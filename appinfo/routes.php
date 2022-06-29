@@ -9,7 +9,5 @@
  */
 return [
     'routes' => [
-	   ['name' => 'page#do_echo', 'url' => '/echo', 'verb' => 'POST'],
-	   ['name' => 'Page#index', 'url' => '/', 'verb' => 'GET']
-    ]
+	]
 ];
