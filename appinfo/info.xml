@@ -2,7 +2,7 @@
 <info xmlns:xsi= "http://www.w3.org/2001/XMLSchema-instance"
       xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
     <id>nmc_sharing</id>
-    <name>nmc_sharing</name>
+    <name>NMC sharing</name>
     <summary>pending shares within the file list view.</summary>
     <description><![CDATA[Show pending shares within the file list view.]]></description>
     <version>0.0.1</version>
