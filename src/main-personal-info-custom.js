@@ -1,7 +1,7 @@
 /**
- * @copyright Copyright (c) 2019 John Molakvoæ <skjnldsv@protonmail.com>
+ * @copyright 2021, Christopher Ng <chrng8@gmail.com>
  *
- * @author John Molakvoæ <skjnldsv@protonmail.com>
+ * @author Christopher Ng <chrng8@gmail.com>
  *
  * @license AGPL-3.0-or-later
  *
@@ -19,6 +19,25 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  */
-
+import Vue from 'vue'
+import { getRequestToken } from '@nextcloud/auth'
+import { loadState } from '@nextcloud/initial-state'
 import { translate as t } from '@nextcloud/l10n'
+import '@nextcloud/dialogs/dist/index.css'
+
+import LanguageSectionCustom from './components/PersonalInfo/LanguageSection/LanguageSectionCustom.vue'
+
+__webpack_nonce__ = btoa(getRequestToken())
+
+const profileEnabledGlobally = loadState('settings', 'profileEnabledGlobally', true)
+
+Vue.mixin({
+	methods: {
+		t,
+	},
+})
+
+const LanguageViewCsutom = Vue.extend(LanguageSectionCustom)
+new LanguageViewCsutom().$mount('#vue-language-section')
+
 

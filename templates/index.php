@@ -22,7 +22,7 @@
  */
 
 
-script('nmc_sharing', 'pendingsharelistplugin');
+// script('nmc_sharing', 'src/main-personal-info-custom');
 ?>
 
 
