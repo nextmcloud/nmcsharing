@@ -25,7 +25,7 @@ import { loadState } from '@nextcloud/initial-state'
 import { translate as t } from '@nextcloud/l10n'
 import '@nextcloud/dialogs/dist/index.css'
 
-import LanguageSectionCustom from './components/PersonalInfo/LanguageSection/LanguageSectionCustom.vue'
+import LanguageSectionCustom from './components/Language/LanguageSectionCustom.vue'
 
 __webpack_nonce__ = btoa(getRequestToken())
 
@@ -37,7 +37,12 @@ Vue.mixin({
 	},
 })
 
-const LanguageViewCsutom = Vue.extend(LanguageSectionCustom)
-new LanguageViewCsutom().$mount('#vue-language-section')
+console.log('Attempting to mount new Vue instance to #vue-language-section')
+
+//const LanguageViewCustom = Vue.extend(LanguageSectionCustom)
+export default new Vue({
+	el: '#vue-language-section',
+	render: h => h(LanguageSectionCustom)
+})
 
 

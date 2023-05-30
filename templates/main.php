@@ -20,9 +20,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-
-
-// script('nmc_sharing', 'src/main-personal-info-custom');
+<div id="content"></div>
 ?>
 
 

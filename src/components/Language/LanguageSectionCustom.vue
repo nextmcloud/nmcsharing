@@ -55,7 +55,12 @@ export default {
 		Language,
 		HeaderBar,
 	},
-
+	created () {
+		console.log('Custom LanguageSection is created!')
+	},
+	mounted () {
+		console.log('Custom LanguageSection is Mounted!')
+	},
 	data() {
 		return {
 			propertyReadable: ACCOUNT_SETTING_PROPERTY_READABLE_ENUM.LANGUAGE,
