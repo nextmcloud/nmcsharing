@@ -25,11 +25,11 @@ import { loadState } from '@nextcloud/initial-state'
 import { translate as t } from '@nextcloud/l10n'
 import '@nextcloud/dialogs/dist/index.css'
 
-import LanguageSectionCustom from './components/Language/LanguageSectionCustom.vue'
-
+import LanguageSectionCustom from './PersonalInfo/LanguageSection/LanguageSectionCustom.vue'
+//import HelloWorld from './HelloWorld.vue'
 __webpack_nonce__ = btoa(getRequestToken())
 
-const profileEnabledGlobally = loadState('settings', 'profileEnabledGlobally', true)
+//const profileEnabledGlobally = loadState('settings', 'profileEnabledGlobally', true)
 
 Vue.mixin({
 	methods: {
@@ -37,12 +37,11 @@ Vue.mixin({
 	},
 })
 
-console.log('Attempting to mount new Vue instance to #vue-language-section')
-
-//const LanguageViewCustom = Vue.extend(LanguageSectionCustom)
-export default new Vue({
-	el: '#vue-language-section',
-	render: h => h(LanguageSectionCustom)
-})
-
+console.log('-------------- LOADING VUE COMPONENTS ----------------')
+/*const LanguageViewCustom = Vue.extend(LanguageSectionCustom)
+new LanguageViewCustom().$mount('#app-content-vue')
+*/
+const LanguageSectionCustomView = Vue.extend(LanguageSectionCustom)
+new LanguageSectionCustomView().$mount('#internalShareSettings')
+new LanguageSectionCustomView().$mount('#app-content-nmc_sharing')
 

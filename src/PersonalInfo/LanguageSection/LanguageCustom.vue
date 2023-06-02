@@ -46,13 +46,15 @@
 <script>
 import { showError } from '@nextcloud/dialogs'
 
-import { ACCOUNT_SETTING_PROPERTY_ENUM } from '../../../constants/AccountPropertyConstants'
-import { savePrimaryAccountProperty } from '../../../service/PersonalInfo/PersonalInfoService'
-import { validateLanguage } from '../../../utils/validate'
+import { ACCOUNT_SETTING_PROPERTY_ENUM } from '../../../../settings/src/constants/AccountPropertyConstants'
+import { savePrimaryAccountProperty } from '../../../../settings/src/service/PersonalInfo/PersonalInfoService'
+import { validateLanguage } from '../../../../settings/src/utils/validate'
 
 export default {
 	name: 'Language',
-
+	created () {
+		console.log('CREATED LANGUAGECUSTOM COMPONENT')
+	},
 	props: {
 		commonLanguages: {
 			type: Array,

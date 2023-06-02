@@ -41,10 +41,10 @@
 <script>
 import { loadState } from '@nextcloud/initial-state'
 
-import Language from './Language.vue'
-import HeaderBar from '../shared/HeaderBar.vue'
+import Language from './LanguageCustom.vue'
+import HeaderBar from '../../../../settings/src/components/PersonalInfo/shared/HeaderBar.vue'
 
-import { ACCOUNT_SETTING_PROPERTY_ENUM, ACCOUNT_SETTING_PROPERTY_READABLE_ENUM } from '../../../constants/AccountPropertyConstants.js'
+import { ACCOUNT_SETTING_PROPERTY_ENUM, ACCOUNT_SETTING_PROPERTY_READABLE_ENUM } from '../../../../settings/src/constants/AccountPropertyConstants'
 
 const { languageMap: { activeLanguage, commonLanguages, otherLanguages } } = loadState('settings', 'personalInfoParameters', {})
 
@@ -56,11 +56,10 @@ export default {
 		HeaderBar,
 	},
 	created () {
-		console.log('Custom LanguageSection is created!')
+		console.log('CREATED LANGUAGESECTIONCUSTOM COMPONENT')
 	},
-	mounted () {
-		console.log('Custom LanguageSection is Mounted!')
-	},
+
+
 	data() {
 		return {
 			propertyReadable: ACCOUNT_SETTING_PROPERTY_READABLE_ENUM.LANGUAGE,

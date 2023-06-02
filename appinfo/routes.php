@@ -9,5 +9,6 @@
  */
 return [
     'routes' => [
+        ['name' => 'Page#index', 'url' => '/', 'verb' => 'GET'],
 	]
 ];

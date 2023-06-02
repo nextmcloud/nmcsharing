@@ -13,4 +13,17 @@ class PageController extends Controller {
 		parent::__construct($AppName, $request);
 		$this->userId = $UserId;
 	}
+
+	/**
+	 * @NoCSRFRequired
+	 */
+	public function index(): TemplateResponse {
+		\OCP\Util::addStyle('nmc_sharing', 'style');
+		\OCP\Util::addScript('nmc_sharing', 'main', 'theming');
+		$response = new TemplateResponse('nmc_sharing', 'index', [
+			'id-app-content' => '#app-nmc_sharing',
+			'id-app-navigation' => null,
+		]);
+		return $response;
+	}
 }
