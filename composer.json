@@ -1,11 +1,11 @@
 {
-    "name": "Files Activity",
-    "description": "Custom Files Activity",
+    "name": "nmcsharing",
+    "description": "MagentaCLOUD sharing customisations",
     "type": "project",
     "license": "AGPL",
     "authors": [
         {
-            "name": "sangramsinh desai"
+            "name": "Aleksei Efremov"
         }
     ],
     "require": {},

@@ -33,24 +33,26 @@ use OCP\ILogger;
 use OCP\IServerContainer;
 
 class Application extends App implements IBootstrap {
+    const APP_ID = "nmcsharing";
+
 	public function __construct(array $urlParams = []) {
-		parent::__construct('nmc_sharing', $urlParams);
+		parent::__construct(self::APP_ID, $urlParams);
 	}
 
 	public function register(IRegistrationContext $context): void {
-		$context->registerCapability(Capabilities::class);
+		//$context->registerCapability(Capabilities::class);
 
-		$context->registerServiceAlias('Expiration', Expiration::class);
-		$context->registerServiceAlias(ITrashManager::class, TrashManager::class);
+		//$context->registerServiceAlias('Expiration', Expiration::class);
+		//$context->registerServiceAlias(ITrashManager::class, TrashManager::class);
 		/** Register $principalBackend for the DAV collection */
-		$context->registerServiceAlias('principalBackend', Principal::class);
+		//$context->registerServiceAlias('principalBackend', Principal::class);
 	}
 
 	public function boot(IBootContext $context): void {
 		\OCA\Files\App::getNavigationManager()->add(function () {
 			return [
-				'id' => 'nmc_sharing',
-				'appname' => 'nmc_sharing',
+				'id' => 'nmcsharing',
+				'appname' => 'nmcsharing',
 				'script' => 'list.php',
 				];
 		});
