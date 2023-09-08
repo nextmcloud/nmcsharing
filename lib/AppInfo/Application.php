@@ -29,6 +29,8 @@ use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
+use OCP\AppFramework\Http\Events\BeforeTemplateRenderedEvent;
+use OCA\Nmcsharing\Listener\BeforeTemplateRenderedListener;
 use OCP\ILogger;
 use OCP\IServerContainer;
 
@@ -46,16 +48,11 @@ class Application extends App implements IBootstrap {
 		//$context->registerServiceAlias(ITrashManager::class, TrashManager::class);
 		/** Register $principalBackend for the DAV collection */
 		//$context->registerServiceAlias('principalBackend', Principal::class);
+
+		$context->registerEventListener(BeforeTemplateRenderedEvent::class, BeforeTemplateRenderedListener::class);
 	}
 
 	public function boot(IBootContext $context): void {
-		\OCA\Files\App::getNavigationManager()->add(function () {
-			return [
-				'id' => 'nmcsharing',
-				'appname' => 'nmcsharing',
-				'script' => 'list.php',
-				];
-		});
 
 	}
 }
