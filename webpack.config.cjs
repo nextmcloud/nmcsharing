@@ -3,7 +3,7 @@ const path = require('path')
 
 module.exports = {
 	entry: {
-		sharing: './js/sharing.js',
+		sharing: './src/files_sharing_tab.js',
 	},
 	output: {
 		path: path.resolve(__dirname, 'dist'),
