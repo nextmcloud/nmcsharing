@@ -1,91 +1,53 @@
 <template>
 	<div class="sharingTabDetailsView">
-		<div class="sharingTabDetailsView__header">
-			<span>
-				<NcAvatar v-if="isUserShare"
-					class="sharing-entry__avatar"
-					:is-no-user="share.shareType !== SHARE_TYPES.SHARE_TYPE_USER"
-					:user="share.shareWith"
-					:display-name="share.shareWithDisplayName"
-					:menu-position="'left'"
-					:url="share.shareWithAvatar" />
-				<component :is="getShareTypeIcon(share.type)" :size="32" />
-			</span>
-			<span>
-				<h1>{{ title }}</h1>
-			</span>
-		</div>
+		<p class="sharingTabDetailsView__header">
+			{{ t('files_nmcsharing', 'Permissions') }}
+		</p>
 		<div class="sharingTabDetailsView__quick-permissions">
 			<div>
-				<NcCheckboxRadioSwitch :button-variant="true"
-					:checked.sync="sharingPermission"
+				<NcCheckboxRadioSwitch :checked.sync="sharingPermission"
+					:disabled="!isFolder && (isLinkShare || isEmailShare)"
 					:value="bundledPermissions.READ_ONLY.toString()"
 					name="sharing_permission_radio"
 					type="radio"
-					button-variant-grouped="vertical"
 					@update:checked="toggleCustomPermissions">
-					{{ t('files_sharing', 'View only') }}
-					<template #icon>
-						<ViewIcon :size="20" />
-					</template>
+					{{ t('files_nmcsharing', 'Read only') }}
 				</NcCheckboxRadioSwitch>
-				<NcCheckboxRadioSwitch :button-variant="true"
-					:checked.sync="sharingPermission"
+				<NcCheckboxRadioSwitch :checked.sync="sharingPermission"
+					:disabled="!isFolder && (isLinkShare || isEmailShare)"
 					:value="bundledPermissions.ALL.toString()"
 					name="sharing_permission_radio"
 					type="radio"
-					button-variant-grouped="vertical"
 					@update:checked="toggleCustomPermissions">
-					{{ t('files_sharing', 'Allow upload and editing') }}
-					<template #icon>
-						<EditIcon :size="20" />
-					</template>
+					{{ isFolder ? t('files_nmcsharing', 'Read, write and upload') : t('files_nmcsharing', 'Read and write') }}
 				</NcCheckboxRadioSwitch>
 				<NcCheckboxRadioSwitch v-if="allowsFileDrop"
-					:button-variant="true"
 					:checked.sync="sharingPermission"
 					:value="bundledPermissions.FILE_DROP.toString()"
 					name="sharing_permission_radio"
 					type="radio"
-					button-variant-grouped="vertical"
 					@update:checked="toggleCustomPermissions">
-					{{ t('files_sharing', 'File drop') }}
-					<small>{{ t('files_sharing', 'Upload only') }}</small>
-					<template #icon>
-						<UploadIcon :size="20" />
-					</template>
+					{{ t('files_nmcsharing', 'File drop (upload only)') }}
 				</NcCheckboxRadioSwitch>
-				<NcCheckboxRadioSwitch :button-variant="true"
-					:checked.sync="sharingPermission"
-					:value="'custom'"
-					name="sharing_permission_radio"
-					type="radio"
-					button-variant-grouped="vertical"
-					@update:checked="expandCustomPermissions">
-					{{ t('files_sharing', 'Custom permissions') }}
-					<small>{{ t('files_sharing', customPermissionsList) }}</small>
-					<template #icon>
-						<DotsHorizontalIcon :size="20" />
-					</template>
-				</NcCheckboxRadioSwitch>
+				<p v-if="allowsFileDrop" class="sharing_permission-desc">
+					{{ t('files_nmcsharing', 'With File drop, only uploading is allowed. Only you can see files and folders that have been uploaded.') }}
+				</p>
 			</div>
 		</div>
 		<div class="sharingTabDetailsView__advanced-control">
-			<NcButton type="tertiary"
-				alignment="end-reverse"
+			<button id="btn-advanced"
+				type="button"
+				:class="{ open: advancedSectionAccordionExpanded }"
 				@click="advancedSectionAccordionExpanded = !advancedSectionAccordionExpanded">
-				{{ t('files_sharing', 'Advanced settings') }}
-				<template #icon>
-					<MenuDownIcon />
-				</template>
-			</NcButton>
+				{{ t('files_nmcsharing', 'Advanced') }}
+			</button>
 		</div>
 		<div v-if="advancedSectionAccordionExpanded" class="sharingTabDetailsView__advanced">
 			<section>
 				<NcInputField v-if="isPublicShare"
 					:value.sync="share.label"
 					type="text"
-					:label="t('file_sharing', 'Share label')" />
+					:placeholder="t('file_sharing', 'Share label')" />
 				<template v-if="isPublicShare">
 					<NcCheckboxRadioSwitch :checked.sync="isPasswordProtected" :disabled="isPasswordEnforced">
 						{{ t('file_sharing', 'Set password') }}
@@ -95,7 +57,6 @@
 						:value="hasUnsavedPassword ? share.newPassword : '***************'"
 						:error="passwordError"
 						:required="isPasswordEnforced"
-						:label="t('file_sharing', 'Password')"
 						@update:value="onPasswordChange" />
 
 					<!-- Migrate icons and remote -> icon="icon-info"-->
@@ -133,44 +94,10 @@
 				<template v-if="writeNoteToRecipientIsChecked">
 					<textarea :value="share.note" @input="share.note = $event.target.value" />
 				</template>
-				<NcCheckboxRadioSwitch :checked.sync="setCustomPermissions">
-					{{ t('file_sharing', 'Custom permissions') }}
-				</NcCheckboxRadioSwitch>
-				<section v-if="setCustomPermissions" class="custom-permissions-group">
-					<NcCheckboxRadioSwitch :disabled="!allowsFileDrop && share.type === SHARE_TYPES.SHARE_TYPE_LINK" :checked.sync="hasRead">
-						{{ t('file_sharing', 'Read') }}
-					</NcCheckboxRadioSwitch>
-					<NcCheckboxRadioSwitch v-if="isFolder" :disabled="!canSetCreate" :checked.sync="canCreate">
-						{{ t('file_sharing', 'Create') }}
-					</NcCheckboxRadioSwitch>
-					<NcCheckboxRadioSwitch :disabled="!canSetEdit" :checked.sync="canEdit">
-						{{ t('file_sharing', 'Update') }}
-					</NcCheckboxRadioSwitch>
-					<NcCheckboxRadioSwitch v-if="config.isResharingAllowed && share.type !== SHARE_TYPES.SHARE_TYPE_LINK" :disabled="!canSetReshare" :checked.sync="canReshare">
-						{{ t('file_sharing', 'Share') }}
-					</NcCheckboxRadioSwitch>
-					<NcCheckboxRadioSwitch v-if="!isPublicShare" :disabled="!canSetDownload" :checked.sync="canDownload">
-						{{ t('file_sharing', 'Download') }}
-					</NcCheckboxRadioSwitch>
-					<NcCheckboxRadioSwitch :disabled="!canSetDelete" :checked.sync="canDelete">
-						{{ t('file_sharing', 'Delete') }}
-					</NcCheckboxRadioSwitch>
-				</section>
 			</section>
 		</div>
 
 		<div class="sharingTabDetailsView__footer">
-			<NcButton v-if="!isNewShare"
-				:aria-label="t('files_sharing', 'Delete share')"
-				:disabled="false"
-				:readonly="false"
-				type="tertiary"
-				@click.prevent="removeShare">
-				<template #icon>
-					<CloseIcon :size="16" />
-				</template>
-				{{ t('files_sharing', 'Delete share') }}
-			</NcButton>
 			<div class="button-group">
 				<NcButton @click="$emit('close-sharing-details')">
 					{{ t('file_sharing', 'Cancel') }}
@@ -186,22 +113,14 @@
 <script>
 import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
 import NcInputField from '@nextcloud/vue/dist/Components/NcInputField.js'
-import NcAvatar from '@nextcloud/vue/dist/Components/NcAvatar.js'
-import NcDatetimePicker from '@nextcloud/vue/dist/Components/NcDatetimePicker.js'
 import NcDateTimePickerNative from '@nextcloud/vue/dist/Components/NcDateTimePickerNative.js'
 import NcCheckboxRadioSwitch from '@nextcloud/vue/dist/Components/NcCheckboxRadioSwitch.js'
 import CircleIcon from 'vue-material-design-icons/CircleOutline.vue'
-import CloseIcon from 'vue-material-design-icons/Close.vue'
-import EditIcon from 'vue-material-design-icons/Pencil.vue'
 import EmailIcon from 'vue-material-design-icons/Email.vue'
 import LinkIcon from 'vue-material-design-icons/Link.vue'
 import GroupIcon from 'vue-material-design-icons/AccountGroup.vue'
 import ShareIcon from 'vue-material-design-icons/ShareCircle.vue'
 import UserIcon from 'vue-material-design-icons/AccountCircleOutline.vue'
-import ViewIcon from 'vue-material-design-icons/Eye.vue'
-import UploadIcon from 'vue-material-design-icons/Upload.vue'
-import MenuDownIcon from 'vue-material-design-icons/MenuDown.vue'
-import DotsHorizontalIcon from 'vue-material-design-icons/DotsHorizontal.vue'
 
 import GeneratePassword from '../utils/GeneratePassword.js'
 import Share from '../models/Share.js'
@@ -218,23 +137,10 @@ import {
 export default {
 	name: 'SharingDetailsTab',
 	components: {
-		NcAvatar,
 		NcButton,
 		NcInputField,
-		NcDatetimePicker,
 		NcDateTimePickerNative,
 		NcCheckboxRadioSwitch,
-		CloseIcon,
-		CircleIcon,
-		EditIcon,
-		LinkIcon,
-		GroupIcon,
-		ShareIcon,
-		UserIcon,
-		UploadIcon,
-		ViewIcon,
-		MenuDownIcon,
-		DotsHorizontalIcon,
 	},
 	mixins: [ShareTypes, ShareRequests, SharesMixin],
 	props: {
@@ -258,7 +164,7 @@ export default {
 			revertSharingPermission: null,
 			setCustomPermissions: false,
 			passwordError: false,
-			advancedSectionAccordionExpanded: false,
+			advancedSectionAccordionExpanded: true,
 			bundledPermissions: BUNDLED_PERMISSIONS,
 			isFirstComponentLoad: true,
 			test: false,
@@ -441,6 +347,12 @@ export default {
 		isGroupShare() {
 			return this.share.type === this.SHARE_TYPES.SHARE_TYPE_GROUP
 		},
+		isLinkShare() {
+			return this.share.type === this.SHARE_TYPES.SHARE_TYPE_LINK
+		},
+		isEmailShare() {
+			return this.share.type === this.SHARE_TYPES.SHARE_TYPE_EMAIL
+		},
 		isRemoteShare() {
 			return this.share.type === this.SHARE_TYPES.SHARE_TYPE_REMOTE_GROUP || this.share.type === this.SHARE_TYPES.SHARE_TYPE_REMOTE
 		},
@@ -528,7 +440,7 @@ export default {
 			return this.share.newPassword !== undefined
 		},
 		passwordExpirationTime() {
-			if (this.share.passwordExpirationTime === null) {
+			if (this.share.passwordExpirationTime === null || this.share.passwordExpirationTime === undefined) {
 				return null
 			}
 
@@ -628,7 +540,7 @@ export default {
 			}
 		},
 		expandCustomPermissions() {
-			if (!this.advancedSectionAccordionExpanded)	{
+			if (!this.advancedSectionAccordionExpanded) {
 				this.advancedSectionAccordionExpanded = true
 			}
 			this.toggleCustomPermissions()
@@ -849,7 +761,7 @@ export default {
 }
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 .sharingTabDetailsView {
 	display: flex;
 	flex-direction: column;
@@ -858,63 +770,31 @@ export default {
 	margin: 0 auto;
 
 	&__header {
-		display: flex;
-		align-items: center;
-		box-sizing: border-box;
-		margin: 0.2em;
-
-		span {
-			display: flex;
-			align-items: center;
-
-			h1 {
-				font-size: 15px;
-				padding-left: 0.3em;
-			}
-
-		}
+		font: var(--telekom-text-style-ui-bold);
 	}
 
 	&__quick-permissions {
 		display: flex;
-		justify-content: center;
 		margin-bottom: 0.2em;
 		width: 100%;
 		margin: 0 auto;
 		border-radius: 0;
 
-		div {
-			width: 100%;
-
-			span {
-				width: 100%;
-
-				span:nth-child(1) {
-					align-items: center;
-					justify-content: center;
-					color: var(--color-primary-element);
-					padding: 0.1em;
-				}
-
-				::v-deep label {
-
-					span {
-						display: flex;
-						flex-direction: column;
-					}
-				}
+		// align radiobuttons vertically
+		div span {
+			.checkbox-radio-switch__label {
+				padding-left: 0px;
 			}
+		}
 
+		.sharing_permission-desc {
+			color: var(--telekom-color-ui-regular);
 		}
 	}
 
 	&__advanced-control {
 		width: 100%;
-
-		button {
-			margin-top: 0.5em;
-		}
-
+		margin-top: var(--telekom-spacing-composition-space-08);
 	}
 
 	&__advanced {
@@ -932,6 +812,11 @@ export default {
 
 			textarea {
 				height: 80px;
+				border: var(--telekom-spacing-composition-space-01) solid var(--telekom-color-ui-border-standard);
+				border-radius: var(--telekom-radius-small);
+				&:hover {
+					cursor: text;
+				}
 			}
 
 			/*
@@ -943,7 +828,10 @@ export default {
               Without this achieving left alignment for the checkboxes would not
               be possible.
             */
-			span {
+			span.checkbox-radio-switch-checkbox {
+				.checkbox-radio-switch__label {
+					padding-left: 0px;
+				}
 				::v-deep label {
 					padding-left: 0 !important;
 					background-color: initial !important;
@@ -960,8 +848,6 @@ export default {
 	&__footer {
 		width: 100%;
 		display: flex;
-		position: sticky;
-		bottom: 0;
 		flex-direction: column;
 		justify-content: space-between;
 		align-items: flex-start;
@@ -974,17 +860,42 @@ export default {
 
 		.button-group {
 			display: flex;
-			justify-content: space-between;
 			width: 100%;
 			margin-top: 16px;
+			gap: 1rem;
 
 			button {
-				margin-left: 16px;
-
-				&:first-child {
-					margin-left: 0;
-				}
+				padding: 0 1rem;
+				font-size: 0.875rem;
 			}
+		}
+	}
+
+	// 'Advanced' button style
+	#btn-advanced {
+		all: unset;
+		position: relative;
+		font: var(--telekom-text-style-ui-bold);
+		&:hover {
+			color: var(--telekom-color-primary-hovered);
+			background-color: initial;
+			cursor: pointer;
+			&::after {
+				border-bottom-color: var(--color-primary);
+			}
+		}
+		&::after {
+			content: '';
+			border-left: 5px solid transparent;
+			border-right: 5px solid transparent;
+			border-bottom: 5px solid var(--color-main-text);
+			position: absolute;
+			top: calc(50% - 2px);
+			margin-left: 4px;
+		}
+		// rotate arrow when opened
+		&.open::after {
+			transform: rotate(0.5turn);
 		}
 	}
 }

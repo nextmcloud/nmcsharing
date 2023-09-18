@@ -66,7 +66,7 @@ export default {
 	},
 	computed: {
 		canViewText() {
-			return t('files_sharing', 'View only')
+			return t('files_nmcsharing', 'Read only')
 		},
 		canEditText() {
 			return t('files_sharing', 'Can edit')
@@ -95,7 +95,7 @@ export default {
 			if (this.supportsFileDrop) {
 				options.push(this.fileDropText)
 			}
-			options.push(this.customPermissionsText)
+			// options.push(this.customPermissionsText)
 
 			return options
 		},
@@ -112,8 +112,8 @@ export default {
 				return this.isFolder ? BUNDLED_PERMISSIONS.ALL : BUNDLED_PERMISSIONS.ALL_FILE
 			case this.fileDropText:
 				return BUNDLED_PERMISSIONS.FILE_DROP
-			case this.customPermissionsText:
-				return 'custom'
+			// case this.customPermissionsText:
+			// return 'custom'
 			case this.canViewText:
 			default:
 				return BUNDLED_PERMISSIONS.READ_ONLY
@@ -154,12 +154,12 @@ export default {
 		},
 		selectOption(option) {
 			this.selectedOption = option
-			if (option === this.customPermissionsText) {
-				this.$emit('open-sharing-details')
-			} else {
-				this.share.permissions = this.dropDownPermissionValue
-				this.queueUpdate('permissions')
-			}
+			// if (option === this.customPermissionsText) {
+			// this.$emit('open-sharing-details')
+			// } else {
+			// }
+			this.share.permissions = this.dropDownPermissionValue
+			this.queueUpdate('permissions')
 			this.showDropdown = false
 		},
 		initializeComponent() {

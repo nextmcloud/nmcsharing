@@ -1,8 +1,13 @@
 module.exports = {
+	globals: {
+		__webpack_nonce__: true,
+		moment: true,
+	},
 	extends: [
 		'@nextcloud',
 	],
 	rules: {
+		'vue/no-mutating-props': 'warn',
 		camelcase: 'off',
 		'jsdoc/require-param-description': 'off',
 		'n/no-unpublished-import': 'off',

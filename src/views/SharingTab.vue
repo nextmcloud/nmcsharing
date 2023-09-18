@@ -29,6 +29,9 @@
 
 		<!-- shares content -->
 		<div v-if="!showSharingDetailsView" class="sharingTab__content">
+			<h2 class="sharingTab__header">
+				{{ t('files_nmcsharing', 'Sharing') }}
+			</h2>
 			<!-- shared with me information -->
 			<SharingEntrySimple v-if="isSharedWithMe" v-bind="sharedWithMe" class="sharing-entry__reshare">
 				<template #avatar>
@@ -47,12 +50,10 @@
 				:shares="shares"
 				@open-sharing-details="toggleShareDetailsView" />
 
-			<NcActionButton v-if="canReshare"
-				class="new-share-link"
-				icon="icon-add"
-				@click.prevent.stop="onNewLinkShare">
-				{{ t('files_sharing', 'Add another link') }}
-			</NcActionButton>
+			<!-- TODO translation -->
+			<h1 v-if="!loading">
+				<strong>{{ t('files_nmcsharing', 'Your shares')}}</strong>
+			</h1>
 
 			<!-- link shares list -->
 			<SharingLinkList v-if="!loading"
@@ -364,6 +365,7 @@ export default {
 				listComponent = this.$refs.linkShareList
 			}
 
+			if (!listComponent) return
 			this.$nextTick(() => {
 				const newShare = listComponent.$children.find(component => component.share === share)
 				if (newShare) {
@@ -386,9 +388,13 @@ export default {
 	margin: 1rem auto;
 }
 
+.sharingTab__header {
+	line-height: initial;
+}
+
 .sharingTab {
 	&__content {
-		padding: 0 6px;
+		padding: 0px;
 	}
 
 	&__additionalContent {

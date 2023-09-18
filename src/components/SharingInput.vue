@@ -22,7 +22,7 @@
 
 <template>
 	<div class="sharing-search">
-		<label for="sharing-search-input">{{ t('files_sharing', 'Search for share recipients') }}</label>
+		<label for="sharing-search-input">{{ t('files_sharing', 'You can create links or send shares by mail. If you invite MagentaCLOUD users, you have more opportunities for collaboration.') }}</label>
 		<NcSelect ref="select"
 			v-model="value"
 			input-id="sharing-search-input"
@@ -389,6 +389,11 @@ export default {
 					icon: 'icon-user',
 					iconTitle: t('files_sharing', 'Guest'),
 				}
+			case this.SHARE_TYPES.SHARE_TYPE_USER:
+				return {
+					icon: 'icon-upload-to-cloud',
+					iconTitle: t('files_nmcsharing', 'User'),
+				}
 			case this.SHARE_TYPES.SHARE_TYPE_REMOTE_GROUP:
 			case this.SHARE_TYPES.SHARE_TYPE_GROUP:
 				return {
@@ -542,12 +547,43 @@ export default {
 	margin-bottom: 4px;
 
 	label[for="sharing-search-input"] {
-		margin-bottom: 2px;
+		margin-bottom: 15px;
 	}
 
-	&__input {
+	&__input.v-select.select {
+		min-width: auto;
 		width: 100%;
 		margin: 10px 0;
+	}
+};
+
+ul.vs__dropdown-menu {
+	--vs-border-width: 1px;
+	--vs-dropdown-option-padding: 16px 8px;
+	padding: 0px !important;
+	.vs__dropdown-option {
+		border-radius: 0px !important;
+		// remove user avatar
+		.avatardiv {
+			display: none;
+		}
+		// set dropdown option height
+		span.option {
+			--height: 16px !important;
+		}
+		// add a new icon definition
+		.icon {
+			background-position: right;
+			.icon-upload-to-cloud {
+				background-image: var(--icon-upload-to-cloud-dark);
+			}
+		}
+
+	}
+	// No elements found
+	.vs__no-options {
+		padding: 1rem 0.5rem;
+		line-height: 1rem;
 	}
 }
 

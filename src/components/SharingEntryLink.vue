@@ -23,8 +23,16 @@
 <template>
 	<li :class="{'sharing-entry--share': share}" class="sharing-entry sharing-entry__link">
 		<NcAvatar :is-no-user="true"
-			:icon-class="isEmailShareType ? 'avatar-link-share icon-mail-white' : 'avatar-link-share icon-public-white'"
-			class="sharing-entry__avatar" />
+			class="sharing-entry__avatar">
+			<template #icon>
+				<span class="icon"
+					:class="{
+						'icon-default': !share,
+						'icon-user': isEmailShareType,
+						'icon-link': isLinkShareType,
+						'icon-upload-to-cloud': isUserShareType}" />
+			</template>
+		</NcAvatar>
 		<div class="sharing-entry__desc" @click.prevent="toggleQuickShareSelect">
 			<span class="sharing-entry__title" :title="title">
 				{{ title }}
@@ -47,8 +55,15 @@
 				target="_blank"
 				:title="copyLinkTooltip"
 				:aria-label="copyLinkTooltip"
-				:icon="copied && copySuccess ? 'icon-checkmark-color' : 'icon-clippy'"
-				@click.stop.prevent="copyLink" />
+				@click.stop.prevent="copyLink">
+				<template #icon>
+					<span class="icon"
+						:class="{
+							'icon-checkmark-magenta': copied && copySuccess,
+							'icon-clipboard': !(copied && copySuccess)
+						}" />
+				</template>
+			</NcActionLink>
 		</NcActions>
 
 		<!-- pending actions -->
@@ -164,7 +179,7 @@
 				</NcActionButton>
 
 				<NcActionButton v-if="share.canDelete"
-					icon="icon-close"
+					icon="icon-delete"
 					:disabled="saving"
 					@click.prevent="onDelete">
 					{{ t('files_sharing', 'Unshare') }}
@@ -403,6 +418,18 @@ export default {
 		isEmailShareType() {
 			return this.share
 				? this.share.type === this.SHARE_TYPES.SHARE_TYPE_EMAIL
+				: false
+		},
+
+		isLinkShareType() {
+			return this.share
+				? this.share.type === this.SHARE_TYPES.SHARE_TYPE_LINK
+				: false
+		},
+
+		isUserShareType() {
+			return this.share
+				? this.share.type === this.SHARE_TYPES.SHARE_TYPE_GROUP
 				: false
 		},
 
@@ -798,7 +825,7 @@ export default {
 	}
 
 	::v-deep .avatar-link-share {
-		background-color: var(--color-primary-element);
+		background-color: var(--color-main-background);
 	}
 
 	.sharing-entry__action--public-upload {
@@ -825,6 +852,10 @@ export default {
 
 	.icon-checkmark-color {
 		opacity: 1;
+	}
+
+	.button-vue:hover:not(:disabled) {
+		background-color: initial;
 	}
 }
 </style>
