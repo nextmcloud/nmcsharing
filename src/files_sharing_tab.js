@@ -28,6 +28,8 @@ import { getRequestToken } from '@nextcloud/auth'
 // eslint-disable-next-line camelcase
 __webpack_nonce__ = btoa(getRequestToken())
 
+__webpack_public_path__ = '/customapps/nmcsharing/js/'
+
 Vue.prototype.t = t
 Vue.prototype.n = n
 

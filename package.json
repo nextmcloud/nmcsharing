@@ -8,7 +8,8 @@
     "test": "tests"
   },
   "scripts": {
-    "build": "webpack --node-env development --progress",
+    "build": "webpack --node-env production --progress",
+    "build:dev": "webpack --node-env development --progress",
     "build:watch": "webpack --node-env development --progress --watch",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix"
