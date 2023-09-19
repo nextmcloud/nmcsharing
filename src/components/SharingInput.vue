@@ -392,7 +392,7 @@ export default {
 			case this.SHARE_TYPES.SHARE_TYPE_USER:
 				return {
 					icon: 'icon-upload-to-cloud',
-					iconTitle: t('files_nmcsharing', 'User'),
+					iconTitle: t('nmcsharing', 'User'),
 				}
 			case this.SHARE_TYPES.SHARE_TYPE_REMOTE_GROUP:
 			case this.SHARE_TYPES.SHARE_TYPE_GROUP:
@@ -544,16 +544,16 @@ export default {
 .sharing-search {
 	display: flex;
 	flex-direction: column;
-	margin-bottom: 4px;
+	margin-bottom: 0px;
 
 	label[for="sharing-search-input"] {
-		margin-bottom: 15px;
+		margin-bottom: 0;
 	}
 
 	&__input.v-select.select {
 		min-width: auto;
 		width: 100%;
-		margin: 10px 0;
+		margin: 16px 0 12px;
 	}
 };
 

@@ -30,7 +30,7 @@
 		<!-- shares content -->
 		<div v-if="!showSharingDetailsView" class="sharingTab__content">
 			<h2 class="sharingTab__header">
-				{{ t('files_nmcsharing', 'Sharing') }}
+				{{ t('nmcsharing', 'Sharing') }}
 			</h2>
 			<!-- shared with me information -->
 			<SharingEntrySimple v-if="isSharedWithMe" v-bind="sharedWithMe" class="sharing-entry__reshare">

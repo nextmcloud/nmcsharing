@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<NcButton id="addlink_button" type="secondary" @click.prevent.stop="onNewLinkShare">
-			{{ t('files_nmcsharing', 'Add link') }}
+			{{ t('nmcsharing', 'Add link') }}
 		</NcButton>
 	</div>
 </template>
@@ -72,7 +72,6 @@ export default {
 <style lang="scss" scoped>
 button#addlink_button {
 	font-size: 1rem;
-	margin-top: 2px;
 	margin-bottom: 24px;
 }
 </style>

@@ -66,13 +66,13 @@ export default {
 	},
 	computed: {
 		canViewText() {
-			return t('files_nmcsharing', 'Read only')
+			return t('nmcsharing', 'Read only')
 		},
 		canEditText() {
-			return t('files_sharing', 'Can edit')
+			return t('nmcsharing', 'Can edit')
 		},
 		fileDropText() {
-			return t('files_sharing', 'File drop')
+			return t('nmcsharing', 'File drop')
 		},
 		customPermissionsText() {
 			return t('files_sharing', 'Custom permissions')

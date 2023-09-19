@@ -24,7 +24,7 @@
 	<ul v-if="canLinkShare" class="sharing-link-list">
 		<AddLinkButton v-if="canReshare" :file-info="fileInfo" @add:share="addShare" />
 		<h1>
-			<strong>{{ t('files_nmcsharing', 'Your shares') }}</strong>
+			<strong>{{ t('nmcsharing', 'Your shares') }}</strong>
 		</h1>
 		<template v-if="hasShares">
 			<!-- using shares[index] to work with .sync -->

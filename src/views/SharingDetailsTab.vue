@@ -1,7 +1,7 @@
 <template>
 	<div class="sharingTabDetailsView">
 		<p class="sharingTabDetailsView__header">
-			{{ t('files_nmcsharing', 'Permissions') }}
+			{{ t('nmcsharing', 'Permissions') }}
 		</p>
 		<div class="sharingTabDetailsView__quick-permissions">
 			<div>
@@ -11,7 +11,7 @@
 					name="sharing_permission_radio"
 					type="radio"
 					@update:checked="toggleCustomPermissions">
-					{{ t('files_nmcsharing', 'Read only') }}
+					{{ t('nmcsharing', 'Read only') }}
 				</NcCheckboxRadioSwitch>
 				<NcCheckboxRadioSwitch :checked.sync="sharingPermission"
 					:disabled="!isFolder && (isLinkShare || isEmailShare)"
@@ -19,7 +19,7 @@
 					name="sharing_permission_radio"
 					type="radio"
 					@update:checked="toggleCustomPermissions">
-					{{ isFolder ? t('files_nmcsharing', 'Read, write and upload') : t('files_nmcsharing', 'Read and write') }}
+					{{ isFolder ? t('nmcsharing', 'Read, write and upload') : t('nmcsharing', 'Read and write') }}
 				</NcCheckboxRadioSwitch>
 				<NcCheckboxRadioSwitch v-if="allowsFileDrop"
 					:checked.sync="sharingPermission"
@@ -27,10 +27,10 @@
 					name="sharing_permission_radio"
 					type="radio"
 					@update:checked="toggleCustomPermissions">
-					{{ t('files_nmcsharing', 'File drop (upload only)') }}
+					{{ t('nmcsharing', 'File drop (upload only)') }}
 				</NcCheckboxRadioSwitch>
 				<p v-if="allowsFileDrop" class="sharing_permission-desc">
-					{{ t('files_nmcsharing', 'With File drop, only uploading is allowed. Only you can see files and folders that have been uploaded.') }}
+					{{ t('nmcsharing', 'With File drop, only uploading is allowed. Only you can see files and folders that have been uploaded.') }}
 				</p>
 			</div>
 		</div>
@@ -39,7 +39,7 @@
 				type="button"
 				:class="{ open: advancedSectionAccordionExpanded }"
 				@click="advancedSectionAccordionExpanded = !advancedSectionAccordionExpanded">
-				{{ t('files_nmcsharing', 'Advanced') }}
+				{{ t('nmcsharing', 'Advanced') }}
 			</button>
 		</div>
 		<div v-if="advancedSectionAccordionExpanded" class="sharingTabDetailsView__advanced">
@@ -47,10 +47,10 @@
 				<NcInputField v-if="isPublicShare"
 					:value.sync="share.label"
 					type="text"
-					:placeholder="t('file_sharing', 'Share label')" />
+					:placeholder="t('files_sharing', 'Share label')" />
 				<template v-if="isPublicShare">
 					<NcCheckboxRadioSwitch :checked.sync="isPasswordProtected" :disabled="isPasswordEnforced">
-						{{ t('file_sharing', 'Set password') }}
+						{{ t('nmcsharing', 'Set password') }}
 					</NcCheckboxRadioSwitch>
 					<NcInputField v-if="isPasswordProtected"
 						:type="hasUnsavedPassword ? 'text' : 'password'"
@@ -79,17 +79,17 @@
 					:max="dateMaxEnforced"
 					:hide-label="true"
 					:disabled="isExpiryDateEnforced"
-					:placeholder="t('file_sharing', 'Expiration date')"
+					:placeholder="t('files_sharing', 'Expiration date')"
 					type="date"
 					@input="onExpirationChange" />
 				<NcCheckboxRadioSwitch v-if="isPublicShare"
 					:disabled="canChangeHideDownload"
 					:checked.sync="share.hideDownload"
 					@update:checked="queueUpdate('hideDownload')">
-					{{ t('file_sharing', 'Hide download') }}
+					{{ t('files_sharing', 'Hide download') }}
 				</NcCheckboxRadioSwitch>
 				<NcCheckboxRadioSwitch :checked.sync="writeNoteToRecipientIsChecked">
-					{{ t('file_sharing', 'Note to recipient') }}
+					{{ t('files_sharing', 'Note to recipient') }}
 				</NcCheckboxRadioSwitch>
 				<template v-if="writeNoteToRecipientIsChecked">
 					<textarea :value="share.note" @input="share.note = $event.target.value" />
@@ -100,7 +100,7 @@
 		<div class="sharingTabDetailsView__footer">
 			<div class="button-group">
 				<NcButton @click="$emit('close-sharing-details')">
-					{{ t('file_sharing', 'Cancel') }}
+					{{ t('files_sharing', 'Cancel') }}
 				</NcButton>
 				<NcButton type="primary" @click="saveShare">
 					{{ shareButtonText }}
@@ -372,9 +372,9 @@ export default {
 		},
 		shareButtonText() {
 			if (this.isNewShare) {
-				return t('file_sharing', 'Save share')
+				return t('files_sharing', 'Save share')
 			}
-			return t('file_sharing', 'Update share')
+			return t('files_sharing', 'Update share')
 
 		},
 		/**
