@@ -50,11 +50,6 @@
 				:shares="shares"
 				@open-sharing-details="toggleShareDetailsView" />
 
-			<!-- TODO translation -->
-			<h1 v-if="!loading">
-				<strong>{{ t('files_nmcsharing', 'Your shares')}}</strong>
-			</h1>
-
 			<!-- link shares list -->
 			<SharingLinkList v-if="!loading"
 				ref="linkShareList"

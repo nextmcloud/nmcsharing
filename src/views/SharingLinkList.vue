@@ -22,13 +22,10 @@
 
 <template>
 	<ul v-if="canLinkShare" class="sharing-link-list">
-		<!-- If no link shares, show the add link default entry -->
-		<SharingEntryLink v-if="!hasLinkShares && canReshare"
-			:can-reshare="canReshare"
-			:file-info="fileInfo"
-			@add:share="addShare" />
-
-		<!-- Else we display the list -->
+		<AddLinkButton v-if="canReshare" :file-info="fileInfo" @add:share="addShare" />
+		<h1>
+			<strong>{{ t('files_nmcsharing', 'Your shares') }}</strong>
+		</h1>
 		<template v-if="hasShares">
 			<!-- using shares[index] to work with .sync -->
 			<SharingEntryLink v-for="(share, index) in shares"
@@ -51,12 +48,14 @@ import Share from '../models/Share.js'
 import ShareTypes from '../mixins/ShareTypes.js'
 import SharingEntryLink from '../components/SharingEntryLink.vue'
 import ShareDetails from '../mixins/ShareDetails.js'
+import AddLinkButton from '../components/AddLinkButton.vue'
 
 export default {
 	name: 'SharingLinkList',
 
 	components: {
 		SharingEntryLink,
+		AddLinkButton,
 	},
 
 	mixins: [ShareTypes, ShareDetails],

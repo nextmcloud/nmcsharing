@@ -152,8 +152,6 @@
 					</NcActionButton>
 				</template>
 
-				<NcActionSeparator />
-
 				<!-- external actions -->
 				<ExternalShareAction v-for="action in externalLinkActions"
 					:id="action.id"
@@ -171,13 +169,6 @@
 					{{ name }}
 				</NcActionLink>
 
-				<NcActionButton v-if="!isEmailShareType && canReshare"
-					class="new-share-link"
-					icon="icon-add"
-					@click.prevent.stop="onNewLinkShare">
-					{{ t('files_sharing', 'Add another link') }}
-				</NcActionButton>
-
 				<NcActionButton v-if="share.canDelete"
 					icon="icon-delete"
 					:disabled="saving"
@@ -185,14 +176,6 @@
 					{{ t('files_sharing', 'Unshare') }}
 				</NcActionButton>
 			</template>
-
-			<!-- Create new share -->
-			<NcActionButton v-else-if="canReshare"
-				class="new-share-link"
-				:title="t('files_sharing', 'Create a new share link')"
-				:aria-label="t('files_sharing', 'Create a new share link')"
-				:icon="loading ? 'icon-loading-small' : 'icon-add'"
-				@click.prevent.stop="onNewLinkShare" />
 		</NcActions>
 
 		<!-- loading indicator to replace the menu -->
@@ -210,7 +193,6 @@ import NcActionButton from '@nextcloud/vue/dist/Components/NcActionButton.js'
 import NcActionInput from '@nextcloud/vue/dist/Components/NcActionInput.js'
 import NcActionLink from '@nextcloud/vue/dist/Components/NcActionLink.js'
 import NcActionText from '@nextcloud/vue/dist/Components/NcActionText.js'
-import NcActionSeparator from '@nextcloud/vue/dist/Components/NcActionSeparator.js'
 import NcActions from '@nextcloud/vue/dist/Components/NcActions.js'
 import NcAvatar from '@nextcloud/vue/dist/Components/NcAvatar.js'
 
@@ -234,7 +216,6 @@ export default {
 		NcActionInput,
 		NcActionLink,
 		NcActionText,
-		NcActionSeparator,
 		NcAvatar,
 		Tune,
 		QuickShareSelect,
