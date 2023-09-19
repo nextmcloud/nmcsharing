@@ -9,7 +9,7 @@
         }
     ],
     "config": {
-        "autoloader-suffix": "NMCSettings",
+        "autoloader-suffix": "nmcsharing",
         "classmap-authoritative": true,
         "optimize-autoloader": true,
         "sort-packages": true,
