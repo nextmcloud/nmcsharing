@@ -48,6 +48,12 @@
 					:value.sync="share.label"
 					type="text"
 					:placeholder="t('files_sharing', 'Share label')" />
+				<NcCheckboxRadioSwitch v-if="isPublicShare"
+					:disabled="canChangeHideDownload"
+					:checked.sync="share.hideDownload"
+					@update:checked="queueUpdate('hideDownload')">
+					{{ t('files_sharing', 'Hide download') }}
+				</NcCheckboxRadioSwitch>
 				<template v-if="isPublicShare">
 					<NcCheckboxRadioSwitch :checked.sync="isPasswordProtected" :disabled="isPasswordEnforced">
 						{{ t('nmcsharing', 'Set password') }}
@@ -82,12 +88,6 @@
 					:placeholder="t('files_sharing', 'Expiration date')"
 					type="date"
 					@input="onExpirationChange" />
-				<NcCheckboxRadioSwitch v-if="isPublicShare"
-					:disabled="canChangeHideDownload"
-					:checked.sync="share.hideDownload"
-					@update:checked="queueUpdate('hideDownload')">
-					{{ t('files_sharing', 'Hide download') }}
-				</NcCheckboxRadioSwitch>
 				<NcCheckboxRadioSwitch :checked.sync="writeNoteToRecipientIsChecked">
 					{{ t('files_sharing', 'Note to recipient') }}
 				</NcCheckboxRadioSwitch>
@@ -770,7 +770,8 @@ export default {
 	margin: 0 auto;
 
 	&__header {
-		font: var(--telekom-text-style-ui-bold);
+		font: var(--telekom-text-style-heading-5);
+		font-weight: bold;
 	}
 
 	&__quick-permissions {
@@ -779,13 +780,6 @@ export default {
 		width: 100%;
 		margin: 0 auto;
 		border-radius: 0;
-
-		// align radiobuttons vertically
-		div span {
-			.checkbox-radio-switch__label {
-				padding-left: 0px;
-			}
-		}
 
 		.sharing_permission-desc {
 			color: var(--telekom-color-ui-regular);
@@ -842,6 +836,10 @@ export default {
 			section.custom-permissions-group {
 				padding-left: 1.5em;
 			}
+		}
+
+		.checkbox-radio-switch-checkbox {
+			margin-top: 0.5rem;
 		}
 	}
 
