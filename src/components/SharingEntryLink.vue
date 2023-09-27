@@ -153,12 +153,12 @@
 				</template>
 
 				<!-- external actions -->
-				<ExternalShareAction v-for="action in externalLinkActions"
+				<!-- <ExternalShareAction v-for="action in externalLinkActions"
 					:id="action.id"
 					:key="action.id"
 					:action="action"
 					:file-info="fileInfo"
-					:share="share" />
+					:share="share" /> -->
 
 				<!-- external legacy sharing via url (social...) -->
 				<NcActionLink v-for="({icon, url, name}, index) in externalLegacyLinkActions"
@@ -200,7 +200,6 @@ import Tune from 'vue-material-design-icons/Tune.vue'
 
 import QuickShareSelect from './SharingEntryQuickShareSelect.vue'
 
-import ExternalShareAction from './ExternalShareAction.vue'
 import GeneratePassword from '../utils/GeneratePassword.js'
 import Share from '../models/Share.js'
 import SharesMixin from '../mixins/SharesMixin.js'
@@ -210,7 +209,6 @@ export default {
 	name: 'SharingEntryLink',
 
 	components: {
-		ExternalShareAction,
 		NcActions,
 		NcActionButton,
 		NcActionInput,

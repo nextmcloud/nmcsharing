@@ -13,7 +13,8 @@
 		"With File drop, only uploading is allowed. Only you can see files and folders that have been uploaded.": "With File drop, only uploading is allowed. Only you can see files and folders that have been uploaded.",
 		"Advanced": "Advanced",
 		"Set password": "Set password",
-		"Your shares": "Your shares"
+		"Your shares": "Your shares",
+		"No shares created yet.": "No shares created yet."
 	},
 	"pluralForm": "nplurals=2; plural=(n != 1);"
 }

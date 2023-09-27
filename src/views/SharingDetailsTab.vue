@@ -94,6 +94,9 @@
 				<template v-if="writeNoteToRecipientIsChecked">
 					<textarea :value="share.note" @input="share.note = $event.target.value" />
 				</template>
+				<DownloadLimit v-if="(isLinkShare || isEmailShare) && !isNewShare && !isFolder"
+					:share="share"
+					:file-info="fileInfo" />
 			</section>
 		</div>
 
@@ -133,6 +136,7 @@ import {
 	BUNDLED_PERMISSIONS,
 	hasPermissions,
 } from '../lib/SharePermissionsToolBox.js'
+import DownloadLimit from '../components/DownloadLimit.vue'
 
 export default {
 	name: 'SharingDetailsTab',
@@ -141,6 +145,7 @@ export default {
 		NcInputField,
 		NcDateTimePickerNative,
 		NcCheckboxRadioSwitch,
+		DownloadLimit,
 	},
 	mixins: [ShareTypes, ShareRequests, SharesMixin],
 	props: {
@@ -867,6 +872,10 @@ export default {
 				font-size: 0.875rem;
 			}
 		}
+	}
+
+	#share-date-picker {
+		border-width: 1px;
 	}
 
 	// 'Advanced' button style
