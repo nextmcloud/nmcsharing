@@ -255,12 +255,8 @@ export default {
 			white-space: nowrap;
 			text-align: left;
 
-			&:hover {
-				background-color: #f2f2f2;
-			}
-
-			&.selected {
-				background-color: #f0f0f0;
+			&:hover, &.selected {
+				background-color: var(--color-background-hover);
 			}
 		}
 	}
