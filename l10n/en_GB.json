@@ -14,7 +14,8 @@
 		"Advanced": "Advanced",
 		"Set password": "Set password",
 		"Your shares": "Your shares",
-		"No shares created yet.": "No shares created yet."
+		"No shares created yet.": "No shares created yet.",
+		"Advanced permissions": "Advanced permissions"
 	},
 	"pluralForm": "nplurals=2; plural=(n != 1);"
 }

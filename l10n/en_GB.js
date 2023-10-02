@@ -16,5 +16,6 @@ OC.L10N.register(
 		'Set password': 'Set password',
 		'Your shares': 'Your shares',
 		'No shares created yet.': 'No shares created yet.',
+		'Advanced permissions': 'Advanced permissions',
 	},
 	'nplurals=2; plural=(n != 1);')
