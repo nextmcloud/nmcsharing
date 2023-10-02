@@ -143,12 +143,10 @@
 			@close="onMenuClose">
 			<template v-if="share">
 				<template v-if="share.canEdit && canReshare">
-					<NcActionButton :disabled="saving"
+					<NcActionButton icon="icon-edit"
+						:disabled="saving"
 						@click.prevent="openSharingDetails">
-						<template #icon>
-							<Tune />
-						</template>
-						{{ t('files_sharing', 'Customize link') }}
+						{{ t('nmcsharing', 'Advanced permissions') }}
 					</NcActionButton>
 				</template>
 
@@ -196,8 +194,6 @@ import NcActionText from '@nextcloud/vue/dist/Components/NcActionText.js'
 import NcActions from '@nextcloud/vue/dist/Components/NcActions.js'
 import NcAvatar from '@nextcloud/vue/dist/Components/NcAvatar.js'
 
-import Tune from 'vue-material-design-icons/Tune.vue'
-
 import QuickShareSelect from './SharingEntryQuickShareSelect.vue'
 
 import GeneratePassword from '../utils/GeneratePassword.js'
@@ -215,7 +211,6 @@ export default {
 		NcActionLink,
 		NcActionText,
 		NcAvatar,
-		Tune,
 		QuickShareSelect,
 	},
 
