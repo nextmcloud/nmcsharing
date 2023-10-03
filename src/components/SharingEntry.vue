@@ -22,12 +22,12 @@
 
 <template>
 	<li class="sharing-entry">
-		<NcAvatar class="sharing-entry__avatar"
-			:is-no-user="share.type !== SHARE_TYPES.SHARE_TYPE_USER"
-			:user="share.shareWith"
-			:display-name="share.shareWithDisplayName"
-			:menu-position="'left'"
-			:url="share.shareWithAvatar" />
+		<NcAvatar :is-no-user="true"
+			class="sharing-entry__avatar">
+			<template #icon>
+				<span class="icon icon-upload-to-cloud" />
+			</template>
+		</NcAvatar>
 
 		<div class="sharing-entry__summary" @click.prevent="toggleQuickShareSelect">
 			<component :is="share.shareWithLink ? 'a' : 'div'"
@@ -168,10 +168,6 @@ export default {
 		&-unique {
 			color: var(--color-text-maxcontrast);
 		}
-	}
-
-	&__actions {
-		margin-left: auto;
 	}
 
 	&__summary {
