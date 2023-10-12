@@ -72,6 +72,7 @@
 			:aria-label="actionsTooltip"
 			menu-align="right"
 			:open.sync="open"
+			:force-menu="true"
 			@close="onNewLinkShare">
 			<!-- pending data menu -->
 			<NcActionText v-if="errors.pending"

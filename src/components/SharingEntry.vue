@@ -47,21 +47,35 @@
 				:toggle="showDropdown"
 				@open-sharing-details="openShareDetailsForCustomSettings(share)" />
 		</div>
-		<NcButton class="sharing-entry__action"
-			:aria-label="t('files_sharing', 'Open Sharing Details')"
-			type="tertiary-no-background"
-			@click="openSharingDetails(share)">
-			<template #icon>
-				<DotsHorizontalIcon :size="20" />
+		<NcActions class="sharing-entry__actions"
+			menu-align="right"
+			:force-menu="true"
+			:open.sync="open"
+			@close="onMenuClose">
+			<template v-if="share">
+				<template v-if="share.canEdit && canReshare">
+					<NcActionButton icon="icon-edit"
+						:disabled="saving"
+						@click.prevent="openSharingDetails(share)">
+						{{ t('nmcsharing', 'Advanced permissions') }}
+					</NcActionButton>
+				</template>
+				<NcActionButton v-if="share.canDelete"
+					icon="icon-delete"
+					:disabled="saving"
+					@click.prevent="onDelete">
+					{{ t('files_sharing', 'Unshare') }}
+				</NcActionButton>
 			</template>
-		</NcButton>
+		</NcActions>
 	</li>
 </template>
 
 <script>
-import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
 import NcSelect from '@nextcloud/vue/dist/Components/NcSelect.js'
 import NcAvatar from '@nextcloud/vue/dist/Components/NcAvatar.js'
+import NcActions from '@nextcloud/vue/dist/Components/NcActions.js'
+import NcActionButton from '@nextcloud/vue/dist/Components/NcActionButton.js'
 import DotsHorizontalIcon from 'vue-material-design-icons/DotsHorizontal.vue'
 
 import QuickShareSelect from './SharingEntryQuickShareSelect.vue'
@@ -73,14 +87,23 @@ export default {
 	name: 'SharingEntry',
 
 	components: {
-		NcButton,
 		NcAvatar,
+		NcActions,
+		NcActionButton,
 		DotsHorizontalIcon,
 		NcSelect,
 		QuickShareSelect,
 	},
 
 	mixins: [SharesMixin, ShareDetails],
+
+	props: {
+		// TODO add reshare property
+		canReshare: {
+			type: Boolean,
+			default: true,
+		},
+	},
 
 	data() {
 		return {
