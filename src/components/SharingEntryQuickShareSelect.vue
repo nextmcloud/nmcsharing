@@ -1,6 +1,6 @@
 <template>
 	<div ref="quickShareDropdownContainer"
-		:class="{ 'active': showDropdown, 'share-select': true }">
+		:class="{ 'active': showDropdown, 'share-select': true, 'disabled': disabled }">
 		<span :id="dropdownId"
 			class="trigger-text"
 			:aria-expanded="showDropdown"
@@ -53,6 +53,11 @@ export default {
 			required: true,
 		},
 		toggle: {
+			type: Boolean,
+			default: false,
+		},
+		// TODO apply based on mime type
+		disabled: {
 			type: Boolean,
 			default: false,
 		},
@@ -224,7 +229,7 @@ export default {
 		display: flex;
 		flex-direction: row;
 		align-items: center;
-		font-size: 12.5px;
+		font-size: 14px;
 		gap: 2px;
 		color: var(--color-primary-element);
 	}
@@ -255,8 +260,8 @@ export default {
 			white-space: nowrap;
 			text-align: left;
 
-			&:hover, &.selected {
-				background-color: var(--color-background-hover);
+			&:hover {
+				color: var(--telekom-color-primary-standard)
 			}
 		}
 	}
@@ -271,6 +276,10 @@ export default {
 	&.active .share-select-dropdown {
 		max-height: 200px;
 		/* Adjust the value to your desired height */
+	}
+
+	&.disabled .trigger-text {
+		color: #666;
 	}
 }
 </style>
