@@ -29,8 +29,7 @@
 					:class="{
 						'icon-default': !share,
 						'icon-user': isEmailShareType,
-						'icon-link': isLinkShareType,
-						'icon-upload-to-cloud': isUserShareType}" />
+						'icon-link': isLinkShareType}" />
 			</template>
 		</NcAvatar>
 		<div class="sharing-entry__desc" @click.prevent="toggleQuickShareSelect">
@@ -399,12 +398,6 @@ export default {
 		isLinkShareType() {
 			return this.share
 				? this.share.type === this.SHARE_TYPES.SHARE_TYPE_LINK
-				: false
-		},
-
-		isUserShareType() {
-			return this.share
-				? this.share.type === this.SHARE_TYPES.SHARE_TYPE_GROUP
 				: false
 		},
 
