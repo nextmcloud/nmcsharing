@@ -27,6 +27,7 @@
 			:file-info="fileInfo"
 			:share="share"
 			:is-unique="isUnique(share)"
+			@remove:share="removeShare"
 			@open-sharing-details="openSharingDetails(share)" />
 	</ul>
 </template>
@@ -68,6 +69,18 @@ export default {
 					return share.type === this.SHARE_TYPES.SHARE_TYPE_USER && share.shareWithDisplayName === item.shareWithDisplayName
 				}).length <= 1
 			}
+		},
+	},
+	methods: {
+		/**
+		 * Remove a share from the shares list
+		 *
+		 * @param {Share} share the share to remove
+		 */
+		 removeShare(share) {
+			const index = this.shares.findIndex(item => item === share)
+			// eslint-disable-next-line vue/no-mutating-props
+			this.shares.splice(index, 1)
 		},
 	},
 }
