@@ -1,7 +1,7 @@
 OC.L10N.register(
 	'nmcsharing',
 	{
-		Sharing: '',
+		Sharing: 'Teilen',
 		'Add link': 'Link erstellen',
 		'Read only': 'Nur lesen',
 		'Can edit': 'Kann bearbeiten',
@@ -18,5 +18,6 @@ OC.L10N.register(
 		'No shares created yet.': 'Noch keine Freigaben erstellt.',
 		'Advanced permissions': 'Erweiterte Berechtigungen',
 		'Allow resharing': 'Weiterteilen erlauben',
+		'You can create links or send shares by mail. If you invite MagentaCLOUD users, you have more opportunities for collaboration.': 'Sie können Links erstellen oder Freigaben per Mail versenden. Wenn Sie MagentaCLOUD Nutzer einladen, bieten sich Ihnen mehr Möglichkeiten der Zusammenarbeit.',
 	},
 	'nplurals=2; plural=(n != 1);')

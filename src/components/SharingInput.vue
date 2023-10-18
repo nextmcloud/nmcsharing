@@ -22,7 +22,7 @@
 
 <template>
 	<div class="sharing-search">
-		<label for="sharing-search-input">{{ t('files_sharing', 'You can create links or send shares by mail. If you invite MagentaCLOUD users, you have more opportunities for collaboration.') }}</label>
+		<label for="sharing-search-input">{{ t('nmcsharing', 'You can create links or send shares by mail. If you invite MagentaCLOUD users, you have more opportunities for collaboration.') }}</label>
 		<NcSelect ref="select"
 			v-model="value"
 			input-id="sharing-search-input"
