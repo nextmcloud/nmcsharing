@@ -138,6 +138,7 @@ export default {
 		hasCustomPermissions() {
 			const bundledPermissions = [
 				BUNDLED_PERMISSIONS.ALL,
+				BUNDLED_PERMISSIONS.ALL_FILE,
 				BUNDLED_PERMISSIONS.READ_ONLY,
 				BUNDLED_PERMISSIONS.FILE_DROP,
 			]

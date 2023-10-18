@@ -38,6 +38,7 @@ import ShareTypes from '../mixins/ShareTypes.js'
 import {
 	BUNDLED_PERMISSIONS,
 	ATOMIC_PERMISSIONS,
+	hasPermissions,
 } from '../lib/SharePermissionsToolBox.js'
 
 import { createFocusTrap } from 'focus-trap'
@@ -83,12 +84,16 @@ export default {
 			return t('files_sharing', 'Custom permissions')
 		},
 		preSelectedOption() {
-			// We remove the share permission for the comparison as it is not relevant for bundled permissions.
-			if ((this.share.permissions & ~ATOMIC_PERMISSIONS.SHARE) === BUNDLED_PERMISSIONS.READ_ONLY) {
+			let permissions = this.share.permissions
+			if (hasPermissions(this.share.permissions, ATOMIC_PERMISSIONS.SHARE)) {
+				// We remove the share permission for the comparison as it is not relevant for bundled permissions.
+				permissions = this.share.permissions & ~ATOMIC_PERMISSIONS.SHARE
+			}
+			if (permissions === BUNDLED_PERMISSIONS.READ_ONLY) {
 				return this.canViewText
-			} else if (this.share.permissions === BUNDLED_PERMISSIONS.ALL || this.share.permissions === BUNDLED_PERMISSIONS.ALL_FILE) {
+			} else if (permissions === BUNDLED_PERMISSIONS.ALL || permissions === BUNDLED_PERMISSIONS.ALL_FILE) {
 				return this.canEditText
-			} else if ((this.share.permissions & ~ATOMIC_PERMISSIONS.SHARE) === BUNDLED_PERMISSIONS.FILE_DROP) {
+			} else if (permissions === BUNDLED_PERMISSIONS.FILE_DROP) {
 				return this.fileDropText
 			}
 

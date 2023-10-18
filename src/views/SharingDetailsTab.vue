@@ -15,7 +15,7 @@
 				</NcCheckboxRadioSwitch>
 				<NcCheckboxRadioSwitch :checked.sync="sharingPermission"
 					:disabled="!isFolder && (isLinkShare || isEmailShare)"
-					:value="bundledPermissions.ALL.toString()"
+					:value="isFolder ? bundledPermissions.ALL.toString() : bundledPermissions.ALL_FILE.toString()"
 					name="sharing_permission_radio"
 					type="radio"
 					@update:checked="toggleCustomPermissions">
@@ -590,12 +590,7 @@ export default {
 				this.share.type = this.share.shareType
 			}
 			if (this.isNewShare) {
-				if (this.isPublicShare) {
-					this.sharingPermission = BUNDLED_PERMISSIONS.READ_ONLY.toString()
-				} else {
-					this.sharingPermission = BUNDLED_PERMISSIONS.ALL.toString()
-				}
-
+				this.sharingPermission = BUNDLED_PERMISSIONS.READ_ONLY.toString()
 			} else {
 				if (this.hasCustomPermissions || this.share.setCustomPermissions) {
 					this.sharingPermission = 'custom'
