@@ -97,6 +97,10 @@
 				<DownloadLimit v-if="(isLinkShare || isEmailShare) && !isNewShare && !isFolder"
 					:share="share"
 					:file-info="fileInfo" />
+				<NcCheckboxRadioSwitch v-if="!isPublicShare && resharingAllowedGlobal"
+					:checked.sync="allowResharingIsChecked">
+					{{ t('nmcsharing', 'Allow resharing') }}
+				</NcCheckboxRadioSwitch>
 			</section>
 		</div>
 
@@ -161,10 +165,15 @@ export default {
 			type: Object,
 			required: true,
 		},
+		resharingAllowedGlobal: {
+			type: Boolean,
+			required: true,
+		},
 	},
 	data() {
 		return {
 			writeNoteToRecipientIsChecked: false,
+			allowResharingIsChecked: this.share.hasSharePermission,
 			sharingPermission: BUNDLED_PERMISSIONS.ALL.toString(),
 			revertSharingPermission: null,
 			setCustomPermissions: false,
@@ -592,10 +601,8 @@ export default {
 			if (this.isNewShare) {
 				this.sharingPermission = BUNDLED_PERMISSIONS.READ_ONLY.toString()
 			} else {
-				if (this.hasCustomPermissions || this.share.setCustomPermissions) {
-					this.sharingPermission = 'custom'
-					this.advancedSectionAccordionExpanded = true
-					this.setCustomPermissions = true
+				if (this.canReshare) {
+					this.sharingPermission = (this.share.permissions & ~ATOMIC_PERMISSIONS.SHARE).toString()
 				} else {
 					this.sharingPermission = this.share.permissions.toString()
 				}
@@ -617,6 +624,13 @@ export default {
 			if (!this.isFolder && this.share.permissions === BUNDLED_PERMISSIONS.ALL) {
 				// It's not possible to create an existing file.
 				this.share.permissions = BUNDLED_PERMISSIONS.ALL_FILE
+			}
+			// add SHARE permission if share doesn't have it, 'Allow resharing' is checked and Resharing is enabled globally
+			if (this.allowResharingIsChecked && !this.canReshare && this.resharingAllowedGlobal) {
+				this.share.permissions |= ATOMIC_PERMISSIONS.SHARE
+			// remove SHARE permission if internal share, 'Allow resharing' is unchecked and it initially had SHARE permission
+			} else if (!this.isPublicShare && this.canReshare && !this.allowResharingIsChecked) {
+				this.share.permissions = this.share.permissions & ~ATOMIC_PERMISSIONS.SHARE
 			}
 			if (!this.writeNoteToRecipientIsChecked) {
 				this.share.note = ''

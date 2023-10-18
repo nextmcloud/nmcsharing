@@ -74,6 +74,7 @@
 		<div v-else>
 			<SharingDetailsTab :file-info="shareDetailsData.fileInfo"
 				:share="shareDetailsData.share"
+				:resharing-allowed-global="config.isResharingAllowed"
 				@close-sharing-details="toggleShareDetailsView"
 				@add:share="addShare"
 				@remove:share="removeShare" />

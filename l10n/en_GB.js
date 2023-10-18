@@ -17,5 +17,6 @@ OC.L10N.register(
 		'Your shares': 'Your shares',
 		'No shares created yet.': 'No shares created yet.',
 		'Advanced permissions': 'Advanced permissions',
+		'Allow resharing': 'Allow resharing',
 	},
 	'nplurals=2; plural=(n != 1);')
