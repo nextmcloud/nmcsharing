@@ -22,9 +22,12 @@
 
 <template>
 	<div class="sharing-search">
-		<label for="sharing-search-input">
-			{{ canReshare && isSharedWithMe ? `${t('nmcsharing', 'Resharing is allowed')}. ` : '' }}
+		<label v-if="canReshare" for="sharing-search-input">
+			{{ isSharedWithMe ? `${t('nmcsharing', 'Resharing is allowed')}. ` : '' }}
 			{{ t('nmcsharing', 'You can create links or send shares by mail. If you invite MagentaCLOUD users, you have more opportunities for collaboration.') }}
+		</label>
+		<label v-else>
+			{{ t('files_sharing', 'Resharing is not allowed') }}
 		</label>
 		<NcSelect v-if="canReshare"
 			ref="select"
@@ -96,7 +99,7 @@ export default {
 		},
 		isSharedWithMe: {
 			type: Boolean,
-			required: false,
+			required: true,
 		},
 	},
 
