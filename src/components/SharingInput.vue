@@ -181,14 +181,6 @@ export default {
 
 			const shareType = [
 				this.SHARE_TYPES.SHARE_TYPE_USER,
-				this.SHARE_TYPES.SHARE_TYPE_GROUP,
-				this.SHARE_TYPES.SHARE_TYPE_REMOTE,
-				this.SHARE_TYPES.SHARE_TYPE_REMOTE_GROUP,
-				this.SHARE_TYPES.SHARE_TYPE_CIRCLE,
-				this.SHARE_TYPES.SHARE_TYPE_ROOM,
-				this.SHARE_TYPES.SHARE_TYPE_GUEST,
-				this.SHARE_TYPES.SHARE_TYPE_DECK,
-				this.SHARE_TYPES.SHARE_TYPE_SCIENCEMESH,
 			]
 
 			if (OC.getCapabilities().files_sharing.public.enabled === true) {
