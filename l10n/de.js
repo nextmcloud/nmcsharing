@@ -18,6 +18,7 @@ OC.L10N.register(
 		'No shares created yet.': 'Noch keine Freigaben erstellt.',
 		'Advanced permissions': 'Erweiterte Berechtigungen',
 		'Allow resharing': 'Weiterteilen erlauben',
+		'Set download limit': 'Downloads begrenzen',
 		'You can create links or send shares by mail. If you invite MagentaCLOUD users, you have more opportunities for collaboration.': 'Sie können Links erstellen oder Freigaben per Mail versenden. Wenn Sie MagentaCLOUD Nutzer einladen, bieten sich Ihnen mehr Möglichkeiten der Zusammenarbeit.',
 	},
 	'nplurals=2; plural=(n != 1);')

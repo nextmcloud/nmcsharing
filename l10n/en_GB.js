@@ -18,6 +18,7 @@ OC.L10N.register(
 		'No shares created yet.': 'No shares created yet.',
 		'Advanced permissions': 'Advanced permissions',
 		'Allow resharing': 'Allow resharing',
+		'Set download limit': 'Set download limit',
 		'You can create links or send shares by mail. If you invite MagentaCLOUD users, you have more opportunities for collaboration.': 'You can create links or send shares by mail. If you invite MagentaCLOUD users, you have more opportunities for collaboration.',
 	},
 	'nplurals=2; plural=(n != 1);')
