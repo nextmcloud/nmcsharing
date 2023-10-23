@@ -22,8 +22,12 @@
 
 <template>
 	<div class="sharing-search">
-		<label for="sharing-search-input">{{ t('nmcsharing', 'You can create links or send shares by mail. If you invite MagentaCLOUD users, you have more opportunities for collaboration.') }}</label>
-		<NcSelect ref="select"
+		<label for="sharing-search-input">
+			{{ canReshare && isSharedWithMe ? `${t('nmcsharing', 'Resharing is allowed')}. ` : '' }}
+			{{ t('nmcsharing', 'You can create links or send shares by mail. If you invite MagentaCLOUD users, you have more opportunities for collaboration.') }}
+		</label>
+		<NcSelect v-if="canReshare"
+			ref="select"
 			v-model="value"
 			input-id="sharing-search-input"
 			class="sharing-search__input"
@@ -89,6 +93,10 @@ export default {
 		canReshare: {
 			type: Boolean,
 			required: true,
+		},
+		isSharedWithMe: {
+			type: Boolean,
+			required: false,
 		},
 	},
 

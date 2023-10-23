@@ -22,32 +22,20 @@
 
 <template>
 	<li class="sharing-entry">
-		<slot name="avatar" />
+		<span class="icon icon-upload-to-cloud" />
 		<div class="sharing-entry__desc">
 			<span class="sharing-entry__title">{{ title }}</span>
 			<p v-if="subtitle">
 				{{ subtitle }}
 			</p>
 		</div>
-		<NcActions v-if="$slots['default']"
-			ref="actionsComponent"
-			class="sharing-entry__actions"
-			menu-align="right"
-			:aria-expanded="ariaExpandedValue">
-			<slot />
-		</NcActions>
 	</li>
 </template>
 
 <script>
-import NcActions from '@nextcloud/vue/dist/Components/NcActions.js'
 
 export default {
 	name: 'SharingEntrySimple',
-
-	components: {
-		NcActions,
-	},
 
 	props: {
 		title: {
@@ -59,23 +47,6 @@ export default {
 			type: String,
 			default: '',
 		},
-		isUnique: {
-			type: Boolean,
-			default: true,
-		},
-		ariaExpanded: {
-			type: Boolean,
-			default: null,
-		},
-	},
-
-	computed: {
-		ariaExpandedValue() {
-			if (this.ariaExpanded === null) {
-				return this.ariaExpanded
-			}
-			return this.ariaExpanded ? 'true' : 'false'
-		},
 	},
 }
 </script>
@@ -83,10 +54,14 @@ export default {
 <style lang="scss" scoped>
 .sharing-entry {
 	display: flex;
-	align-items: center;
-	min-height: 44px;
+	align-items: start;
+	.icon {
+		min-width: 30px;
+		min-height: 1.2rem;
+		filter: invert(61%) sepia(98%) saturate(4546%) hue-rotate(181deg) brightness(99%) contrast(109%);
+	}
 	&__desc {
-		padding: 8px;
+		padding: 0 8px 16px;
 		line-height: 1.2em;
 		position: relative;
 		flex: 1 1;
@@ -100,9 +75,6 @@ export default {
 		text-overflow: ellipsis;
 		overflow: hidden;
 		max-width: inherit;
-	}
-	&__actions {
-		margin-left: auto !important;
 	}
 }
 </style>

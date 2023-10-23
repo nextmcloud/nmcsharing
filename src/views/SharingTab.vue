@@ -33,13 +33,7 @@
 				{{ t('nmcsharing', 'Sharing') }}
 			</h2>
 			<!-- shared with me information -->
-			<SharingEntrySimple v-if="isSharedWithMe" v-bind="sharedWithMe" class="sharing-entry__reshare">
-				<template #avatar>
-					<NcAvatar :user="sharedWithMe.user"
-						:display-name="sharedWithMe.displayName"
-						class="sharing-entry__avatar" />
-				</template>
-			</SharingEntrySimple>
+			<SharingEntrySimple v-if="isSharedWithMe" v-bind="sharedWithMe" class="sharing-entry__reshare" />
 
 			<!-- add new share input -->
 			<SharingInput v-if="!loading"
@@ -48,6 +42,7 @@
 				:link-shares="linkShares"
 				:reshare="reshare"
 				:shares="shares"
+				:is-shared-with-me="isSharedWithMe"
 				@open-sharing-details="toggleShareDetailsView" />
 
 			<!-- link shares list -->
