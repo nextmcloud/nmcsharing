@@ -88,7 +88,7 @@
 					:placeholder="t('files_sharing', 'Expiration date')"
 					type="date"
 					@input="onExpirationChange" />
-				<NcCheckboxRadioSwitch :checked.sync="writeNoteToRecipientIsChecked">
+				<NcCheckboxRadioSwitch v-if="(isLinkShare || isEmailShare)" :checked.sync="writeNoteToRecipientIsChecked">
 					{{ t('files_sharing', 'Note to recipient') }}
 				</NcCheckboxRadioSwitch>
 				<template v-if="writeNoteToRecipientIsChecked">
