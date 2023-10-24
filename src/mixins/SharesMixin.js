@@ -39,6 +39,7 @@ import Config from '../services/ConfigService.js'
 import {
 	BUNDLED_PERMISSIONS,
 } from '../lib/SharePermissionsToolBox.js'
+import { COLLABORA_MIME_TYPES } from '../utils/CollaboraMimeTypes.js'
 
 export default {
 	mixins: [SharesRequests, ShareTypes],
@@ -143,6 +144,10 @@ export default {
 				BUNDLED_PERMISSIONS.FILE_DROP,
 			]
 			return !bundledPermissions.includes(this.share.permissions)
+		},
+		isPermissionEditAllowed() {
+			if (this.fileInfo.type === 'dir') return true
+			return !this.isPublicShare || COLLABORA_MIME_TYPES.includes(this.fileInfo.mimetype)
 		},
 	},
 

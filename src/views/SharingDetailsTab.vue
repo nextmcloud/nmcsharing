@@ -6,7 +6,7 @@
 		<div class="sharingTabDetailsView__quick-permissions">
 			<div>
 				<NcCheckboxRadioSwitch :checked.sync="sharingPermission"
-					:disabled="!isFolder && (isLinkShare || isEmailShare)"
+					:disabled="!isPermissionEditAllowed"
 					:value="bundledPermissions.READ_ONLY.toString()"
 					name="sharing_permission_radio"
 					type="radio"
@@ -14,7 +14,7 @@
 					{{ t('nmcsharing', 'Read only') }}
 				</NcCheckboxRadioSwitch>
 				<NcCheckboxRadioSwitch :checked.sync="sharingPermission"
-					:disabled="!isFolder && (isLinkShare || isEmailShare)"
+					:disabled="!isPermissionEditAllowed"
 					:value="isFolder ? bundledPermissions.ALL.toString() : bundledPermissions.ALL_FILE.toString()"
 					name="sharing_permission_radio"
 					type="radio"

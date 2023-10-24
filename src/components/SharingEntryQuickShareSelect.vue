@@ -1,6 +1,6 @@
 <template>
 	<div ref="quickShareDropdownContainer"
-		:class="{ 'active': showDropdown, 'share-select': true, 'disabled': disabled }">
+		:class="{ 'active': showDropdown, 'share-select': true, 'disabled': !isPermissionEditAllowed }">
 		<span :id="dropdownId"
 			class="trigger-text"
 			:aria-expanded="showDropdown"
@@ -149,6 +149,9 @@ export default {
 	},
 	methods: {
 		toggleDropdown() {
+			if (!this.isPermissionEditAllowed) {
+				return
+			}
 			this.showDropdown = !this.showDropdown
 			if (this.showDropdown) {
 				this.$nextTick(() => {

@@ -757,6 +757,9 @@ export default {
 		},
 
 		toggleQuickShareSelect() {
+			if (!this.isPermissionEditAllowed) {
+				return
+			}
 			this.showDropdown = !this.showDropdown
 		},
 	},
