@@ -562,7 +562,7 @@ export default {
 
 ul.vs__dropdown-menu {
 	--vs-border-width: 1px;
-	--vs-dropdown-option-padding: 16px 8px;
+	--vs-dropdown-option-padding: 16px 16px 16px 8px;
 	padding: 0px !important;
 	.vs__dropdown-option {
 		border-radius: 0px !important;
@@ -576,6 +576,7 @@ ul.vs__dropdown-menu {
 		}
 		// add a new icon definition
 		.icon {
+			background-size: 24px;
 			background-position: right;
 			.icon-upload-to-cloud {
 				background-image: var(--icon-upload-to-cloud-dark);
