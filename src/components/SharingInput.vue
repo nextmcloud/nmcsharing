@@ -344,10 +344,11 @@ export default {
 						}
 					}
 
-					// filter out existing mail shares
+					// filter out existing mail shares and invalid emails
 					if (share.value.shareType === this.SHARE_TYPES.SHARE_TYPE_EMAIL) {
 						const emails = this.linkShares.map(elem => elem.shareWith)
-						if (emails.indexOf(share.value.shareWith.trim()) !== -1) {
+						const emailRegex = /\S+@\S+\.\S+/
+						if (emails.indexOf(share.value.shareWith.trim()) !== -1 || !emailRegex.test(share.value.shareWith)) {
 							return arr
 						}
 					} else { // filter out existing shares
