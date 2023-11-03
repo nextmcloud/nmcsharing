@@ -21,8 +21,8 @@
   -->
 
 <template>
-	<ul v-if="canLinkShare" class="sharing-link-list">
-		<AddLinkButton v-if="canReshare" :file-info="fileInfo" @add:share="addShare" />
+	<ul v-if="canLinkShare && canReshare" class="sharing-link-list">
+		<AddLinkButton :file-info="fileInfo" @add:share="addShare" />
 		<h1>
 			<strong>{{ t('nmcsharing', 'Your shares') }}</strong>
 		</h1>

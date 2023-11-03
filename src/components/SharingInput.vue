@@ -558,6 +558,9 @@ export default {
 		min-width: auto;
 		width: 100%;
 		margin: 16px 0 12px;
+		input {
+			opacity: 1;
+		}
 	}
 };
 
