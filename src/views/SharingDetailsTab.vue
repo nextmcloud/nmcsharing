@@ -88,10 +88,10 @@
 					:placeholder="t('files_sharing', 'Expiration date')"
 					type="date"
 					@input="onExpirationChange" />
-				<NcCheckboxRadioSwitch v-if="(isLinkShare || isEmailShare)" :checked.sync="writeNoteToRecipientIsChecked">
+				<NcCheckboxRadioSwitch v-if="isEmailShare" :checked.sync="writeNoteToRecipientIsChecked">
 					{{ t('files_sharing', 'Note to recipient') }}
 				</NcCheckboxRadioSwitch>
-				<template v-if="writeNoteToRecipientIsChecked">
+				<template v-if="writeNoteToRecipientIsChecked && isEmailShare">
 					<textarea :value="share.note" @input="share.note = $event.target.value" />
 				</template>
 				<DownloadLimit v-if="(isLinkShare || isEmailShare) && !isNewShare && !isFolder"
