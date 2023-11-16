@@ -298,7 +298,7 @@ export default {
 
 						// clear any previous errors
 						this.$delete(this.errors, propertyNames[0])
-						// showSuccess(t('files_sharing', 'Share {propertyName} saved', { propertyName: propertyNames[0] }))
+						showSuccess(t('nmcsharing', 'Share updated'))
 					} catch ({ message }) {
 						if (message && message !== '') {
 							this.onSyncError(propertyNames[0], message)

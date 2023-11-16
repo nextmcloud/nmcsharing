@@ -21,5 +21,6 @@ OC.L10N.register(
 		'Set download limit': 'Downloads begrenzen',
 		'Resharing is allowed': 'Weiterteilen ist erlaubt',
 		'You can create links or send shares by mail. If you invite MagentaCLOUD users, you have more opportunities for collaboration.': 'Sie können Links erstellen oder Freigaben per Mail versenden. Wenn Sie MagentaCLOUD Nutzer einladen, bieten sich Ihnen mehr Möglichkeiten der Zusammenarbeit.',
+		'Share updated': 'Freigabe aktualisiert',
 	},
 	'nplurals=2; plural=(n != 1);')

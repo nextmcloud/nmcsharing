@@ -21,5 +21,6 @@ OC.L10N.register(
 		'Set download limit': 'Set download limit',
 		'Resharing is allowed': 'Resharing is allowed',
 		'You can create links or send shares by mail. If you invite MagentaCLOUD users, you have more opportunities for collaboration.': 'You can create links or send shares by mail. If you invite MagentaCLOUD users, you have more opportunities for collaboration.',
+		'Share updated': 'Share updated',
 	},
 	'nplurals=2; plural=(n != 1);')
