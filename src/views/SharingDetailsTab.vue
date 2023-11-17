@@ -192,16 +192,6 @@ export default {
 				title = title + this.share.shareWithDisplayName
 			} else if (this.share.type === this.SHARE_TYPES.SHARE_TYPE_LINK) {
 				title = t('files_sharing', 'Share link')
-			} else if (this.share.type === this.SHARE_TYPES.SHARE_TYPE_GROUP) {
-				title += ` (${t('files_sharing', 'group')})`
-			} else if (this.share.type === this.SHARE_TYPES.SHARE_TYPE_ROOM) {
-				title += ` (${t('files_sharing', 'conversation')})`
-			} else if (this.share.type === this.SHARE_TYPES.SHARE_TYPE_REMOTE) {
-				title += ` (${t('files_sharing', 'remote')})`
-			} else if (this.share.type === this.SHARE_TYPES.SHARE_TYPE_REMOTE_GROUP) {
-				title += ` (${t('files_sharing', 'remote group')})`
-			} else if (this.share.type === this.SHARE_TYPES.SHARE_TYPE_GUEST) {
-				title += ` (${t('files_sharing', 'guest')})`
 			}
 
 			return title
