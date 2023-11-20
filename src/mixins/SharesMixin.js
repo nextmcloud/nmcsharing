@@ -277,6 +277,8 @@ export default {
 				propertyNames.forEach(name => {
 					if ((typeof this.share[name]) === 'object') {
 						properties[name] = JSON.stringify(this.share[name])
+					} else if (this.mutableShare && name === 'note') {
+						properties[name] = this.mutableShare[name] || ''
 					} else {
 						properties[name] = this.share[name].toString()
 					}
@@ -298,6 +300,7 @@ export default {
 
 						// clear any previous errors
 						this.$delete(this.errors, propertyNames[0])
+						this.share.note = updatedShare.note
 						showSuccess(t('nmcsharing', 'Share updated'))
 					} catch ({ message }) {
 						if (message && message !== '') {

@@ -92,7 +92,7 @@
 					{{ t('files_sharing', 'Note to recipient') }}
 				</NcCheckboxRadioSwitch>
 				<template v-if="writeNoteToRecipientIsChecked && isEmailShare">
-					<textarea :value="share.note" @input="share.note = $event.target.value" />
+					<textarea :value="mutableShare.note" @input="mutableShare.note = $event.target.value" />
 				</template>
 				<DownloadLimit v-if="(isLinkShare || isEmailShare) && !isNewShare && !isFolder"
 					:share="share"
@@ -182,6 +182,9 @@ export default {
 			bundledPermissions: BUNDLED_PERMISSIONS,
 			isFirstComponentLoad: true,
 			test: false,
+			mutableShare: {
+				note: this.share.note,
+			},
 		}
 	},
 
@@ -623,7 +626,7 @@ export default {
 				this.share.permissions = this.share.permissions & ~ATOMIC_PERMISSIONS.SHARE
 			}
 			if (!this.writeNoteToRecipientIsChecked) {
-				this.share.note = ''
+				this.mutableShare.note = ''
 			}
 
 			if (this.isPasswordProtected) {
@@ -650,7 +653,7 @@ export default {
 					shareType: this.share.type,
 					shareWith: this.share.shareWith,
 					attributes: this.share.attributes,
-					note: this.share.note,
+					note: this.mutableShare.note,
 				}
 
 				if (this.hasExpirationDate) {
