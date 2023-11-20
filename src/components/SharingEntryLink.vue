@@ -741,7 +741,7 @@ export default {
 		 * Save potential changed data on menu close
 		 */
 		onMenuClose() {
-			this.onPasswordSubmit()
+			// this.onPasswordSubmit()
 			this.onNoteSubmit()
 		},
 

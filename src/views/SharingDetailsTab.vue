@@ -60,7 +60,7 @@
 					</NcCheckboxRadioSwitch>
 					<NcInputField v-if="isPasswordProtected"
 						:type="hasUnsavedPassword ? 'text' : 'password'"
-						:value="hasUnsavedPassword ? share.newPassword : '***************'"
+						:value="hasUnsavedPassword ? mutableShare.password : '***************'"
 						:error="passwordError"
 						:required="isPasswordEnforced"
 						@update:value="onPasswordChange" />
@@ -184,6 +184,7 @@ export default {
 			test: false,
 			mutableShare: {
 				note: this.share.note,
+				password: this.share.password,
 			},
 		}
 	},
@@ -289,12 +290,10 @@ export default {
 		isPasswordProtected: {
 			get() {
 				return this.config.enforcePasswordForPublicLink
-					|| !!this.share.password
+					|| !!this.mutableShare.password
 			},
 			async set(enabled) {
-				// TODO: directly save after generation to make sure the share is always protected
-				this.share.password = enabled ? await GeneratePassword() : ''
-				this.$set(this.share, 'newPassword', this.share.password)
+				this.mutableShare.password = enabled ? await GeneratePassword() : ''
 			},
 		},
 		/**
@@ -441,10 +440,10 @@ export default {
 			// allowed to revoke it too (but not to grant it again).
 			return (this.fileInfo.canDownload() || this.canDownload)
 		},
-		// if newPassword exists, but is empty, it means
+		// if password in mutableShare differs then it means
 		// the user deleted the original password
 		hasUnsavedPassword() {
-			return this.share.newPassword !== undefined
+			return this.mutableShare.password !== this.share.password
 		},
 		passwordExpirationTime() {
 			if (this.share.passwordExpirationTime === null || this.share.passwordExpirationTime === undefined) {
@@ -630,17 +629,13 @@ export default {
 			}
 
 			if (this.isPasswordProtected) {
-				if (this.isValidShareAttribute(this.share.newPassword)) {
-					this.share.password = this.share.newPassword
-					this.$delete(this.share, 'newPassword')
-				} else {
-					if (this.isPasswordEnforced) {
-						this.passwordError = true
-						return
-					}
+				if (!this.isValidShareAttribute(this.mutableShare.password) && this.isPasswordEnforced) {
+					this.passwordError = true
+					return
 				}
+				this.mutableShare.password = this.mutableShare.password || ''
 			} else {
-				this.share.password = ''
+				this.mutableShare.password = ''
 			}
 
 			if (!this.hasExpirationDate) {
@@ -661,7 +656,7 @@ export default {
 				}
 
 				if (this.isPasswordProtected) {
-					incomingShare.password = this.share.password
+					incomingShare.password = this.mutableShare.password
 				}
 
 				const share = await this.addShare(incomingShare, this.fileInfo, this.config)
@@ -728,7 +723,8 @@ export default {
 		 */
 		onPasswordChange(password) {
 			this.passwordError = !this.isValidShareAttribute(password)
-			this.$set(this.share, 'newPassword', password)
+			this.mutableShare.password = password
+			// this.$set(this.share, 'newPassword', password)
 		},
 		isValidShareAttribute(value) {
 			if ([null, undefined].includes(value)) {

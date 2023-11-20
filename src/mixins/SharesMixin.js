@@ -275,10 +275,10 @@ export default {
 				// force value to string because that is what our
 				// share api controller accepts
 				propertyNames.forEach(name => {
-					if ((typeof this.share[name]) === 'object') {
+					if (this.mutableShare && (name === 'note' || name === 'password')) {
+						properties[name] = this.mutableShare[name].toString()
+					} else if ((typeof this.share[name]) === 'object') {
 						properties[name] = JSON.stringify(this.share[name])
-					} else if (this.mutableShare && name === 'note') {
-						properties[name] = this.mutableShare[name] || ''
 					} else {
 						properties[name] = this.share[name].toString()
 					}
@@ -296,6 +296,7 @@ export default {
 
 							// updates password expiration time after sync
 							this.share.passwordExpirationTime = updatedShare.password_expiration_time
+							this.share.password = this.mutableShare.password
 						}
 
 						// clear any previous errors
