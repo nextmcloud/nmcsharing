@@ -122,12 +122,8 @@ import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
 import NcInputField from '@nextcloud/vue/dist/Components/NcInputField.js'
 import NcDateTimePickerNative from '@nextcloud/vue/dist/Components/NcDateTimePickerNative.js'
 import NcCheckboxRadioSwitch from '@nextcloud/vue/dist/Components/NcCheckboxRadioSwitch.js'
-import CircleIcon from 'vue-material-design-icons/CircleOutline.vue'
 import EmailIcon from 'vue-material-design-icons/Email.vue'
 import LinkIcon from 'vue-material-design-icons/Link.vue'
-import GroupIcon from 'vue-material-design-icons/AccountGroup.vue'
-import ShareIcon from 'vue-material-design-icons/ShareCircle.vue'
-import UserIcon from 'vue-material-design-icons/AccountCircleOutline.vue'
 
 import GeneratePassword from '../utils/GeneratePassword.js'
 import Share from '../models/Share.js'
@@ -741,21 +737,8 @@ export default {
 			switch (type) {
 			case this.SHARE_TYPES.SHARE_TYPE_LINK:
 				return LinkIcon
-			case this.SHARE_TYPES.SHARE_TYPE_GUEST:
-				return UserIcon
-			case this.SHARE_TYPES.SHARE_TYPE_REMOTE_GROUP:
-			case this.SHARE_TYPES.SHARE_TYPE_GROUP:
-				return GroupIcon
 			case this.SHARE_TYPES.SHARE_TYPE_EMAIL:
 				return EmailIcon
-			case this.SHARE_TYPES.SHARE_TYPE_CIRCLE:
-				return CircleIcon
-			case this.SHARE_TYPES.SHARE_TYPE_ROOM:
-				return ShareIcon
-			case this.SHARE_TYPES.SHARE_TYPE_DECK:
-				return ShareIcon
-			case this.SHARE_TYPES.SHARE_TYPE_SCIENCEMESH:
-				return ShareIcon
 			default:
 				return null // Or a default icon component if needed
 			}
