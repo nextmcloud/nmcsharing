@@ -53,12 +53,12 @@
 				:shares="linkShares"
 				@open-sharing-details="toggleShareDetailsView" />
 
-			<p v-if="!loading && shares.length === 0 && linkShares.length === 0">
+			<p v-if="!loading && shares.length === 0 && linkShares.length === 0 && canReshare">
 				{{ t('nmcsharing', 'No shares created yet.') }}
 			</p>
 
 			<!-- other shares list -->
-			<SharingList v-if="!loading"
+			<SharingList v-if="!loading && canReshare"
 				ref="shareList"
 				:shares="shares"
 				:file-info="fileInfo"
