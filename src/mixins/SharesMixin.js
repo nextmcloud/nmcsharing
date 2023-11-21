@@ -203,7 +203,9 @@ export default {
 		 * @param {Date} date
 		 */
 		onExpirationChange(date) {
-			this.share.expireDate = this.formatDateToString(new Date(date))
+			try {
+				this.share.expireDate = this.formatDateToString(new Date(date))
+			} catch (error) {}
 		},
 
 		/**
