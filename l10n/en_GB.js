@@ -22,5 +22,6 @@ OC.L10N.register(
 		'Resharing is allowed': 'Resharing is allowed',
 		'You can create links or send shares by mail. If you invite MagentaCLOUD users, you have more opportunities for collaboration.': 'You can create links or send shares by mail. If you invite MagentaCLOUD users, you have more opportunities for collaboration.',
 		'Share updated': 'Share updated',
+		'This share was limited to {limit} downloads. There is still {downloadsLeft} left allowed.': 'This share was limited to {limit} downloads. There is still {downloadsLeft} left allowed.',
 	},
 	'nplurals=2; plural=(n != 1);')

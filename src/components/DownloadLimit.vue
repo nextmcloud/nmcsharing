@@ -4,6 +4,7 @@
 			{{ t('nmcsharing', 'Set download limit') }}
 		</NcCheckboxRadioSwitch>
 		<NcInputField v-if="isLimitEnabled"
+			:title="downloadsLeftTooltip"
 			:value.sync="limit"
 			@update:value="debounceUpdateLimit" />
 	</div>
@@ -40,6 +41,14 @@ export default {
 			loading: false,
 		}
 	},
+	computed: {
+		downloadsLeftTooltip() {
+			if (!parseInt(this.limit) || parseInt(this.limit) < 1) return ''
+			const downloadsLeft = Number(this.limit) - Number(this.count)
+			return t('nmcsharing', 'This share was limited to {limit} downloads. There is still {downloadsLeft} left allowed.',
+				{ limit: this.limit, downloadsLeft })
+		},
+	},
 	beforeMount() {
 		this.getInitialData()
 	},
@@ -75,7 +84,7 @@ export default {
 			} else {
 				await setDownloadLimit(this.token, limit)
 			}
-
+			this.count = '0'
 			this.loading = false
 		}),
 	},
