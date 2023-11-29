@@ -561,6 +561,10 @@ export default {
 		input {
 			opacity: 1;
 		}
+
+		&.vs--searching:not(.vs--open):not(.vs--loading) .vs__search {
+			opacity: 1;
+		}
 	}
 };
 
