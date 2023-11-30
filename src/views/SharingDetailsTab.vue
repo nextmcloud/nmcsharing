@@ -45,7 +45,7 @@
 		<div v-if="advancedSectionAccordionExpanded" class="sharingTabDetailsView__advanced">
 			<section>
 				<NcInputField v-if="isPublicShare"
-					:value.sync="share.label"
+					:value.sync="mutableShare.label"
 					type="text"
 					:placeholder="t('files_sharing', 'Share label')" />
 				<NcCheckboxRadioSwitch v-if="isPublicShare"
@@ -181,6 +181,7 @@ export default {
 			mutableShare: {
 				note: this.share.note,
 				password: this.share.password,
+				label: this.share.label,
 			},
 		}
 	},
@@ -644,6 +645,7 @@ export default {
 					shareType: this.share.type,
 					shareWith: this.share.shareWith,
 					attributes: this.share.attributes,
+					label: this.mutableShare.label,
 					note: this.mutableShare.note,
 				}
 
@@ -695,6 +697,7 @@ export default {
 					...(value.note ? { note: value.note } : {}),
 					...(value.password ? { password: value.password } : {}),
 					...(value.expireDate ? { expireDate: value.expireDate } : {}),
+					...(value.label ? { label: value.label } : {}),
 				})
 				return share
 			} catch (error) {

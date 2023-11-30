@@ -277,7 +277,7 @@ export default {
 				// force value to string because that is what our
 				// share api controller accepts
 				propertyNames.forEach(name => {
-					if (this.mutableShare && (name === 'note' || name === 'password')) {
+					if (this.mutableShare && ['note', 'password', 'label'].includes(name)) {
 						properties[name] = this.mutableShare[name].toString()
 					} else if ((typeof this.share[name]) === 'object') {
 						properties[name] = JSON.stringify(this.share[name])
@@ -304,6 +304,7 @@ export default {
 						// clear any previous errors
 						this.$delete(this.errors, propertyNames[0])
 						this.share.note = updatedShare.note
+						this.share.label = updatedShare.label
 						showSuccess(t('nmcsharing', 'Share updated'))
 					} catch ({ message }) {
 						if (message && message !== '') {
