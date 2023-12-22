@@ -287,7 +287,7 @@ export default {
 	}
 
 	&.disabled .trigger-text {
-		color: #666;
+		color: var(--telekom-color-text-and-icon-disabled);
 	}
 }
 </style>
