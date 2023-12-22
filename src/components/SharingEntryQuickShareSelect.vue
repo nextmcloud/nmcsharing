@@ -248,7 +248,7 @@ export default {
 		flex-direction: column;
 		top: 100%;
 		left: 0;
-		background-color: var(--color-main-background);
+		background-color: var(--telekom-color-background-surface);
 		border-radius: 8px;
 		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 		padding: 4px 0;
@@ -287,7 +287,7 @@ export default {
 	}
 
 	&.disabled .trigger-text {
-		color: #666;
+		color: var(--telekom-color-text-and-icon-disabled);
 	}
 }
 </style>
