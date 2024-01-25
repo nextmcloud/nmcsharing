@@ -5,7 +5,6 @@ namespace OCA\Nmcsharing\Tests\Integration\Controller;
 use OCP\AppFramework\App;
 use Test\TestCase;
 
-
 /**
  * This test shows how to make a small Integration Test. Query your class
  * directly from the container, only pass in mocks if needed and run your tests
@@ -13,17 +12,17 @@ use Test\TestCase;
  */
 class AppTest extends TestCase {
 
-    private $container;
+	private $container;
 
-    public function setUp() {
-        parent::setUp();
-        $app = new App('nmc_sharing');
-        $this->container = $app->getContainer();
-    }
+	public function setUp() {
+		parent::setUp();
+		$app = new App('nmc_sharing');
+		$this->container = $app->getContainer();
+	}
 
-    public function testAppInstalled() {
-        $appManager = $this->container->query('OCP\App\IAppManager');
-        $this->assertTrue($appManager->isInstalled('nmc_sharing'));
-    }
+	public function testAppInstalled() {
+		$appManager = $this->container->query('OCP\App\IAppManager');
+		$this->assertTrue($appManager->isInstalled('nmc_sharing'));
+	}
 
 }
