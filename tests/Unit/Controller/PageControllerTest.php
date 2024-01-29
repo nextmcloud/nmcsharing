@@ -2,12 +2,10 @@
 
 namespace OCA\Nmcsharing\Tests\Unit\Controller;
 
-use PHPUnit_Framework_TestCase;
-
-use OCP\AppFramework\Http\TemplateResponse;
-
 use OCA\Nmcsharing\Controller\PageController;
 
+
+use PHPUnit_Framework_TestCase;
 
 class PageControllerTest extends PHPUnit_Framework_TestCase {
 	private $controller;

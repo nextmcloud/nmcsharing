@@ -3,7 +3,7 @@
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
  * @author Kavita sonawane<kavita.sonawane@t-systems.com>
-
+ *
  *
  * @license AGPL-3.0
  *
@@ -24,18 +24,15 @@
 namespace OCA\Nmcsharing\AppInfo;
 
 use OCA\DAV\Connector\Sabre\Principal;
-use OCP\App\IAppManager;
+use OCA\Nmcsharing\Listener\BeforeTemplateRenderedListener;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCP\AppFramework\Http\Events\BeforeTemplateRenderedEvent;
-use OCA\Nmcsharing\Listener\BeforeTemplateRenderedListener;
-use OCP\ILogger;
-use OCP\IServerContainer;
 
 class Application extends App implements IBootstrap {
-    const APP_ID = "nmcsharing";
+	public const APP_ID = "nmcsharing";
 
 	public function __construct(array $urlParams = []) {
 		parent::__construct(self::APP_ID, $urlParams);
