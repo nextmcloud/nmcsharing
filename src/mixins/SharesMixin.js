@@ -204,6 +204,9 @@ export default {
 		 */
 		onExpirationChange(date) {
 			try {
+				// Date.UTC marks years between 0 and 99 as '1900 + year' forcing error and incorrect date value
+				// thus we need to skip formatting while user is typing year in the input field
+				if (date.getFullYear() <= 99) return
 				this.share.expireDate = this.formatDateToString(new Date(date))
 			} catch (error) {}
 		},
