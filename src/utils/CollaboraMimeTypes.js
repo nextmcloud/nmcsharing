@@ -14,4 +14,6 @@ export const COLLABORA_MIME_TYPES = [
 	'application/vnd.ms-powerpoint',
 	'application/vnd.oasis.opendocument.graphics',
 	'application/vnd.visio',
+	'text/plain',
+	'text/markdown'
 ]
