@@ -375,5 +375,10 @@ export default {
 		debounceQueueUpdate: debounce(500, function(property) {
 			this.queueUpdate(property)
 		}),
+
+		sendUtagInfo: (data) => {
+			if (typeof utag === 'undefined' || !utag.view()) return
+			utag.view(data)
+		}
 	},
 }
