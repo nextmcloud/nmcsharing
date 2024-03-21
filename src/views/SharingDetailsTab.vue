@@ -661,16 +661,16 @@ export default {
 				this.share = share
 				this.$emit('add:share', this.share)
 				this.sendUtagInfo({
-					wt_link_id: "button.create-share",
-					page_content_id: "files.sharing",
-					page_type: "files"
+					wt_link_id: 'button.create-share',
+					page_content_id: 'files.sharing',
+					page_type: 'files',
 				})
 			} else {
 				this.queueUpdate(...permissionsAndAttributes)
 				this.sendUtagInfo({
-					wt_link_id: "button.update-share",
-					page_content_id: "files.sharing",
-					page_type: "files"
+					wt_link_id: 'button.update-share',
+					page_content_id: 'files.sharing',
+					page_type: 'files',
 				})
 			}
 

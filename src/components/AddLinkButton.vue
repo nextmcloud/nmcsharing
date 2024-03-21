@@ -52,9 +52,9 @@ export default {
 				})
 				showSuccess(t('files_sharing', 'Link share created'))
 				this.sendUtagInfo({
-					wt_link_id: "button.add-link-share",
-					page_content_id: "files.sharing",
-					page_type: "files"
+					wt_link_id: 'button.add-link-share',
+					page_content_id: 'files.sharing',
+					page_type: 'files',
 				})
 
 			} catch (data) {
