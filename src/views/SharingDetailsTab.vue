@@ -50,8 +50,7 @@
 					:placeholder="t('files_sharing', 'Share label')" />
 				<NcCheckboxRadioSwitch v-if="isPublicShare"
 					:disabled="canChangeHideDownload"
-					:checked.sync="share.hideDownload"
-					@update:checked="queueUpdate('hideDownload')">
+					:checked.sync="mutableShare.hideDownload">
 					{{ t('files_sharing', 'Hide download') }}
 				</NcCheckboxRadioSwitch>
 				<template v-if="isPublicShare">
@@ -181,7 +180,8 @@ export default {
 			mutableShare: {
 				note: this.share.note,
 				password: this.share.password,
-				label: this.share.label,
+				label: this.share.label || '',
+				hideDownload: this.share.hideDownload,
 			},
 		}
 	},
@@ -647,6 +647,7 @@ export default {
 					attributes: this.share.attributes,
 					label: this.mutableShare.label,
 					note: this.mutableShare.note,
+					hideDownload: this.mutableShare.hideDownload.toString(),
 				}
 
 				if (this.hasExpirationDate) {
@@ -654,6 +655,10 @@ export default {
 				}
 
 				if (this.isPasswordProtected) {
+					incomingShare.password = this.mutableShare.password
+				}
+
+				if (this.isPublicShare && this.canChangeHideDownload) {
 					incomingShare.password = this.mutableShare.password
 				}
 
@@ -698,6 +703,7 @@ export default {
 					...(value.password ? { password: value.password } : {}),
 					...(value.expireDate ? { expireDate: value.expireDate } : {}),
 					...(value.label ? { label: value.label } : {}),
+					...(value.hideDownload ? { hideDownload: value.hideDownload } : {}),
 				})
 				return share
 			} catch (error) {
