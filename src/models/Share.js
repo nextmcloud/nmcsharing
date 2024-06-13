@@ -65,7 +65,7 @@ export default class Share {
 	 *
 	 * @return {object} the share raw state
 	 * @readonly
-	 * @memberof Sidebar
+	 * @memberof Share
 	 */
 	get state() {
 		return this._share
@@ -391,7 +391,7 @@ export default class Share {
 	/**
 	 * Password expiration time
 	 *
-	 * @param {string} password expiration time
+	 * @param {string} passwordExpirationTime
 	 * @memberof Share
 	 */
 	set passwordExpirationTime(passwordExpirationTime) {

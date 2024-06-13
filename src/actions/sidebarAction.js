@@ -1,4 +1,4 @@
-import { Permission, Node, View, FileAction } from '@nextcloud/files'
+import { Permission, FileAction } from '@nextcloud/files'
 import { translate as t } from '@nextcloud/l10n'
 
 export const ACTION_DETAILS = 'details'

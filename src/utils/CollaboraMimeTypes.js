@@ -15,5 +15,5 @@ export const COLLABORA_MIME_TYPES = [
 	'application/vnd.oasis.opendocument.graphics',
 	'application/vnd.visio',
 	'text/plain',
-	'text/markdown'
+	'text/markdown',
 ]
