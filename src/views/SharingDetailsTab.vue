@@ -44,10 +44,6 @@
 		</div>
 		<div v-if="advancedSectionAccordionExpanded" class="sharingTabDetailsView__advanced">
 			<section>
-				<NcInputField v-if="isPublicShare"
-					:value.sync="mutableShare.label"
-					type="text"
-					:placeholder="t('files_sharing', 'Share label')" />
 				<NcCheckboxRadioSwitch v-if="isPublicShare"
 					:disabled="canChangeHideDownload"
 					:checked.sync="share.hideDownload"
