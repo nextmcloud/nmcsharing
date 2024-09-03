@@ -36,9 +36,9 @@ Vue.prototype.n = n
 // Init Sharing tab component
 let TabInstance = null
 
-//	Remove all unused
+// Remove all unused
 function checkTabs(id) {
-	return id !== 'sharing' && id !== 'photos' && id !== 'comments' && id !== 'version_vue';
+	return id !== 'sharing' && id !== 'photos' && id !== 'comments' && id !== 'version_vue'
 }
 
 window.addEventListener('DOMContentLoaded', function() {
