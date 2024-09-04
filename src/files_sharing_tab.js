@@ -36,11 +36,16 @@ Vue.prototype.n = n
 // Init Sharing tab component
 let TabInstance = null
 
+// Remove all unused
+function checkTabs(id) {
+	return id !== 'sharing' && id !== 'photos' && id !== 'comments' && id !== 'version_vue'
+}
+
 window.addEventListener('DOMContentLoaded', function() {
 	if (OCA.Files && OCA.Files.Sidebar) {
-		// remove core Sharing app which is initialized earlier
+		// remove all unused tabs
 		const tabsState = OCA.Files.Sidebar.state.tabs
-		OCA.Files.Sidebar.state.tabs = tabsState.filter((tab) => tab.id !== 'sharing')
+		OCA.Files.Sidebar.state.tabs = tabsState.filter((tab) => checkTabs(tab.id))
 
 		OCA.Files.Sidebar.registerTab(new OCA.Files.Sidebar.Tab({
 			id: 'sharing',
