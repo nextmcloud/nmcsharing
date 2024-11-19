@@ -2,6 +2,7 @@
 	"translations": {
 		"Sharing": "Teilen",
 		"Add link": "Link erstellen",
+		"Share": "Teilen",
 		"Read only": "Nur lesen",
 		"Can edit": "Kann bearbeiten",
 		"File drop": "Sammelbox",
@@ -14,6 +15,8 @@
 		"Advanced": "Erweiterte",
 		"Set password": "Passwortschutz",
 		"Your shares": "Ihre Freigaben",
+		"Links sent per E-mail": "Links per E-mail versandt",
+		"Links to Copy": "Links zum Kopieren",
 		"No shares created yet.": "Noch keine Freigaben erstellt.",
 		"Advanced permissions": "Erweiterte Berechtigungen",
 		"Allow resharing": "Weiterteilen erlauben",
@@ -21,7 +24,8 @@
 		"Resharing is allowed": "Weiterteilen ist erlaubt",
 		"You can create links or send shares by mail. If you invite MagentaCLOUD users, you have more opportunities for collaboration.": "Sie können Links erstellen oder Freigaben per Mail versenden. Wenn Sie MagentaCLOUD Nutzer einladen, bieten sich Ihnen mehr Möglichkeiten der Zusammenarbeit.",
 		"Share updated": "Freigabe aktualisiert",
-		"This share was limited to {limit} downloads. There is still {downloadsLeft} left allowed.": "Diese Freigabe ist auf {limit} Downloads beschränkt. Es sind noch {downloadsLeft} Downloads zugelassen."
+		"This share was limited to {limit} downloads. There is still {downloadsLeft} left allowed.": "Diese Freigabe ist auf {limit} Downloads beschränkt. Es sind noch {downloadsLeft} Downloads zugelassen.",
+		"Manage Access": "Zugriff verwalten"
 	},
 	"pluralForm": "nplurals=2; plural=(n != 1);"
 }

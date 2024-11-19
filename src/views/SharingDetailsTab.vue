@@ -179,6 +179,8 @@ export default {
 				password: this.share.password,
 				label: this.share.label,
 			},
+			// Multiple Email shares are saved in an Array of Objects
+			emailSharesArray: []
 		}
 	},
 
@@ -593,6 +595,14 @@ export default {
 				}
 			}
 		},
+		pushEmailShare(email, subject, message) {
+      		const newShare = {
+        	email: email,
+        	subject: subject,
+        	message: message
+      };
+      this.emailSharesArray.push(newShare);
+    },
 		async saveShare() {
 			const permissionsAndAttributes = ['permissions', 'attributes', 'note', 'expireDate']
 			const publicShareAttributes = ['label', 'password', 'hideDownload']
@@ -653,9 +663,9 @@ export default {
 					incomingShare.password = this.mutableShare.password
 				}
 
-				const share = await this.addShare(incomingShare, this.fileInfo, this.config)
-				this.share = share
-				this.$emit('add:share', this.share)
+				const share = this.addShare(incomingShare, this.fileInfo, this.config)
+				// this.share = share
+				this.$emit('update:share', share)
 			} else {
 				this.queueUpdate(...permissionsAndAttributes)
 			}
@@ -669,22 +679,10 @@ export default {
 		 * @param {object} fileInfo file data
 		 * @param {Config} config instance configs
 		 */
-		async addShare(value, fileInfo, config) {
-			// Clear the displayed selection
-			this.value = null
-
-			// handle externalResults from OCA.Sharing.ShareSearch
-			if (value.handler) {
-				const share = await value.handler(this)
-				this.$emit('add:share', new Share(share))
-				return true
-			}
-
-			// this.loading = true // Are we adding loaders the new share flow?
-			console.debug('Adding a new share from the input for', value)
+		addShare(value, fileInfo, config) {
 			try {
 				const path = (fileInfo.path + '/' + fileInfo.name).replace('//', '/')
-				const share = await this.createShare({
+				const emailShare = {
 					path,
 					shareType: value.shareType,
 					shareWith: value.shareWith,
@@ -694,8 +692,8 @@ export default {
 					...(value.password ? { password: value.password } : {}),
 					...(value.expireDate ? { expireDate: value.expireDate } : {}),
 					...(value.label ? { label: value.label } : {}),
-				})
-				return share
+				}
+				return emailShare
 			} catch (error) {
 				console.error('Error while adding new share', error)
 			} finally {

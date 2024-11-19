@@ -29,20 +29,15 @@
 		<label v-else>
 			{{ t('files_sharing', 'Resharing is not allowed') }}
 		</label>
-		<NcSelect v-if="canReshare"
-			ref="select"
-			v-model="value"
-			input-id="sharing-search-input"
-			class="sharing-search__input"
-			:disabled="!canReshare"
-			:loading="loading"
-			:filterable="false"
-			:placeholder="inputPlaceholder"
-			:clear-search-on-blur="() => false"
-			:user-select="true"
-			:options="options"
-			@search="asyncFind"
-			@option:selected="openSharingDetails">
+		<ul v-if="filteredEmailArr.length > 0" :style="{ display: 'flex', flexWrap: 'wrap'}">
+			<li v-for="(emailShare, index) in filteredEmailArr" :key="index" class= "email--listItem__display" v-show="isShownArr[index].isVisible === true" @click="toggleDisplay(index)">
+				{{ index }} : {{ emailShare?.shareWith }}
+			</li>
+		</ul>
+		<NcSelect v-if="canReshare" ref="select" v-model="value" input-id="sharing-search-input"
+			class="sharing-search__input" :disabled="!canReshare" :loading="loading" :filterable="false"
+			:placeholder="inputPlaceholder" :clear-search-on-blur="() => false" :user-select="true" :options="options"
+			@search="asyncFind" @option:selected="openSharingDetails">
 			<template #no-options="{ search }">
 				{{ search ? noResultText : t('files_sharing', 'No recommendations. Start typing.') }}
 			</template>
@@ -86,7 +81,7 @@ export default {
 		},
 		fileInfo: {
 			type: Object,
-			default: () => {},
+			default: () => { },
 			required: true,
 		},
 		reshare: {
@@ -101,10 +96,16 @@ export default {
 			type: Boolean,
 			required: true,
 		},
+		filteredEmailArr: {
+			type: Array,
+			default: () => [],
+			required: true,
+		}
 	},
 
 	data() {
 		return {
+			isShownArr: [...Array(this.filteredEmailArr.length).keys()].map(i => ({ id: i, isVisible: true })),
 			config: new Config(),
 			loading: false,
 			query: '',
@@ -114,6 +115,12 @@ export default {
 			value: null,
 		}
 	},
+
+// 	created() {
+// 		this.filteredEmailArr.forEach((emailShare, i) => {
+//     		this.isShownArr.push(i);
+//   		});
+//    },
 
 	computed: {
 		/**
@@ -176,6 +183,17 @@ export default {
 				await this.debounceGetSuggestions(query)
 			}
 		},
+
+		// toggle display for individual email item in multiple email share list
+		toggleDisplay(index) {
+			if (this.isShownArr[index].isVisible) {
+          		this.isShownArr[index].isVisible = !this.isShownArr[index].isVisible
+        	} else {
+          	this.isShownArr.push(index);
+        	}
+			this.$emit('remove-email-arr-element', index)
+			console.log('filtered email arr after remove', this.filteredEmailArr);
+    	},
 
 		/**
 		 * Get suggestions
@@ -279,7 +297,7 @@ export default {
 		 *
 		 * @param {...*} args the arguments
 		 */
-		debounceGetSuggestions: debounce(750, function(...args) {
+		debounceGetSuggestions: debounce(750, function (...args) {
 			this.getSuggestions(...args)
 		}),
 
@@ -384,53 +402,53 @@ export default {
 		 */
 		shareTypeToIcon(type) {
 			switch (type) {
-			case this.SHARE_TYPES.SHARE_TYPE_GUEST:
-				// default is a user, other icons are here to differentiate
-				// themselves from it, so let's not display the user icon
-				// case this.SHARE_TYPES.SHARE_TYPE_REMOTE:
-				// case this.SHARE_TYPES.SHARE_TYPE_USER:
-				return {
-					icon: 'icon-user',
-					iconTitle: t('files_sharing', 'Guest'),
-				}
-			case this.SHARE_TYPES.SHARE_TYPE_USER:
-				return {
-					icon: 'icon-upload-to-cloud',
-					iconTitle: t('nmcsharing', 'User'),
-				}
-			case this.SHARE_TYPES.SHARE_TYPE_REMOTE_GROUP:
-			case this.SHARE_TYPES.SHARE_TYPE_GROUP:
-				return {
-					icon: 'icon-group',
-					iconTitle: t('files_sharing', 'Group'),
-				}
-			case this.SHARE_TYPES.SHARE_TYPE_EMAIL:
-				return {
-					icon: 'icon-mail',
-					iconTitle: t('files_sharing', 'Email'),
-				}
-			case this.SHARE_TYPES.SHARE_TYPE_CIRCLE:
-				return {
-					icon: 'icon-circle',
-					iconTitle: t('files_sharing', 'Circle'),
-				}
-			case this.SHARE_TYPES.SHARE_TYPE_ROOM:
-				return {
-					icon: 'icon-room',
-					iconTitle: t('files_sharing', 'Talk conversation'),
-				}
-			case this.SHARE_TYPES.SHARE_TYPE_DECK:
-				return {
-					icon: 'icon-deck',
-					iconTitle: t('files_sharing', 'Deck board'),
-				}
-			case this.SHARE_TYPES.SHARE_TYPE_SCIENCEMESH:
-				return {
-					icon: 'icon-sciencemesh',
-					iconTitle: t('files_sharing', 'ScienceMesh'),
-				}
-			default:
-				return {}
+				case this.SHARE_TYPES.SHARE_TYPE_GUEST:
+					// default is a user, other icons are here to differentiate
+					// themselves from it, so let's not display the user icon
+					// case this.SHARE_TYPES.SHARE_TYPE_REMOTE:
+					// case this.SHARE_TYPES.SHARE_TYPE_USER:
+					return {
+						icon: 'icon-user',
+						iconTitle: t('files_sharing', 'Guest'),
+					}
+				case this.SHARE_TYPES.SHARE_TYPE_USER:
+					return {
+						icon: 'icon-upload-to-cloud',
+						iconTitle: t('nmcsharing', 'User'),
+					}
+				case this.SHARE_TYPES.SHARE_TYPE_REMOTE_GROUP:
+				case this.SHARE_TYPES.SHARE_TYPE_GROUP:
+					return {
+						icon: 'icon-group',
+						iconTitle: t('files_sharing', 'Group'),
+					}
+				case this.SHARE_TYPES.SHARE_TYPE_EMAIL:
+					return {
+						icon: 'icon-mail',
+						iconTitle: t('files_sharing', 'Email'),
+					}
+				case this.SHARE_TYPES.SHARE_TYPE_CIRCLE:
+					return {
+						icon: 'icon-circle',
+						iconTitle: t('files_sharing', 'Circle'),
+					}
+				case this.SHARE_TYPES.SHARE_TYPE_ROOM:
+					return {
+						icon: 'icon-room',
+						iconTitle: t('files_sharing', 'Talk conversation'),
+					}
+				case this.SHARE_TYPES.SHARE_TYPE_DECK:
+					return {
+						icon: 'icon-deck',
+						iconTitle: t('files_sharing', 'Deck board'),
+					}
+				case this.SHARE_TYPES.SHARE_TYPE_SCIENCEMESH:
+					return {
+						icon: 'icon-sciencemesh',
+						iconTitle: t('files_sharing', 'ScienceMesh'),
+					}
+				default:
+					return {}
 			}
 		},
 
@@ -445,7 +463,7 @@ export default {
 			if (result.value.shareType === this.SHARE_TYPES.SHARE_TYPE_USER && this.config.shouldAlwaysShowUnique) {
 				subtitle = result.shareWithDisplayNameUnique ?? ''
 			} else if ((result.value.shareType === this.SHARE_TYPES.SHARE_TYPE_REMOTE
-					|| result.value.shareType === this.SHARE_TYPES.SHARE_TYPE_REMOTE_GROUP
+				|| result.value.shareType === this.SHARE_TYPES.SHARE_TYPE_REMOTE_GROUP
 			) && result.value.server) {
 				subtitle = t('files_sharing', 'on {server}', { server: result.value.server })
 			} else if (result.value.shareType === this.SHARE_TYPES.SHARE_TYPE_EMAIL) {
@@ -545,6 +563,16 @@ export default {
 </script>
 
 <style lang="scss">
+.email--listItem__display {
+  display: inline-block;
+  padding: 0.5em 1em;
+  border-radius: 20px;
+  background-color: magenta;
+  border: 1px solid #ccc;
+  margin: 0.5em;
+}
+
+
 .sharing-search {
 	display: flex;
 	flex-direction: column;
@@ -558,6 +586,7 @@ export default {
 		min-width: auto;
 		width: 100%;
 		margin: 16px 0 12px;
+
 		input {
 			opacity: 1;
 		}
@@ -566,32 +595,40 @@ export default {
 			opacity: 1;
 		}
 	}
-};
+}
+
+;
 
 ul.vs__dropdown-menu {
 	--vs-border-width: 1px;
 	--vs-dropdown-option-padding: 16px 16px 16px 8px;
 	padding: 0px !important;
+
 	.vs__dropdown-option {
 		border-radius: 0px !important;
+
 		// remove user avatar
 		.avatardiv {
 			display: none;
 		}
+
 		// set dropdown option height
 		span.option {
 			--height: 16px !important;
 		}
+
 		// add a new icon definition
 		.icon {
 			background-size: 24px;
 			background-position: right;
+
 			.icon-upload-to-cloud {
 				background-image: var(--icon-upload-to-cloud-dark);
 			}
 		}
 
 	}
+
 	// No elements found
 	.vs__no-options {
 		padding: 1rem 0.5rem;
@@ -600,6 +637,7 @@ ul.vs__dropdown-menu {
 }
 
 .vs__dropdown-menu {
+
 	// properly style the lookup entry
 	span[lookup] {
 		.avatardiv {
@@ -607,6 +645,7 @@ ul.vs__dropdown-menu {
 			background-repeat: no-repeat;
 			background-position: center;
 			background-color: var(--color-text-maxcontrast) !important;
+
 			div {
 				display: none;
 			}
