@@ -21,17 +21,7 @@
   -->
 
 <template>
-	<li :class="{'sharing-entry--share': share}" class="sharing-entry sharing-entry__link">
-		<NcAvatar :is-no-user="true"
-			class="sharing-entry__avatar">
-			<template #icon>
-				<span class="icon"
-					:class="{
-						'icon-default': !share,
-						'icon-user': isEmailShareType,
-						'icon-link': isLinkShareType}" />
-			</template>
-		</NcAvatar>
+	<li :class="{ 'sharing-entry--share': share }" class="sharing-entry sharing-entry__link">
 		<div class="sharing-entry__desc" @click.prevent="toggleQuickShareSelect">
 			<span class="sharing-entry__title" :title="title">
 				{{ title }}
@@ -47,9 +37,7 @@
 		</div>
 
 		<!-- clipboard -->
-		<NcActions v-if="share && !isEmailShareType && share.token"
-			ref="copyButton"
-			class="sharing-entry__copy">
+		<NcActions v-if="share && !isEmailShareType && share.token" ref="copyButton" class="sharing-entry__copy">
 			<NcActionLink :href="shareLink"
 				target="_blank"
 				:title="copyLinkTooltip"
@@ -74,9 +62,7 @@
 			:force-menu="true"
 			@close="onNewLinkShare">
 			<!-- pending data menu -->
-			<NcActionText v-if="errors.pending"
-				icon="icon-error"
-				:class="{ error: errors.pending}">
+			<NcActionText v-if="errors.pending" icon="icon-error" :class="{ error: errors.pending }">
 				{{ errors.pending }}
 			</NcActionText>
 			<NcActionText v-else icon="icon-info">
@@ -143,9 +129,7 @@
 			@close="onMenuClose">
 			<template v-if="share">
 				<template v-if="share.canEdit && canReshare">
-					<NcActionButton icon="icon-edit"
-						:disabled="saving"
-						@click.prevent="openSharingDetails">
+					<NcActionButton icon="icon-edit" :disabled="saving" @click.prevent="openSharingDetails">
 						{{ t('nmcsharing', 'Advanced permissions') }}
 					</NcActionButton>
 				</template>
@@ -159,7 +143,7 @@
 					:share="share" /> -->
 
 				<!-- external legacy sharing via url (social...) -->
-				<NcActionLink v-for="({icon, url, name}, index) in externalLegacyLinkActions"
+				<NcActionLink v-for="({ icon, url, name }, index) in externalLegacyLinkActions"
 					:key="index"
 					:href="url(shareLink)"
 					:icon="icon"
@@ -192,7 +176,6 @@ import NcActionInput from '@nextcloud/vue/dist/Components/NcActionInput.js'
 import NcActionLink from '@nextcloud/vue/dist/Components/NcActionLink.js'
 import NcActionText from '@nextcloud/vue/dist/Components/NcActionText.js'
 import NcActions from '@nextcloud/vue/dist/Components/NcActions.js'
-import NcAvatar from '@nextcloud/vue/dist/Components/NcAvatar.js'
 
 import QuickShareSelect from './SharingEntryQuickShareSelect.vue'
 
@@ -210,7 +193,6 @@ export default {
 		NcActionInput,
 		NcActionLink,
 		NcActionText,
-		NcAvatar,
 		QuickShareSelect,
 	},
 
@@ -267,7 +249,7 @@ export default {
 							label: this.share.label.trim(),
 						})
 					}
-					return t('files_sharing', 'Share link ({label})', {
+					return t('files_sharing', 'Link {label}', {
 						label: this.share.label.trim(),
 					})
 				}
@@ -563,7 +545,7 @@ export default {
 				this.pending = false
 				component.open = true
 
-			// Nothing is enforced, creating share directly
+				// Nothing is enforced, creating share directly
 			} else {
 				const share = new Share(shareDefaults)
 				await this.pushNewLinkShare(share)
@@ -783,6 +765,7 @@ export default {
 			color: var(--color-text-maxcontrast);
 		}
 	}
+
 	&__title {
 		text-overflow: ellipsis;
 		overflow: hidden;
@@ -815,8 +798,9 @@ export default {
 	// but only the first one
 	.action-item {
 		margin-left: auto;
-		~ .action-item,
-		~ .sharing-entry__loading {
+
+		~.action-item,
+		~.sharing-entry__loading {
 			margin-left: 0;
 		}
 	}

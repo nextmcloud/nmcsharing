@@ -29,6 +29,15 @@
 		<label v-else>
 			{{ t('files_sharing', 'Resharing is not allowed') }}
 		</label>
+		<ul v-if="filteredEmailArr.length > 0" :style="{ display: 'flex', flexWrap: 'wrap' }">
+			<li v-for="(emailShare, index) in filteredEmailArr"
+				v-show="isShownArr[index].isVisible === true"
+				:key="index"
+				class="email--listItem__display"
+				@click="toggleDisplay(index)">
+				{{ index }} : {{ emailShare?.shareWith }}
+			</li>
+		</ul>
 		<NcSelect v-if="canReshare"
 			ref="select"
 			v-model="value"
@@ -86,7 +95,7 @@ export default {
 		},
 		fileInfo: {
 			type: Object,
-			default: () => {},
+			default: () => { },
 			required: true,
 		},
 		reshare: {
@@ -101,10 +110,16 @@ export default {
 			type: Boolean,
 			required: true,
 		},
+		filteredEmailArr: {
+			type: Array,
+			default: () => [],
+			required: true,
+		},
 	},
 
 	data() {
 		return {
+			isShownArr: [...Array(this.filteredEmailArr.length).keys()].map(i => ({ id: i, isVisible: true })),
 			config: new Config(),
 			loading: false,
 			query: '',
@@ -175,6 +190,16 @@ export default {
 				this.loading = true
 				await this.debounceGetSuggestions(query)
 			}
+		},
+
+		// toggle display for individual email item in multiple email share list
+		toggleDisplay(index) {
+			if (this.isShownArr[index].isVisible) {
+				this.isShownArr[index].isVisible = !this.isShownArr[index].isVisible
+			} else {
+				this.isShownArr.push(index)
+			}
+			this.$emit('remove-email-arr-element', index)
 		},
 
 		/**
@@ -445,7 +470,7 @@ export default {
 			if (result.value.shareType === this.SHARE_TYPES.SHARE_TYPE_USER && this.config.shouldAlwaysShowUnique) {
 				subtitle = result.shareWithDisplayNameUnique ?? ''
 			} else if ((result.value.shareType === this.SHARE_TYPES.SHARE_TYPE_REMOTE
-					|| result.value.shareType === this.SHARE_TYPES.SHARE_TYPE_REMOTE_GROUP
+				|| result.value.shareType === this.SHARE_TYPES.SHARE_TYPE_REMOTE_GROUP
 			) && result.value.server) {
 				subtitle = t('files_sharing', 'on {server}', { server: result.value.server })
 			} else if (result.value.shareType === this.SHARE_TYPES.SHARE_TYPE_EMAIL) {
@@ -545,6 +570,15 @@ export default {
 </script>
 
 <style lang="scss">
+.email--listItem__display {
+	display: inline-block;
+	padding: 0.5em 1em;
+	border-radius: 20px;
+	background-color: magenta;
+	border: 1px solid #ccc;
+	margin: 0.5em;
+}
+
 .sharing-search {
 	display: flex;
 	flex-direction: column;
@@ -558,6 +592,7 @@ export default {
 		min-width: auto;
 		width: 100%;
 		margin: 16px 0 12px;
+
 		input {
 			opacity: 1;
 		}
@@ -566,32 +601,40 @@ export default {
 			opacity: 1;
 		}
 	}
-};
+}
+
+;
 
 ul.vs__dropdown-menu {
 	--vs-border-width: 1px;
 	--vs-dropdown-option-padding: 16px 16px 16px 8px;
 	padding: 0px !important;
+
 	.vs__dropdown-option {
 		border-radius: 0px !important;
+
 		// remove user avatar
 		.avatardiv {
 			display: none;
 		}
+
 		// set dropdown option height
 		span.option {
 			--height: 16px !important;
 		}
+
 		// add a new icon definition
 		.icon {
 			background-size: 24px;
 			background-position: right;
+
 			.icon-upload-to-cloud {
 				background-image: var(--icon-upload-to-cloud-dark);
 			}
 		}
 
 	}
+
 	// No elements found
 	.vs__no-options {
 		padding: 1rem 0.5rem;
@@ -600,6 +643,7 @@ ul.vs__dropdown-menu {
 }
 
 .vs__dropdown-menu {
+
 	// properly style the lookup entry
 	span[lookup] {
 		.avatardiv {
@@ -607,6 +651,7 @@ ul.vs__dropdown-menu {
 			background-repeat: no-repeat;
 			background-position: center;
 			background-color: var(--color-text-maxcontrast) !important;
+
 			div {
 				display: none;
 			}

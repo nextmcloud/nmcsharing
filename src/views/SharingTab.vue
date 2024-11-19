@@ -30,32 +30,47 @@
 		<!-- shares content -->
 		<div v-if="!showSharingDetailsView" class="sharingTab__content">
 			<h2 class="sharingTab__header">
-				{{ t('nmcsharing', 'Sharing') }}
+				{{ t('nmcsharing', 'Manage Access') }}
 			</h2>
+			<!-- <label v-if="canReshare" for="sharing-search-input"> -->
+			<p v-if="canReshare" class="sharingTab__info">
+				{{ t('nmcsharing', 'You did not share this file/ folder yet. You can share the file/ folder to others')
+				}}
+				{{ isSharedWithMe ? `${t('nmcsharing', 'Resharing is allowed')}. ` : '' }}
+			</p>
+
 			<!-- shared with me information -->
 			<SharingEntrySimple v-if="isSharedWithMe" v-bind="sharedWithMe" class="sharing-entry__reshare" />
 
+			<template v-if="!loading">
+				<!-- display multiple email share recipients -->
+				<SharingInput :can-reshare="canReshare"
+					:file-info="fileInfo"
+					:link-shares="linkShares"
+					:reshare="reshare"
+					:shares="shares"
+					:filtered-email-arr="filteredEmailArr"
+					:is-shared-with-me="isSharedWithMe"
+					@open-sharing-details="toggleShareDetailsView"
+					@remove-email-arr-element="filteredEmailArrRemove" />
+
+				<AddAllEmailsButton :is-loading="loading"
+					:file-info="fileInfo"
+					:filtered-email-arr="filteredEmailArr"
+					:on-submit="addEmailShare"
+					@add-share="addShare"
+					@force-update="forceUpdate" />
+			</template>
 			<!-- add new share input -->
-			<SharingInput v-if="!loading"
-				:can-reshare="canReshare"
-				:file-info="fileInfo"
-				:link-shares="linkShares"
-				:reshare="reshare"
-				:shares="shares"
-				:is-shared-with-me="isSharedWithMe"
-				@open-sharing-details="toggleShareDetailsView" />
 
 			<!-- link shares list -->
 			<SharingLinkList v-if="!loading"
 				ref="linkShareList"
 				:can-reshare="canReshare"
+				:can-edit="canEdit"
 				:file-info="fileInfo"
 				:shares="linkShares"
 				@open-sharing-details="toggleShareDetailsView" />
-
-			<p v-if="!loading && shares.length === 0 && linkShares.length === 0 && canReshare">
-				{{ t('nmcsharing', 'No shares created yet.') }}
-			</p>
 
 			<!-- other shares list -->
 			<SharingList v-if="!loading && canReshare"
@@ -71,8 +86,8 @@
 				:share="shareDetailsData.share"
 				:resharing-allowed-global="config.isResharingAllowed"
 				@close-sharing-details="toggleShareDetailsView"
-				@add:share="addShare"
-				@remove:share="removeShare" />
+				@remove:share="deleteShare"
+				@update:share="updateEmailShares" />
 		</div>
 
 		<!-- additional entries, use it with cautious -->
@@ -80,40 +95,41 @@
 			:ref="'section-' + index"
 			:key="index"
 			class="sharingTab__additionalContent">
-			<component :is="section($refs['section-'+index], fileInfo)" :file-info="fileInfo" />
+			<component :is="section($refs['section-' + index], fileInfo)" :file-info="fileInfo" />
 		</div>
 	</div>
 </template>
 <!-- eslint-disable @nextcloud/no-deprecations -->
 <script>
 import { generateOcsUrl } from '@nextcloud/router'
-import NcAvatar from '@nextcloud/vue/dist/Components/NcAvatar.js'
 import axios from '@nextcloud/axios'
 
 import Config from '../services/ConfigService.js'
 import { shareWithTitle } from '../utils/SharedWithMe.js'
 import Share from '../models/Share.js'
 import ShareTypes from '../mixins/ShareTypes.js'
+import ShareRequests from '../mixins/ShareRequests.js'
+import SharesMixin from '../mixins/SharesMixin.js'
 import SharingEntrySimple from '../components/SharingEntrySimple.vue'
 import SharingInput from '../components/SharingInput.vue'
-
 import SharingLinkList from './SharingLinkList.vue'
 import SharingList from './SharingList.vue'
 import SharingDetailsTab from './SharingDetailsTab.vue'
+import AddAllEmailsButton from '../components/AddAllEmailsButton.vue'
 
 export default {
 	name: 'SharingTab',
 
 	components: {
-		NcAvatar,
 		SharingEntrySimple,
 		SharingInput,
 		SharingLinkList,
 		SharingList,
 		SharingDetailsTab,
+		AddAllEmailsButton,
 	},
 
-	mixins: [ShareTypes],
+	mixins: [ShareTypes, ShareRequests, SharesMixin],
 
 	data() {
 		return {
@@ -127,6 +143,7 @@ export default {
 
 			// reshare Share object
 			reshare: null,
+			edit: null,
 			sharedWithMe: {},
 			shares: [],
 			linkShares: [],
@@ -135,10 +152,13 @@ export default {
 			// projectsEnabled: loadState('core', 'projects_enabled', false),
 			showSharingDetailsView: false,
 			shareDetailsData: {},
+			emailSharesArray: [],
 		}
 	},
 
 	computed: {
+		console: () => console,
+		window: () => window,
 		/**
 		 * Is this share shared with me?
 		 *
@@ -152,6 +172,18 @@ export default {
 			return !!(this.fileInfo.permissions & OC.PERMISSION_SHARE)
 				|| !!(this.reshare && this.reshare.hasSharePermission && this.config.isResharingAllowed)
 		},
+
+		// Check if file is Read Only or can be Updated / Edited
+		canEdit() {
+			return !!(this.fileInfo.permissions & OC.PERMISSION_UPDATE)
+				|| !!(this.edit && this.edit.hasUpdatePermission)
+		},
+		// remove duplicate email addresses
+		filteredEmailArr() {
+			return this.emailSharesArray.filter((value, index, self) =>
+				self.findIndex(v => v.shareWith === value.shareWith) === index,
+			)
+		},
 	},
 
 	methods: {
@@ -164,6 +196,44 @@ export default {
 			this.fileInfo = fileInfo
 			this.resetState()
 			this.getShares()
+		},
+		/**
+		 * Process single new Email share request
+		 *
+		 * @param {object} value the multiselect option
+		 * @param emailObj
+		 */
+		async addEmailShare(emailObj) {
+			try {
+				if (emailObj) {
+					const options = {
+						path: emailObj?.path,
+						shareType: emailObj.shareType,
+						shareWith: emailObj.shareWith,
+						permissions: emailObj.permissions,
+						attributes: emailObj.attributes,
+						password: emailObj.password ? emailObj.password : null,
+						expireDate: emailObj.expireDate ? emailObj.expireDate : null,
+						label: emailObj.label ? emailObj.label : null,
+					}
+					console.debug('Creating email link share with options', options)
+					const share = await this.createShare(options)
+					this.$forceUpdate()
+					return share
+				}
+			} catch (error) {
+				console.error('Error while adding new share', error)
+			} finally {
+				// this.loading = false // No loader here yet
+			}
+		},
+		async removeShare() {
+			await this.onDelete()
+			this.$emit('close-sharing-details')
+		},
+
+		async updateEmailShares(emailSharesElement) {
+			this.emailSharesArray.push(emailSharesElement)
 		},
 
 		/**
@@ -225,6 +295,7 @@ export default {
 			this.linkShares = []
 			this.showSharingDetailsView = false
 			this.shareDetailsData = {}
+			this.emailSharesArray = []
 		},
 
 		/**
@@ -327,7 +398,8 @@ export default {
 		addShare(share, resolve = () => { }) {
 			// only catching share type MAIL as link shares are added differently
 			// meaning: not from the ShareInput
-			if (share.type === this.SHARE_TYPES.SHARE_TYPE_EMAIL) {
+			// For email addresses in emailSharesArray
+			if (share.type === this.SHARE_TYPES.SHARE_TYPE_EMAIL || share.shareType === this.SHARE_TYPES.SHARE_TYPE_EMAIL || share.type === this.SHARE_TYPES.SHARE_TYPE_EMAIL) {
 				this.linkShares.unshift(share)
 			} else {
 				this.shares.unshift(share)
@@ -339,7 +411,7 @@ export default {
 		 *
 		 * @param {Share} share the share to remove
 		 */
-		removeShare(share) {
+		deleteShare(share) {
 			const index = this.shares.findIndex(item => item.id === share.id)
 			// eslint-disable-next-line vue/no-mutating-props
 			this.shares.splice(index, 1)
@@ -374,6 +446,10 @@ export default {
 			}
 			this.showSharingDetailsView = !this.showSharingDetailsView
 		},
+		filteredEmailArrRemove(index) {
+			// this.filteredEmailArr.splice(index, 1);
+			this.filteredEmailArr[index] = null
+		},
 	},
 }
 </script>
@@ -390,6 +466,11 @@ export default {
 .sharingTab {
 	&__content {
 		padding: 0px;
+	}
+
+	&__info {
+		display: block;
+		margin-bottom: 1rem
 	}
 
 	&__additionalContent {

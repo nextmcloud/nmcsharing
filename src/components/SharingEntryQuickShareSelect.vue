@@ -7,8 +7,11 @@
 			:aria-haspopup="true"
 			aria-label="Quick share options dropdown"
 			@click="toggleDropdown">
+			<!-- <DropdownIcon :size="15" /> -->
+			<UploadIcon v-if="dropPermission" :size="15" />
+			<PencilIcon v-if="editPermission" :size="15" />
+			<EyeIcon v-if="readPermission" :size="15" />
 			{{ selectedOption }}
-			<DropdownIcon :size="15" />
 		</span>
 		<div v-if="showDropdown"
 			ref="quickShareDropdown"
@@ -30,7 +33,9 @@
 </template>
 
 <script>
-import DropdownIcon from 'vue-material-design-icons/TriangleSmallDown.vue'
+import EyeIcon from 'vue-material-design-icons/EyeCircleOutline.vue'
+import PencilIcon from 'vue-material-design-icons/Pencil.vue'
+import UploadIcon from 'vue-material-design-icons/Upload.vue'
 import SharesMixin from '../mixins/SharesMixin.js'
 import ShareDetails from '../mixins/ShareDetails.js'
 import ShareTypes from '../mixins/ShareTypes.js'
@@ -45,7 +50,9 @@ import { createFocusTrap } from 'focus-trap'
 
 export default {
 	components: {
-		DropdownIcon,
+		EyeIcon,
+		PencilIcon,
+		UploadIcon,
 	},
 	mixins: [SharesMixin, ShareDetails, ShareTypes],
 	props: {
@@ -66,6 +73,9 @@ export default {
 	data() {
 		return {
 			selectedOption: '',
+			dropPermission: false,
+			editPermission: false,
+			readPermission: false,
 			showDropdown: this.toggle,
 			focusTrap: null,
 		}
@@ -83,6 +93,7 @@ export default {
 		customPermissionsText() {
 			return t('files_sharing', 'Custom permissions')
 		},
+		/* eslint-disable */
 		preSelectedOption() {
 			let permissions = this.share.permissions
 			if (hasPermissions(this.share.permissions, ATOMIC_PERMISSIONS.SHARE)) {
@@ -90,16 +101,19 @@ export default {
 				permissions = this.share.permissions & ~ATOMIC_PERMISSIONS.SHARE
 			}
 			if (permissions === BUNDLED_PERMISSIONS.READ_ONLY) {
+				this.readPermission = true
 				return this.canViewText
 			} else if (permissions === BUNDLED_PERMISSIONS.ALL || permissions === BUNDLED_PERMISSIONS.ALL_FILE) {
+				this.editPermission = true
 				return this.canEditText
 			} else if (permissions === BUNDLED_PERMISSIONS.FILE_DROP) {
+				this.dropPermission = true
 				return this.fileDropText
 			}
 
 			return this.customPermissionsText
-
 		},
+		/* eslint-enable */
 		options() {
 			const options = [this.canViewText, this.canEditText]
 			if (this.supportsFileDrop) {
@@ -116,19 +130,31 @@ export default {
 			}
 			return false
 		},
+		/* eslint-disable */
 		dropDownPermissionValue() {
 			switch (this.selectedOption) {
 			case this.canEditText:
+				this.editPermission = true
+				this.readPermission = false
+				this.dropPermission = false
 				return this.isFolder ? BUNDLED_PERMISSIONS.ALL : BUNDLED_PERMISSIONS.ALL_FILE
 			case this.fileDropText:
+				this.dropPermission = true
+				this.editPermission = false
+				this.readPermission = false
 				return BUNDLED_PERMISSIONS.FILE_DROP
-			// case this.customPermissionsText:
-			// return 'custom'
+				// case this.customPermissionsText:
+				// return 'custom'
 			case this.canViewText:
+				this.readPermission = true
+				this.editPermission = false
+				this.dropPermission = false
+				break
 			default:
 				return BUNDLED_PERMISSIONS.READ_ONLY
 			}
 		},
+		/* eslint-enable */
 		dropdownId() {
 			// Generate a unique ID for ARIA attributes
 			return `dropdown-${Math.random().toString(36).substr(2, 9)}`

@@ -31,6 +31,7 @@
 				</NcCheckboxRadioSwitch>
 				<p v-if="allowsFileDrop" class="sharing_permission-desc">
 					{{ t('nmcsharing', 'With File drop, only uploading is allowed. Only you can see files and folders that have been uploaded.') }}
+					that have been uploaded.') }}
 				</p>
 			</div>
 		</div>
@@ -63,7 +64,8 @@
 
 					<!-- Migrate icons and remote -> icon="icon-info"-->
 					<span v-if="isEmailShareType && passwordExpirationTime" icon="icon-info">
-						{{ t('files_sharing', 'Password expires {passwordExpirationTime}', { passwordExpirationTime }) }}
+						{{ t('files_sharing', 'Password expires {passwordExpirationTime}', { passwordExpirationTime })
+						}}
 					</span>
 					<span v-else-if="isEmailShareType && passwordExpirationTime !== null" icon="icon-error">
 						{{ t('files_sharing', 'Password expired') }}
@@ -120,9 +122,7 @@ import NcDateTimePickerNative from '@nextcloud/vue/dist/Components/NcDateTimePic
 import NcCheckboxRadioSwitch from '@nextcloud/vue/dist/Components/NcCheckboxRadioSwitch.js'
 import EmailIcon from 'vue-material-design-icons/Email.vue'
 import LinkIcon from 'vue-material-design-icons/Link.vue'
-
 import GeneratePassword from '../utils/GeneratePassword.js'
-import Share from '../models/Share.js'
 import ShareRequests from '../mixins/ShareRequests.js'
 import ShareTypes from '../mixins/ShareTypes.js'
 import SharesMixin from '../mixins/SharesMixin.js'
@@ -179,6 +179,8 @@ export default {
 				password: this.share.password,
 				label: this.share.label,
 			},
+			// Multiple Email shares are saved in an Array of Objects
+			emailSharesArray: [],
 		}
 	},
 
@@ -593,6 +595,14 @@ export default {
 				}
 			}
 		},
+		pushEmailShare(email, subject, message) {
+			const newShare = {
+				email,
+				subject,
+				message,
+			}
+			this.emailSharesArray.push(newShare)
+		},
 		async saveShare() {
 			const permissionsAndAttributes = ['permissions', 'attributes', 'note', 'expireDate']
 			const publicShareAttributes = ['label', 'password', 'hideDownload']
@@ -613,7 +623,7 @@ export default {
 			// add SHARE permission if share doesn't have it, 'Allow resharing' is checked and Resharing is enabled globally
 			if (this.allowResharingIsChecked && !this.canReshare && this.resharingAllowedGlobal) {
 				this.share.permissions |= ATOMIC_PERMISSIONS.SHARE
-			// remove SHARE permission if internal share, 'Allow resharing' is unchecked and it initially had SHARE permission
+				// remove SHARE permission if internal share, 'Allow resharing' is unchecked and it initially had SHARE permission
 			} else if (!this.isPublicShare && this.canReshare && !this.allowResharingIsChecked) {
 				this.share.permissions = this.share.permissions & ~ATOMIC_PERMISSIONS.SHARE
 			}
@@ -653,9 +663,9 @@ export default {
 					incomingShare.password = this.mutableShare.password
 				}
 
-				const share = await this.addShare(incomingShare, this.fileInfo, this.config)
-				this.share = share
-				this.$emit('add:share', this.share)
+				const share = this.addShare(incomingShare, this.fileInfo, this.config)
+				// this.share = share
+				this.$emit('update:share', share)
 			} else {
 				this.queueUpdate(...permissionsAndAttributes)
 			}
@@ -669,22 +679,10 @@ export default {
 		 * @param {object} fileInfo file data
 		 * @param {Config} config instance configs
 		 */
-		async addShare(value, fileInfo, config) {
-			// Clear the displayed selection
-			this.value = null
-
-			// handle externalResults from OCA.Sharing.ShareSearch
-			if (value.handler) {
-				const share = await value.handler(this)
-				this.$emit('add:share', new Share(share))
-				return true
-			}
-
-			// this.loading = true // Are we adding loaders the new share flow?
-			console.debug('Adding a new share from the input for', value)
+		addShare(value, fileInfo, config) {
 			try {
 				const path = (fileInfo.path + '/' + fileInfo.name).replace('//', '/')
-				const share = await this.createShare({
+				const emailShare = {
 					path,
 					shareType: value.shareType,
 					shareWith: value.shareWith,
@@ -694,8 +692,8 @@ export default {
 					...(value.password ? { password: value.password } : {}),
 					...(value.expireDate ? { expireDate: value.expireDate } : {}),
 					...(value.label ? { label: value.label } : {}),
-				})
-				return share
+				}
+				return emailShare
 			} catch (error) {
 				console.error('Error while adding new share', error)
 			} finally {
@@ -793,6 +791,7 @@ export default {
 				height: 80px;
 				border: var(--telekom-spacing-composition-space-01) solid var(--telekom-color-ui-border-standard);
 				border-radius: var(--telekom-radius-small);
+
 				&:hover {
 					cursor: text;
 				}
@@ -811,6 +810,7 @@ export default {
 				.checkbox-radio-switch__label {
 					padding-left: 0px;
 				}
+
 				::v-deep label {
 					padding-left: 0 !important;
 					background-color: initial !important;
@@ -863,14 +863,17 @@ export default {
 		all: unset;
 		position: relative;
 		font: var(--telekom-text-style-ui-bold);
+
 		&:hover {
 			color: var(--telekom-color-primary-hovered);
 			background-color: initial;
 			cursor: pointer;
+
 			&::after {
 				border-bottom-color: var(--color-primary);
 			}
 		}
+
 		&::after {
 			content: '';
 			border-left: 5px solid transparent;
@@ -880,6 +883,7 @@ export default {
 			top: calc(50% - 2px);
 			margin-left: 4px;
 		}
+
 		// rotate arrow when opened
 		&.open::after {
 			transform: rotate(0.5turn);

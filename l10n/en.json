@@ -2,6 +2,7 @@
 	"translations": {
 		"Sharing": "Sharing",
 		"Add link": "Add link",
+		"Share": "Share",
 		"Read only": "Read only",
 		"Can edit": "Can edit",
 		"File drop": "File drop",
@@ -14,6 +15,8 @@
 		"Advanced": "Advanced",
 		"Set password": "Set password",
 		"Your shares": "Your shares",
+		"Links sent per E-mail": "Links sent per E-mail",
+		"Links to Copy": "Links to Copy",
 		"No shares created yet.": "No shares created yet.",
 		"Advanced permissions": "Advanced permissions",
 		"Allow resharing": "Allow resharing",
@@ -21,7 +24,8 @@
 		"Resharing is allowed": "Resharing is allowed",
 		"You can create links or send shares by mail. If you invite MagentaCLOUD users, you have more opportunities for collaboration.": "You can create links or send shares by mail. If you invite MagentaCLOUD users, you have more opportunities for collaboration.",
 		"Share updated": "Share updated",
-		"This share was limited to {limit} downloads. There is still {downloadsLeft} left allowed.": "This share was limited to {limit} downloads. There is still {downloadsLeft} left allowed."
+		"This share was limited to {limit} downloads. There is still {downloadsLeft} left allowed.": "This share was limited to {limit} downloads. There is still {downloadsLeft} left allowed.",
+		"Manage Access": "Manage Access"
 	},
 	"pluralForm": "nplurals=2; plural=(n != 1);"
 }
