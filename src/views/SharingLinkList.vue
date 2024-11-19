@@ -22,22 +22,45 @@
 
 <template>
 	<ul v-if="canLinkShare && canReshare" class="sharing-link-list">
-		<AddLinkButton :file-info="fileInfo" @add:share="addShare" />
-		<h1>
-			<strong>{{ t('nmcsharing', 'Your shares') }}</strong>
-		</h1>
-		<template v-if="hasShares">
-			<!-- using shares[index] to work with .sync -->
-			<SharingEntryLink v-for="(share, index) in shares"
-				:key="share.id"
-				:index="shares.length > 1 ? index + 1 : null"
-				:can-reshare="canReshare"
-				:share.sync="shares[index]"
-				:file-info="fileInfo"
-				@add:share="addShare(...arguments)"
-				@update:share="awaitForShare(...arguments)"
-				@remove:share="removeShare"
-				@open-sharing-details="openSharingDetails(share)" />
+		<OpenSharingModalButton :file-info="fileInfo" @add:share="addShare" />
+
+		<template v-if="hasMailShares">
+			<h1>
+				<strong>{{ t('nmcsharing', 'Links sent per E-mail') }}</strong>
+			</h1>
+
+			<template v-for="(share, index) in shares">
+				<!-- using shares[index] to work with .sync -->
+				<SharingEntryLink v-if="share.type === shareTypeMail"
+					:key="share.id"
+					:index="shares.length > 1 ? index + 1 : null"
+					:can-reshare="canReshare"
+					:share.sync="shares[index]"
+					:file-info="fileInfo"
+					@add:share="addShare(...arguments)"
+					@update:share="awaitForShare(...arguments)"
+					@remove:share="removeShare"
+					@open-sharing-details="openSharingDetails(share)" />
+			</template>
+		</template>
+
+		<template v-if="hasLinkShares">
+			<h1>
+				<strong>{{ t('nmcsharing', 'Links to Copy') }}</strong>
+			</h1>
+
+			<template v-for="(share, index) in shares">
+				<SharingEntryLink v-if="share.type === shareTypeLink"
+					:key="share.id"
+					:index="shares.length > 1 ? index + 1 : null"
+					:can-reshare="canReshare"
+					:share.sync="shares[index]"
+					:file-info="fileInfo"
+					@add:share="addShare(...arguments)"
+					@update:share="awaitForShare(...arguments)"
+					@remove:share="removeShare"
+					@open-sharing-details="openSharingDetails(share)" />
+			</template>
 		</template>
 	</ul>
 </template>
@@ -45,17 +68,17 @@
 <script>
 // eslint-disable-next-line no-unused-vars
 import Share from '../models/Share.js'
-import ShareTypes from '../mixins/ShareTypes.js'
+import OpenSharingModalButton from '../components/OpenSharingModalButton.vue'
 import SharingEntryLink from '../components/SharingEntryLink.vue'
 import ShareDetails from '../mixins/ShareDetails.js'
-import AddLinkButton from '../components/AddLinkButton.vue'
+import ShareTypes from '../mixins/ShareTypes.js'
 
 export default {
 	name: 'SharingLinkList',
 
 	components: {
 		SharingEntryLink,
-		AddLinkButton,
+		OpenSharingModalButton,
 	},
 
 	mixins: [ShareTypes, ShareDetails],
@@ -86,22 +109,34 @@ export default {
 	computed: {
 		/**
 		 * Do we have link shares?
-		 * Using this to still show the `new link share`
-		 * button regardless of mail shares
-		 *
-		 * @return {Array}
-		 */
-		hasLinkShares() {
-			return this.shares.filter(share => share.type === this.SHARE_TYPES.SHARE_TYPE_LINK).length > 0
-		},
-
-		/**
-		 * Do we have any link or email shares?
 		 *
 		 * @return {boolean}
 		 */
-		hasShares() {
-			return this.shares.length > 0
+		hasLinkShares() {
+			return this.shares.filter(share => share.type === this.shareTypeLink).length > 0
+		},
+
+		/**
+		 * @return {int}
+		 */
+		shareTypeLink() {
+			return this.SHARE_TYPES.SHARE_TYPE_LINK
+		},
+
+		/**
+		 * Do we have mail shares?
+		 *
+		 * @return {boolean}
+		 */
+		hasMailShares() {
+			return this.shares.filter(share => share.type === this.shareTypeMail).length > 0
+		},
+
+		/**
+		 * @return {int}
+		 */
+		shareTypeMail() {
+			return this.SHARE_TYPES.SHARE_TYPE_EMAIL
 		},
 	},
 

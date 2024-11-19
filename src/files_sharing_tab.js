@@ -54,6 +54,8 @@ window.addEventListener('DOMContentLoaded', function() {
 
 			async mount(el, fileInfo, context) {
 				const SharingTab = (await import('./views/SharingTab.vue')).default
+				console.log("FileInfo", fileInfo);
+
 				const View = Vue.extend(SharingTab)
 
 				if (TabInstance) {

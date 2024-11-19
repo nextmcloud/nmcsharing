@@ -22,16 +22,6 @@
 
 <template>
 	<li :class="{'sharing-entry--share': share}" class="sharing-entry sharing-entry__link">
-		<NcAvatar :is-no-user="true"
-			class="sharing-entry__avatar">
-			<template #icon>
-				<span class="icon"
-					:class="{
-						'icon-default': !share,
-						'icon-user': isEmailShareType,
-						'icon-link': isLinkShareType}" />
-			</template>
-		</NcAvatar>
 		<div class="sharing-entry__desc" @click.prevent="toggleQuickShareSelect">
 			<span class="sharing-entry__title" :title="title">
 				{{ title }}
@@ -267,7 +257,7 @@ export default {
 							label: this.share.label.trim(),
 						})
 					}
-					return t('files_sharing', 'Share link ({label})', {
+					return t('files_sharing', 'Link {label}', {
 						label: this.share.label.trim(),
 					})
 				}

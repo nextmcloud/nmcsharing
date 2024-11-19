@@ -30,8 +30,14 @@
 		<!-- shares content -->
 		<div v-if="!showSharingDetailsView" class="sharingTab__content">
 			<h2 class="sharingTab__header">
-				{{ t('nmcsharing', 'Sharing') }}
+				{{ t('nmcsharing', 'Manage Access') }}
 			</h2>
+			<!-- <label v-if="canReshare" for="sharing-search-input"> -->
+			<p v-if="canReshare" class="sharingTab__info">
+				{{ t('nmcsharing', 'You did not share this file/ folder yet. You can share the file/ folder to others') }}
+				{{ isSharedWithMe ? `${t('nmcsharing', 'Resharing is allowed')}. ` : '' }}
+			</p>
+
 			<!-- shared with me information -->
 			<SharingEntrySimple v-if="isSharedWithMe" v-bind="sharedWithMe" class="sharing-entry__reshare" />
 
@@ -46,41 +52,25 @@
 				@open-sharing-details="toggleShareDetailsView" />
 
 			<!-- link shares list -->
-			<SharingLinkList v-if="!loading"
-				ref="linkShareList"
-				:can-reshare="canReshare"
-				:file-info="fileInfo"
-				:shares="linkShares"
-				@open-sharing-details="toggleShareDetailsView" />
-
-			<p v-if="!loading && shares.length === 0 && linkShares.length === 0 && canReshare">
-				{{ t('nmcsharing', 'No shares created yet.') }}
-			</p>
+			<SharingLinkList v-if="!loading" ref="linkShareList" :can-reshare="canReshare" :can-edit="canEdit" :file-info="fileInfo"
+					:shares="linkShares" @open-sharing-details="toggleShareDetailsView" />
 
 			<!-- other shares list -->
-			<SharingList v-if="!loading && canReshare"
-				ref="shareList"
-				:shares="shares"
-				:file-info="fileInfo"
+			<SharingList v-if="!loading && canReshare" ref="shareList" :shares="shares" :file-info="fileInfo"
 				@open-sharing-details="toggleShareDetailsView" />
 		</div>
 
 		<!-- share details -->
 		<div v-else>
-			<SharingDetailsTab :file-info="shareDetailsData.fileInfo"
-				:share="shareDetailsData.share"
-				:resharing-allowed-global="config.isResharingAllowed"
-				@close-sharing-details="toggleShareDetailsView"
-				@add:share="addShare"
-				@remove:share="removeShare" />
+			<SharingDetailsTab :file-info="shareDetailsData.fileInfo" :share="shareDetailsData.share"
+				:resharing-allowed-global="config.isResharingAllowed" @close-sharing-details="toggleShareDetailsView"
+				@add:share="addShare" @remove:share="removeShare" />
 		</div>
 
 		<!-- additional entries, use it with cautious -->
-		<div v-for="(section, index) in sections"
-			:ref="'section-' + index"
-			:key="index"
+		<div v-for="(section, index) in sections" :ref="'section-' + index" :key="index"
 			class="sharingTab__additionalContent">
-			<component :is="section($refs['section-'+index], fileInfo)" :file-info="fileInfo" />
+			<component :is="section($refs['section-' + index], fileInfo)" :file-info="fileInfo" />
 		</div>
 	</div>
 </template>
@@ -127,6 +117,7 @@ export default {
 
 			// reshare Share object
 			reshare: null,
+			edit: null,
 			sharedWithMe: {},
 			shares: [],
 			linkShares: [],
@@ -138,7 +129,9 @@ export default {
 		}
 	},
 
-	computed: {
+	computed: {		
+		console: () => console,
+    	window: () => window,
 		/**
 		 * Is this share shared with me?
 		 *
@@ -152,6 +145,12 @@ export default {
 			return !!(this.fileInfo.permissions & OC.PERMISSION_SHARE)
 				|| !!(this.reshare && this.reshare.hasSharePermission && this.config.isResharingAllowed)
 		},
+
+		// Check if file is Read Only or can be Updated / Edited
+		canEdit() {
+			return !!(this.fileInfo.permissions & OC.PERMISSION_UPDATE) 
+				|| !!(this.edit && this.edit.hasUpdatePermission)
+		}
 	},
 
 	methods: {
@@ -390,6 +389,11 @@ export default {
 .sharingTab {
 	&__content {
 		padding: 0px;
+	}
+
+	&__info {
+		display: block;
+		margin-bottom: 1rem
 	}
 
 	&__additionalContent {

@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<NcButton id="addlink_button" type="secondary" @click.prevent.stop="onNewLinkShare">
-			{{ t('nmcsharing', 'Add link') }}
+			{{ t('nmcsharing', 'Share') }}
 		</NcButton>
 	</div>
 </template>
@@ -13,7 +13,7 @@ import { showError, showSuccess } from '@nextcloud/dialogs'
 import SharesMixin from '../mixins/SharesMixin.js'
 
 export default {
-	name: 'AddLinkButton',
+	name: 'OpenSharingModalButton',
 	components: {
 		NcButton,
 	},
