@@ -51,6 +51,11 @@ export default {
 					this.$emit('add:share', newShare, resolve)
 				})
 				showSuccess(t('files_sharing', 'Link share created'))
+				this.sendUtagInfo({
+					wt_link_id: 'button.add-link-share',
+					page_content_id: 'files.sharing',
+					page_type: 'files',
+				})
 
 			} catch (data) {
 				const message = data?.response?.data?.ocs?.meta?.message
