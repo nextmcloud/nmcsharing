@@ -37,6 +37,10 @@ Vue.prototype.n = n
 let TabInstance = null
 
 // Remove all unused
+/**
+ *
+ * @param id
+ */
 function checkTabs(id) {
 	return id !== 'sharing' && id !== 'photos' && id !== 'comments' && id !== 'version_vue'
 }
@@ -54,6 +58,7 @@ window.addEventListener('DOMContentLoaded', function() {
 
 			async mount(el, fileInfo, context) {
 				const SharingTab = (await import('./views/SharingTab.vue')).default
+
 				const View = Vue.extend(SharingTab)
 
 				if (TabInstance) {
