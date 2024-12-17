@@ -22,7 +22,7 @@
 
 <template>
 	<ul v-if="canLinkShare && canReshare" class="sharing-link-list">
-		<OpenSharingModalButton :file-info="fileInfo" @add:share="addShare" class="share-button"/>
+		<OpenSharingModalButton :file-info="fileInfo" @add:share="addShare" class="share-button" />
 
 		<template v-if="hasMailShares">
 			<h1>

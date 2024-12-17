@@ -93,7 +93,7 @@
 					:resharing-allowed-global="config.isResharingAllowed"
 					@close-sharing-details="toggleShareDetailsView"
 					@add:share="addShare"
-					@remove:share="removeShare"
+					@remove:share="deleteShare"
 					@update:share="updateEmailShares" />
 			</div>
 
@@ -428,7 +428,7 @@ export default {
 		 *
 		 * @param {Share} share the share to remove
 		 */
-		removeShare(share) {
+		deleteShare(share) {
 			const index = this.shares.findIndex(item => item.id === share.id)
 			// eslint-disable-next-line vue/no-mutating-props
 			this.shares.splice(index, 1)
