@@ -52,16 +52,16 @@
 					</div>
 
 					<!-- display multiple email share recipients -->
-					<SharingInput :can-reshare="canReshare" 
-						:file-info="fileInfo" 
+					<SharingInput :can-reshare="canReshare"
+						:file-info="fileInfo"
 						:link-shares="linkShares"
-						:reshare="reshare" 
-						:shares="shares" 
+						:reshare="reshare"
+						:shares="shares"
 						:filtered-email-arr="filteredEmailArr"
-						:is-shared-with-me="isSharedWithMe" 
+						:is-shared-with-me="isSharedWithMe"
 						@open-sharing-details="toggleShareDetailsView" />
 
-					<AddAllEmailsButton :file-info="fileInfo" 
+					<AddAllEmailsButton :file-info="fileInfo"
 						:filtered-email-arr="filteredEmailArr"
 						:on-submit="addEmailShare" />
 				</template>
@@ -70,15 +70,17 @@
 					<textarea class="sharingTabDetailsView__advanced" placeholder="Add Personal Message" />
 				</template>
 				<!-- link shares list -->
-				<SharingLinkList v-if="!loading" ref="linkShareList" 
-					:can-reshare="canReshare" 
+				<SharingLinkList v-if="!loading"
+					ref="linkShareList"
+					:can-reshare="canReshare"
 					:can-edit="canEdit"
-					:file-info="fileInfo" 
-					:shares="linkShares" 
+					:file-info="fileInfo"
+					:shares="linkShares"
 					@open-sharing-details="toggleShareDetailsView" />
 
 				<!-- other shares list -->
-				<SharingList v-if="!loading && canReshare" ref="shareList" 
+				<SharingList v-if="!loading && canReshare"
+					ref="shareList" 
 					:shares="shares" 
 					:file-info="fileInfo"
 					@open-sharing-details="toggleShareDetailsView" />
@@ -86,17 +88,19 @@
 
 			<!-- share details -->
 			<div v-else>
-				<SharingDetailsTab :file-info="shareDetailsData.fileInfo" 
+				<SharingDetailsTab :file-info="shareDetailsData.fileInfo"
 					:share="shareDetailsData.share"
 					:resharing-allowed-global="config.isResharingAllowed"
-					@close-sharing-details="toggleShareDetailsView" 
-					@add:share="addShare" 
+					@close-sharing-details="toggleShareDetailsView"
+					@add:share="addShare"
 					@remove:share="removeShare"
 					@update:share="updateEmailShares" />
 			</div>
 
 			<!-- additional entries, use it with cautious -->
-			<div v-for="(section, index) in sections" :ref="'section-' + index" :key="index"
+			<div v-for="(section, index) in sections"
+				:ref="'section-' + index"
+				:key="index"
 				class="sharingTab__additionalContent">
 				<component :is="section($refs['section-' + index], fileInfo)" :file-info="fileInfo" />
 			</div>
@@ -119,7 +123,7 @@ import SharingList from './SharingList.vue'
 import SharingDetailsTab from './SharingDetailsTab.vue'
 import AddAllEmailsButton from '../components/AddAllEmailsButton.vue'
 import NcModal from '@nextcloud/vue/dist/Components/NcModal.js'
-import { Permission, formatFileSize } from '@nextcloud/files'
+import { formatFileSize } from '@nextcloud/files'
 import EyeIcon from 'vue-material-design-icons/EyeCircleOutline.vue'
 import ChevronRight from 'vue-material-design-icons/ChevronRight.vue'
 
