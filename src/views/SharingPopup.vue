@@ -80,8 +80,8 @@
 
 				<!-- other shares list -->
 				<SharingList v-if="!loading && canReshare"
-					ref="shareList" 
-					:shares="shares" 
+					ref="shareList"
+					:shares="shares"
 					:file-info="fileInfo"
 					@open-sharing-details="toggleShareDetailsView" />
 			</div>
@@ -223,20 +223,20 @@ export default {
 		 *
 		 * @param {object} value the multiselect option
 		 */
-		async addEmailShare(emailObj) {				// Clear the displayed selection
+		async addEmailShare(emailObj) { // Clear the displayed selection
 			// this.value = null
 
 			// handle externalResults from OCA.Sharing.ShareSearch
 			// if (value.handler) {
-			// 	const share = await value.handler(this)
-			// 	this.addShare(new Share(share));
-			// 	return true
+			// const share = await value.handler(this)
+			// this.addShare(new Share(share));
+			// return true
 			// }
 
 			// this.loading = true // Are we adding loaders the new share flow?
 			// console.debug('Adding a new share from the input for', value)
 			try {
-				const share = await this.createShare(emailObj.path, emailObj.shareType, emailObj.shareWith, emailObj.permissions, emailObj.attributes);
+				const share = await this.createShare(emailObj.path, emailObj.shareType, emailObj.shareWith, emailObj.permissions, emailObj.attributes)
 				return share
 			} catch (error) {
 				console.error('Error while adding new share', error)
@@ -311,8 +311,8 @@ export default {
 			this.shares = []
 			this.linkShares = []
 			this.showSharingDetailsView = false
-			this.shareDetailsData = {},
-				this.emailSharesArray = []
+			this.shareDetailsData = {}
+			this.emailSharesArray = []
 		},
 
 		/**
@@ -459,7 +459,7 @@ export default {
 		},
 		toggleShareDetailsView(eventData) {
 			if (eventData) {
-				this.shareDetailsData = eventData;
+				this.shareDetailsData = eventData
 			}
 			this.showSharingDetailsView = !this.showSharingDetailsView
 		},
