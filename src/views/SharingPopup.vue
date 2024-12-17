@@ -52,11 +52,17 @@
 					</div>
 
 					<!-- display multiple email share recipients -->
-					<SharingInput :can-reshare="canReshare" :file-info="fileInfo" :link-shares="linkShares"
-						:reshare="reshare" :shares="shares" :filtered-email-arr="filteredEmailArr"
-						:is-shared-with-me="isSharedWithMe" @open-sharing-details="toggleShareDetailsView" />
+					<SharingInput :can-reshare="canReshare" 
+						:file-info="fileInfo" 
+						:link-shares="linkShares"
+						:reshare="reshare" 
+						:shares="shares" 
+						:filtered-email-arr="filteredEmailArr"
+						:is-shared-with-me="isSharedWithMe" 
+						@open-sharing-details="toggleShareDetailsView" />
 
-					<AddAllEmailsButton :file-info="fileInfo" :filtered-email-arr="filteredEmailArr"
+					<AddAllEmailsButton :file-info="fileInfo" 
+						:filtered-email-arr="filteredEmailArr"
 						:on-submit="addEmailShare" />
 				</template>
 				<!-- add new share input -->
@@ -64,19 +70,28 @@
 					<textarea class="sharingTabDetailsView__advanced" placeholder="Add Personal Message" />
 				</template>
 				<!-- link shares list -->
-				<SharingLinkList v-if="!loading" ref="linkShareList" :can-reshare="canReshare" :can-edit="canEdit"
-					:file-info="fileInfo" :shares="linkShares" @open-sharing-details="toggleShareDetailsView" />
+				<SharingLinkList v-if="!loading" ref="linkShareList" 
+					:can-reshare="canReshare" 
+					:can-edit="canEdit"
+					:file-info="fileInfo" 
+					:shares="linkShares" 
+					@open-sharing-details="toggleShareDetailsView" />
 
 				<!-- other shares list -->
-				<SharingList v-if="!loading && canReshare" ref="shareList" :shares="shares" :file-info="fileInfo"
+				<SharingList v-if="!loading && canReshare" ref="shareList" 
+					:shares="shares" 
+					:file-info="fileInfo"
 					@open-sharing-details="toggleShareDetailsView" />
 			</div>
 
 			<!-- share details -->
 			<div v-else>
-				<SharingDetailsTab :file-info="shareDetailsData.fileInfo" :share="shareDetailsData.share"
+				<SharingDetailsTab :file-info="shareDetailsData.fileInfo" 
+					:share="shareDetailsData.share"
 					:resharing-allowed-global="config.isResharingAllowed"
-					@close-sharing-details="toggleShareDetailsView" @add:share="addShare" @remove:share="removeShare"
+					@close-sharing-details="toggleShareDetailsView" 
+					@add:share="addShare" 
+					@remove:share="removeShare"
 					@update:share="updateEmailShares" />
 			</div>
 
@@ -164,7 +179,6 @@ export default {
 		},
 
 		canReshare() {
-			console.log('check boolean value', !!(this.fileInfo.permissions & OC.PERMISSION_SHARE))
 			return !!(this.fileInfo.permissions & OC.PERMISSION_SHARE)
 				|| !!(this.reshare && this.reshare.hasSharePermission && this.config.isResharingAllowed)
 		},
@@ -186,10 +200,6 @@ export default {
 				return this.t('files', 'Pending')
 			}
 			return formatFileSize(size, true)
-		},
-		isNewShare() {
-			console.log('sharing details', this.shareDetailsData?.share)
-			//return this.shareDetailsData?.share?.id === null || this.shareDetailsData?.share?.id === undefined
 		},
 	},
 
@@ -237,8 +247,6 @@ export default {
 
 		async updateEmailShares(emailSharesElement) {
 			this.emailSharesArray.push(emailSharesElement)
-			console.log('updated EmailSharesArray in Sharing Tab', this.emailSharesArray)
-			console.log('updated filteredEmailSharesArray in Sharing Tab', this.filteredEmailArr)
 		},
 
 		/**
@@ -446,21 +454,13 @@ export default {
 			})
 		},
 		toggleShareDetailsView(eventData) {
-			console.log('sharing data event', eventData)
 			if (eventData) {
 				this.shareDetailsData = eventData;
-				console.log('sharing data', this.shareDetailsData.share)
 			}
 			this.showSharingDetailsView = !this.showSharingDetailsView
 		},
-		initializeAttributes() {
-			console.log('method called...')
-		},
 		formatFileSize
 	},
-	beforeMount() {
-		this.initializeAttributes()
-	}
 }
 </script>
 
