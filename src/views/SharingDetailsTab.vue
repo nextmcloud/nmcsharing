@@ -1,8 +1,11 @@
 <template>
 	<div class="sharingTabDetailsView">
-		<p class="sharingTabDetailsView__header">
+		<h2 class="sharingTabDetailsView__header" style="margin-bottom: 0;">
 			{{ t('nmcsharing', 'Permissions') }}
-		</p>
+		</h2>
+
+		<span class="sharingPopup__fileinfo">{{ fileInfo.name }} ⸱ {{ size }}</span>
+
 		<div class="sharingTabDetailsView__quick-permissions">
 			<div>
 				<NcCheckboxRadioSwitch :checked.sync="sharingPermission"
@@ -127,6 +130,8 @@ import ShareRequests from '../mixins/ShareRequests.js'
 import ShareTypes from '../mixins/ShareTypes.js'
 import SharesMixin from '../mixins/SharesMixin.js'
 
+import { formatFileSize } from '@nextcloud/files'
+
 import {
 	ATOMIC_PERMISSIONS,
 	BUNDLED_PERMISSIONS,
@@ -157,6 +162,10 @@ export default {
 			type: Object,
 			required: true,
 		},
+		shareAll: {
+			type: Array,
+			required: false,
+		},
 		resharingAllowedGlobal: {
 			type: Boolean,
 			required: true,
@@ -183,6 +192,13 @@ export default {
 	},
 
 	computed: {
+		size() {
+			const size = parseInt(this.fileInfo.size, 10)
+			if (typeof size !== 'number' || isNaN(size) || size < 0) {
+				return this.t('files', 'Pending')
+			}
+			return formatFileSize(size, true)
+		},
 		title() {
 			let title = t('files_sharing', 'Share with ')
 			if (this.share.type === this.SHARE_TYPES.SHARE_TYPE_USER) {
@@ -636,26 +652,28 @@ export default {
 			}
 
 			if (this.isNewShare) {
-				const incomingShare = {
-					permissions: this.share.permissions,
-					shareType: this.share.type,
-					shareWith: this.share.shareWith,
-					attributes: this.share.attributes,
-					label: this.mutableShare.label,
-					note: this.mutableShare.note,
-				}
+				for (let thisShare of this.shareAll) {
+					const incomingShare = {
+						permissions: this.share.permissions,
+						shareType: thisShare.share.type,
+						shareWith: thisShare.share.shareWith,
+						attributes: thisShare.share.attributes,
+						label: this.mutableShare.label,
+						note: this.mutableShare.note,
+					}
 
-				if (this.hasExpirationDate) {
-					incomingShare.expireDate = this.share.expireDate
-				}
+					if (this.hasExpirationDate) {
+						incomingShare.expireDate = this.share.expireDate
+					}
 
-				if (this.isPasswordProtected) {
-					incomingShare.password = this.mutableShare.password
-				}
+					if (this.isPasswordProtected) {
+						incomingShare.password = this.mutableShare.password
+					}
 
-				const share = await this.addShare(incomingShare, this.fileInfo, this.config)
-				this.share = share
-				this.$emit('add:share', this.share)
+					const newShare = await this.addShare(incomingShare, this.fileInfo, this.config)
+					//this.share = share
+					this.$emit('add:share', newShare)
+				}
 			} else {
 				this.queueUpdate(...permissionsAndAttributes)
 			}
@@ -742,6 +760,8 @@ export default {
 				return null // Or a default icon component if needed
 			}
 		},
+
+		formatFileSize
 	},
 }
 </script>
@@ -751,20 +771,16 @@ export default {
 	display: flex;
 	flex-direction: column;
 	align-items: flex-start;
-	width: 96%;
-	margin: 0 auto;
+	padding: 1rem;
 
 	&__header {
-		font: var(--telekom-text-style-heading-5);
 		font-weight: bold;
 	}
 
 	&__quick-permissions {
 		display: flex;
-		margin-bottom: 0.2em;
 		width: 100%;
-		margin: 0 auto;
-		border-radius: 0;
+		margin-top: 1rem;
 
 		.sharing_permission-desc {
 			color: var(--telekom-color-ui-regular);
@@ -773,7 +789,7 @@ export default {
 
 	&__advanced-control {
 		width: 100%;
-		margin-top: var(--telekom-spacing-composition-space-08);
+		margin-top: 1rem;
 	}
 
 	&__advanced {
@@ -822,10 +838,6 @@ export default {
 				padding-left: 1.5em;
 			}
 		}
-
-		.checkbox-radio-switch-checkbox {
-			margin-top: 0.5rem;
-		}
 	}
 
 	&__footer {
@@ -835,34 +847,25 @@ export default {
 		justify-content: space-between;
 		align-items: flex-start;
 
-		>button:first-child {
-			font-size: 12px;
-			color: rgb(223, 7, 7);
-			background-color: #f5f5f5;
-		}
-
 		.button-group {
 			display: flex;
 			width: 100%;
-			margin-top: 16px;
 			gap: 1rem;
-
-			button {
-				padding: 0 1rem;
-				font-size: 0.875rem;
-			}
+			justify-content: end;
+			margin-top: 1rem;
 		}
 	}
 
 	#share-date-picker {
-		border-width: 1px;
+		border: var(--telekom-spacing-composition-space-01) solid var(--telekom-color-ui-border-standard);
+		height: 44px;
 	}
 
-	// 'Advanced' button style
 	#btn-advanced {
 		all: unset;
 		position: relative;
 		font: var(--telekom-text-style-ui-bold);
+
 		&:hover {
 			color: var(--telekom-color-primary-hovered);
 			background-color: initial;
@@ -871,6 +874,7 @@ export default {
 				border-bottom-color: var(--color-primary);
 			}
 		}
+
 		&::after {
 			content: '';
 			border-left: 5px solid transparent;
@@ -880,6 +884,7 @@ export default {
 			top: calc(50% - 2px);
 			margin-left: 4px;
 		}
+
 		// rotate arrow when opened
 		&.open::after {
 			transform: rotate(0.5turn);

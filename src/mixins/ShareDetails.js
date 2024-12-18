@@ -9,6 +9,17 @@ export default {
 			}
 			this.$emit('open-sharing-details', shareRequestObject)
 		},
+		openSharingDetailsAll(share) {
+			let shareRequestObjects = []
+			for (let element of share) {
+				let shareRequestObject = {
+					fileInfo: this.fileInfo,
+					share: this.mapShareRequestToShareObject(element),
+				}
+				shareRequestObjects.push(shareRequestObject)
+			}
+			this.$emit('open-sharing-details-all', shareRequestObjects)
+		},
 		openShareDetailsForCustomSettings(share) {
 			share.setCustomPermissions = true
 			this.openSharingDetails(share)

@@ -24,7 +24,7 @@
 import Vue from 'vue'
 import { translate as t, translatePlural as n } from '@nextcloud/l10n'
 
-import SharingTab from './views/SharingTab.vue'
+import SharingPopup from './views/SharingPopup.vue'
 import VTooltip from 'v-tooltip'
 
 Vue.prototype.t = t
@@ -33,16 +33,12 @@ Vue.prototype.n = n
 Vue.use(VTooltip)
 
 // Init Sharing tab component
-const View = Vue.extend(SharingTab)
+const View = Vue.extend(SharingPopup)
 let TabInstance = null
 
-function checkTabs(id) {
-	return id !== 'sharing' && id !== 'photos' && id !== 'comments' && id !== 'version_vue'
-}
-
 const sharingTab = new OCA.Files.Sidebar.Tab({
-	id: 'sharing',
-	name: t('files_sharing', 'Sharing'),
+	id: 'sharing-popup',
+	name: t('files_sharing', 'Sharing Popup'),
 	icon: 'icon-share',
 
 	async mount(el, fileInfo, context) {
@@ -68,10 +64,7 @@ const sharingTab = new OCA.Files.Sidebar.Tab({
 
 window.addEventListener('DOMContentLoaded', () => {
 	if (OCA.Files && OCA.Files.Sidebar) {
-		// remove all unused tabs
-		const tabsState = OCA.Files.Sidebar.state.tabs
-		OCA.Files.Sidebar.state.tabs = tabsState.filter((tab) => checkTabs(tab.id))
-		// register new sharing tab
+		// register new sharing popup
 		OCA.Files.Sidebar.registerTab(sharingTab)
 	}
 })

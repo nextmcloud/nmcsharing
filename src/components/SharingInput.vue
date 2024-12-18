@@ -22,13 +22,6 @@
 
 <template>
 	<div class="sharing-search">
-		<label v-if="canReshare" for="sharing-search-input">
-			{{ isSharedWithMe ? `${t('nmcsharing', 'Resharing is allowed')}. ` : '' }}
-			{{ t('nmcsharing', 'You can create links or send shares by mail. If you invite MagentaCLOUD users, you have more opportunities for collaboration.') }}
-		</label>
-		<label v-else>
-			{{ t('files_sharing', 'Resharing is not allowed') }}
-		</label>
 		<NcSelect v-if="canReshare"
 			ref="select"
 			v-model="value"
@@ -40,13 +33,21 @@
 			:placeholder="inputPlaceholder"
 			:clear-search-on-blur="() => false"
 			:user-select="true"
+			:multiple="true"
 			:options="options"
-			@search="asyncFind"
-			@option:selected="openSharingDetails">
+			@search="asyncFind">
 			<template #no-options="{ search }">
 				{{ search ? noResultText : t('files_sharing', 'No recommendations. Start typing.') }}
 			</template>
 		</NcSelect>
+		<div class="button-group">
+			<NcButton 
+				type="primary" 
+				:disabled="!isValidValue"
+				@click="triggerSharingDetails">
+					{{ t('nmcsharing', 'Send') }}
+			</NcButton>
+		</div>
 	</div>
 </template>
 
@@ -55,6 +56,7 @@ import { generateOcsUrl } from '@nextcloud/router'
 import { getCurrentUser } from '@nextcloud/auth'
 import axios from '@nextcloud/axios'
 import { debounce } from 'throttle-debounce'
+import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
 import NcSelect from '@nextcloud/vue/dist/Components/NcSelect.js'
 
 import Config from '../services/ConfigService.js'
@@ -68,6 +70,7 @@ export default {
 	name: 'SharingInput',
 
 	components: {
+		NcButton,
 		NcSelect,
 	},
 
@@ -141,6 +144,13 @@ export default {
 			return t('files_sharing', 'Name, email, or Federated Cloud ID …')
 		},
 
+		isValidValue() {
+			if (this.value) {
+				return this.value.length > 0
+			}
+			return false
+		},
+
 		isValidQuery() {
 			return this.query && this.query.trim() !== '' && this.query.length > this.config.minSearchStringLength
 		},
@@ -165,6 +175,10 @@ export default {
 	},
 
 	methods: {
+		triggerSharingDetails() {
+			this.openSharingDetailsAll(this.value)
+		},
+
 		async asyncFind(query) {
 			// save current query to check if we display
 			// recommendations or search results
@@ -235,6 +249,7 @@ export default {
 
 			// lookup clickable entry
 			// show if enabled and not already requested
+			/*
 			const lookupEntry = []
 			if (data.lookupEnabled && !lookup) {
 				lookupEntry.push({
@@ -244,11 +259,12 @@ export default {
 					lookup: true,
 				})
 			}
+			*/
 
 			// if there is a condition specified, filter it
 			const externalResults = this.externalResults.filter(result => !result.condition || result.condition(this))
 
-			const allSuggestions = exactSuggestions.concat(suggestions).concat(externalResults).concat(lookupEntry)
+			const allSuggestions = exactSuggestions.concat(suggestions).concat(externalResults)
 
 			// Count occurrences of display names in order to provide a distinguishable description if needed
 			const nameCounts = allSuggestions.reduce((nameCounts, result) => {
@@ -271,7 +287,6 @@ export default {
 			})
 
 			this.loading = false
-			console.info('suggestions', this.suggestions)
 		},
 
 		/**
@@ -315,7 +330,6 @@ export default {
 				.concat(externalResults)
 
 			this.loading = false
-			console.info('recommendations', this.recommendations)
 		},
 
 		/**
@@ -493,7 +507,7 @@ export default {
 			}
 
 			this.loading = true
-			console.debug('Adding a new share from the input for', value)
+			
 			try {
 				let password = null
 
@@ -548,7 +562,7 @@ export default {
 .sharing-search {
 	display: flex;
 	flex-direction: column;
-	margin-bottom: 0px;
+	margin-bottom: 1rem;
 
 	label[for="sharing-search-input"] {
 		margin-bottom: 0;
@@ -557,7 +571,8 @@ export default {
 	&__input.v-select.select {
 		min-width: auto;
 		width: 100%;
-		margin: 16px 0 12px;
+		margin: 1rem 0 0.75rem;
+
 		input {
 			opacity: 1;
 		}
@@ -566,26 +581,40 @@ export default {
 			opacity: 1;
 		}
 	}
+
+	.button-group {
+		display: flex;
+		justify-content: end;
+
+		button {
+			font-size: 14px;
+		}
+	}
 };
 
 ul.vs__dropdown-menu {
 	--vs-border-width: 1px;
-	--vs-dropdown-option-padding: 16px 16px 16px 8px;
+	--vs-dropdown-option-padding: 1rem 1rem 1rem 0.5rem;
 	padding: 0px !important;
+
 	.vs__dropdown-option {
 		border-radius: 0px !important;
+
 		// remove user avatar
 		.avatardiv {
 			display: none;
 		}
+
 		// set dropdown option height
 		span.option {
 			--height: 16px !important;
 		}
+
 		// add a new icon definition
 		.icon {
 			background-size: 24px;
 			background-position: right;
+
 			.icon-upload-to-cloud {
 				background-image: var(--icon-upload-to-cloud-dark);
 			}
@@ -602,11 +631,13 @@ ul.vs__dropdown-menu {
 .vs__dropdown-menu {
 	// properly style the lookup entry
 	span[lookup] {
+
 		.avatardiv {
 			background-image: var(--icon-search-white);
 			background-repeat: no-repeat;
 			background-position: center;
 			background-color: var(--color-text-maxcontrast) !important;
+
 			div {
 				display: none;
 			}

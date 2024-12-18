@@ -22,13 +22,18 @@
 
 <template>
 	<ul class="sharing-sharee-list">
-		<SharingEntry v-for="share in shares"
-			:key="share.id"
-			:file-info="fileInfo"
-			:share="share"
-			:is-unique="isUnique(share)"
-			@remove:share="removeShare"
-			@open-sharing-details="openSharingDetails(share)" />
+		<template v-if="!hasShares">
+			<li class="sharing-link-list-caption">
+				<strong>{{ t('nmcsharing', 'Shares') }}</strong>
+			</li>
+			<SharingEntry v-for="share in shares"
+				:key="share.id"
+				:file-info="fileInfo"
+				:share="share"
+				:is-unique="isUnique(share)"
+				@remove:share="removeShare"
+				@open-sharing-details="openSharingDetails(share)" />
+		</template>
 	</ul>
 </template>
 

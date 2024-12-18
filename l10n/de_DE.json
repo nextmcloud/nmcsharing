@@ -2,6 +2,7 @@
 	"translations": {
 		"Sharing": "Teilen",
 		"Add link": "Link erstellen",
+		"Add new link": "Neuen Link erstellen",
 		"Read only": "Nur lesen",
 		"Can edit": "Kann bearbeiten",
 		"File drop": "Sammelbox",
@@ -14,6 +15,10 @@
 		"Advanced": "Erweiterte",
 		"Set password": "Passwortschutz",
 		"Your shares": "Ihre Freigaben",
+		"Manage Access": "Zugriff verwalten",
+		"Links sent per E-mail": "Links per E-mail versandt",
+		"Links to Copy": "Links zum Kopieren",
+		"Shares": "Geteilte Inhalte",
 		"No shares created yet.": "Noch keine Freigaben erstellt.",
 		"Advanced permissions": "Erweiterte Berechtigungen",
 		"Allow resharing": "Weiterteilen erlauben",

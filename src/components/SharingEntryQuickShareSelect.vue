@@ -8,7 +8,9 @@
 			aria-label="Quick share options dropdown"
 			@click="toggleDropdown">
 			{{ selectedOption }}
-			<DropdownIcon :size="15" />
+			<EyeIcon v-if="canView" :size="15" />
+			<PencilIcon v-if="canEdit" :size="15" />
+			<UploadIcon v-if="fileDrop" :size="15" />
 		</span>
 		<div v-if="showDropdown"
 			ref="quickShareDropdown"
@@ -30,7 +32,9 @@
 </template>
 
 <script>
-import DropdownIcon from 'vue-material-design-icons/TriangleSmallDown.vue'
+import EyeIcon from 'vue-material-design-icons/EyeCircleOutline.vue'
+import PencilIcon from 'vue-material-design-icons/Pencil.vue'
+import UploadIcon from 'vue-material-design-icons/Upload.vue'
 import SharesMixin from '../mixins/SharesMixin.js'
 import ShareDetails from '../mixins/ShareDetails.js'
 import ShareTypes from '../mixins/ShareTypes.js'
@@ -45,7 +49,9 @@ import { createFocusTrap } from 'focus-trap'
 
 export default {
 	components: {
-		DropdownIcon,
+		EyeIcon,
+		PencilIcon,
+		UploadIcon,
 	},
 	mixins: [SharesMixin, ShareDetails, ShareTypes],
 	props: {
@@ -68,6 +74,9 @@ export default {
 			selectedOption: '',
 			showDropdown: this.toggle,
 			focusTrap: null,
+			fileDrop: false,
+			canEdit: false,
+			canView: false,
 		}
 	},
 	computed: {
@@ -90,10 +99,13 @@ export default {
 				permissions = this.share.permissions & ~ATOMIC_PERMISSIONS.SHARE
 			}
 			if (permissions === BUNDLED_PERMISSIONS.READ_ONLY) {
+				this.canView = true
 				return this.canViewText
 			} else if (permissions === BUNDLED_PERMISSIONS.ALL || permissions === BUNDLED_PERMISSIONS.ALL_FILE) {
+				this.canEdit = true
 				return this.canEditText
 			} else if (permissions === BUNDLED_PERMISSIONS.FILE_DROP) {
+				this.fileDrop = true
 				return this.fileDropText
 			}
 
@@ -119,13 +131,22 @@ export default {
 		dropDownPermissionValue() {
 			switch (this.selectedOption) {
 			case this.canEditText:
+				this.canView = true
+				this.canEdit = true
+				this.fileDrop = false
 				return this.isFolder ? BUNDLED_PERMISSIONS.ALL : BUNDLED_PERMISSIONS.ALL_FILE
 			case this.fileDropText:
+				this.canView = true
+				this.canEdit = true
+				this.fileDrop = true
 				return BUNDLED_PERMISSIONS.FILE_DROP
 			// case this.customPermissionsText:
 			// return 'custom'
 			case this.canViewText:
 			default:
+				this.canView = true
+				this.canEdit = false
+				this.fileDrop = false
 				return BUNDLED_PERMISSIONS.READ_ONLY
 			}
 		},

@@ -22,32 +22,11 @@
 
 <template>
 	<div>
-		<ul v-if="canLinkShare && canReshare" class="sharing-link-list">		
-			<template v-if="hasMailShares">
-				<li class="sharing-link-list-caption">
-					<strong>{{ t('nmcsharing', 'Links sent per E-mail') }}</strong>
-				</li>
-				<template v-for="(share, index) in shares">
-					<!-- using shares[index] to work with .sync -->
-					<SharingEntryLink v-if="share.type === shareTypeMail"
-						:key="share.id"
-						:index="shares.length > 1 ? index + 1 : null"
-						:can-reshare="canReshare"
-						:share.sync="shares[index]"
-						:file-info="fileInfo"
-						@add:share="addShare(...arguments)"
-						@update:share="awaitForShare(...arguments)"
-						@remove:share="removeShare"
-						@open-sharing-details="openSharingDetails(share)" />
-				</template>
-			</template>
-		</ul>
-
 		<ul v-if="canLinkShare && canReshare" class="sharing-link-list">	
 			<template v-if="hasLinkShares">
-				<li class="sharing-link-list-caption">
+				<h2 class="sharing-link-list-caption">
 					<strong>{{ t('nmcsharing', 'Links to Copy') }}</strong>
-				</li>
+				</h2>
 				<template v-for="(share, index) in shares">
 					<SharingEntryLink v-if="share.type === shareTypeLink"
 						:key="share.id"
@@ -75,7 +54,7 @@ import SharingEntryLink from '../components/SharingEntryLink.vue'
 import AddLinkButton from '../components/AddLinkButton.vue'
 
 export default {
-	name: 'SharingLinkList',
+	name: 'SharingLinkListPopup',
 
 	components: {
 		SharingEntryLink,

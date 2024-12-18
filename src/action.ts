@@ -1,4 +1,6 @@
-import { registerFileAction } from '@nextcloud/files'
-import { action } from './actions/sharingStatusAction'
+import { registerFileAction, getFileActions } from '@nextcloud/files'
+import { action as statusAtion } from './actions/sharingStatusAction'
+import { action as popupAction } from './actions/sharingPopupAction'
 
-registerFileAction(action)
+//registerFileAction(statusAtion)
+registerFileAction(popupAction)

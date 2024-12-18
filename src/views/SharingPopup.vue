@@ -1,103 +1,72 @@
-<!--
-  - @copyright Copyright (c) 2019 John Molakvoæ <skjnldsv@protonmail.com>
-  -
-  - @author John Molakvoæ <skjnldsv@protonmail.com>
-  -
-  - @license GNU AGPL version 3 or any later version
-  -
-  - This program is free software: you can redistribute it and/or modify
-  - it under the terms of the GNU Affero General Public License as
-  - published by the Free Software Foundation, either version 3 of the
-  - License, or (at your option) any later version.
-  -
-  - This program is distributed in the hope that it will be useful,
-  - but WITHOUT ANY WARRANTY; without even the implied warranty of
-  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  - GNU Affero General Public License for more details.
-  -
-  - You should have received a copy of the GNU Affero General Public License
-  - along with this program. If not, see <http://www.gnu.org/licenses/>.
-  -
-  -->
 <template>
-	<div :class="{ 'icon-loading': loading }">
-		<!-- error message -->
-		<div v-if="error" class="emptycontent" :class="{ emptyContentWithSections: sections.length > 0 }">
-			<div class="icon icon-error" />
-			<h2>{{ error }}</h2>
-		</div>
+    <div :class="{ 'icon-loading': loading }">
+        <NcModal size="normal">
+            <!-- error message -->
+            <div v-if="error" class="emptycontent" :class="{ emptyContentWithSections: sections.length > 0 }">
+                <div class="icon icon-error" />
+                <h2>{{ error }}</h2>
+            </div>
 
-		<!-- shares content -->
-		<div v-if="!showSharingDetailsView" class="sharingTab__content">
-			<h2 class="sharingTab__header">
-				{{ t('nmcsharing', 'Manage shares') }}
-			</h2>
+            <!-- shares content -->
+            <div v-if="!showSharingDetailsView" class="sharingPopup__content">
+                <h2 class="sharingPopup__header" style="margin-bottom: 0;">
+                    {{ t('nmcsharing', 'Send link by E-Mail') }}
+                </h2>
 
-			<label v-if="canReshare" for="sharing-search-input">
-				{{ isSharedWithMe ? `${t('nmcsharing', 'Resharing is allowed')}. ` : '' }}
-				{{ t('nmcsharing', 'Here you can see who has access to your file/folder.') }}
-			</label>
-			<label v-else>
-				{{ t('files_sharing', 'Resharing is not allowed') }}
-			</label>
+                <span class="sharingPopup__fileinfo">{{ fileInfo.name }} ⸱ {{ size }}</span>
 
-			<!-- shared with me information -->
-			<SharingEntrySimple v-if="isSharedWithMe" v-bind="sharedWithMe" class="sharing-entry__reshare" />
+                <!-- shared with me information -->
+                <SharingEntrySimple v-if="isSharedWithMe" v-bind="sharedWithMe" class="sharing-entry__reshare" />
 
-			<!-- add new share input -->
-			<SharingInput v-if="!loading"
-				:can-reshare="canReshare"
-				:file-info="fileInfo"
-				:link-shares="linkShares"
-				:reshare="reshare"
-				:shares="shares"
-				:is-shared-with-me="isSharedWithMe"
-				@open-sharing-details="toggleShareDetailsView"
-				@open-sharing-details-all="toggleShareDetailsViewAll" />
+                <template v-if="!loading">
+                    <!-- add new share input -->
+                    <SharingInput v-if="!loading"
+                        :can-reshare="canReshare"
+                        :file-info="fileInfo"
+                        :link-shares="linkShares"
+                        :reshare="reshare"
+                        :shares="shares"
+                        :is-shared-with-me="isSharedWithMe"
+                        @open-sharing-details="toggleShareDetailsView"
+                        @open-sharing-details-all="toggleShareDetailsViewAll" />
+                </template>
 
-			<!-- link shares list -->
-			<SharingLinkList v-if="!loading"
-				ref="linkShareList"
-				:can-reshare="canReshare"
-				:file-info="fileInfo"
-				:shares="linkShares"
-				@open-sharing-details="toggleShareDetailsView" />
+                <div class="sharingPopup__divider"><span class="sharingPopup__or">{{ t('nmcsharing', 'Or') }}</span></div>
+                
+                <!-- link shares list -->
+                <SharingLinkListPopup v-if="!loading"
+                    ref="linkShareList"
+                    :can-reshare="canReshare"
+                    :file-info="fileInfo"
+                    :shares="linkShares"
+                    @open-sharing-details="toggleShareDetailsView" />
+            </div>
 
-			<p v-if="!loading && shares.length === 0 && linkShares.length === 0 && canReshare">
-				{{ t('nmcsharing', 'No shares created yet.') }}
-			</p>
+            <!-- share details -->
+            <div v-else>
+                <SharingDetailsTab :file-info="shareDetailsData.fileInfo"
+                    :share="shareDetailsData.share"
+                    :share-all="shareDetailsDataAll"
+                    :resharing-allowed-global="config.isResharingAllowed"
+                    @close-sharing-details="toggleShareDetailsView"
+                    @add:share="addShare"
+                    @remove:share="removeShare" />
+            </div>
 
-			<!-- other shares list -->
-			<SharingList v-if="!loading && canReshare"
-				ref="shareList"
-				:shares="shares"
-				:file-info="fileInfo"
-				@open-sharing-details="toggleShareDetailsView" />
-		</div>
-
-		<!-- share details -->
-		<div v-else>
-			<SharingDetailsTab :file-info="shareDetailsData.fileInfo"
-				:share="shareDetailsData.share"
-				:share-all="shareDetailsDataAll"
-				:resharing-allowed-global="config.isResharingAllowed"
-				@close-sharing-details="toggleShareDetailsView"
-				@add:share="addShare"
-				@remove:share="removeShare" />
-		</div>
-
-		<!-- additional entries, use it with cautious -->
-		<div v-for="(section, index) in sections"
-			:ref="'section-' + index"
-			:key="index"
-			class="sharingTab__additionalContent">
-			<component :is="section($refs['section-'+index], fileInfo)" :file-info="fileInfo" />
-		</div>
-	</div>
+            <!-- additional entries, use it with cautious -->
+            <div v-for="(section, index) in sections"
+                :ref="'section-' + index"
+                :key="index"
+                class="sharingPopup__additionalContent">
+                <component :is="section($refs['section-' + index], fileInfo)" :file-info="fileInfo" />
+            </div>
+        </NcModal>
+    </div>
 </template>
 <!-- eslint-disable @nextcloud/no-deprecations -->
 <script>
 import { generateOcsUrl } from '@nextcloud/router'
+import NcModal from '@nextcloud/vue/dist/Components/NcModal.js'
 import axios from '@nextcloud/axios'
 
 import Config from '../services/ConfigService.js'
@@ -107,25 +76,32 @@ import ShareTypes from '../mixins/ShareTypes.js'
 import SharingEntrySimple from '../components/SharingEntrySimple.vue'
 import SharingInput from '../components/SharingInput.vue'
 
-import SharingLinkList from './SharingLinkList.vue'
+import SharingLinkListPopup from './SharingLinkListPopup.vue'
 import SharingList from './SharingList.vue'
 import SharingDetailsTab from './SharingDetailsTab.vue'
 
+import { formatFileSize } from '@nextcloud/files'
+import EyeIcon from 'vue-material-design-icons/EyeCircleOutline.vue'
+import ChevronRight from 'vue-material-design-icons/ChevronRight.vue'
+
 export default {
-	name: 'SharingTab',
+    name: 'SharingPopup',
 
-	components: {
-		SharingEntrySimple,
-		SharingInput,
-		SharingLinkList,
-		SharingList,
-		SharingDetailsTab,
-	},
+    components: {
+        SharingEntrySimple,
+        SharingInput,
+        SharingLinkListPopup,
+        SharingList,
+        SharingDetailsTab,
+        NcModal,
+        EyeIcon,
+        ChevronRight
+    },
 
-	mixins: [ShareTypes],
+    mixins: [ShareTypes],
 
-	data() {
-		return {
+    data() {
+        return {
 			config: new Config(),
 			deleteEvent: null,
 			error: '',
@@ -145,24 +121,32 @@ export default {
 			showSharingDetailsView: false,
 			shareDetailsData: {},
 			shareDetailsDataAll: [],
-		}
-	},
+        }
+    },
 
-	computed: {
-		/**
-		 * Is this share shared with me?
-		 *
-		 * @return {boolean}
-		 */
-		isSharedWithMe() {
-			return Object.keys(this.sharedWithMe).length > 0
-		},
+    computed: {
+        /**
+         * Is this share shared with me?
+         *
+         * @return {boolean}
+         */
+        isSharedWithMe() {
+            return Object.keys(this.sharedWithMe).length > 0
+        },
 
-		canReshare() {
-			return !!(this.fileInfo.permissions & OC.PERMISSION_SHARE)
-				|| !!(this.reshare && this.reshare.hasSharePermission && this.config.isResharingAllowed)
-		},
-	},
+        canReshare() {
+            return !!(this.fileInfo.permissions & OC.PERMISSION_SHARE)
+                || !!(this.reshare && this.reshare.hasSharePermission && this.config.isResharingAllowed)
+        },
+
+        size() {
+            const size = parseInt(this.fileInfo.size, 10)
+            if (typeof size !== 'number' || isNaN(size) || size < 0) {
+                return this.t('files', 'Pending')
+            }
+            return formatFileSize(size, true)
+        },
+    },
 
 	methods: {
 		/**
@@ -397,26 +381,52 @@ export default {
 			}
 			this.showSharingDetailsView = !this.showSharingDetailsView
 		},
+
+        formatFileSize
 	},
 }
 </script>
 
 <style scoped lang="scss">
 .emptyContentWithSections {
-	margin: 1rem auto;
+    margin: 1rem auto;
 }
 
-.sharingTab__header {
-	line-height: initial;
+.sharingPopup__header {
+    line-height: initial;
 }
 
-.sharingTab {
-	&__content {
-		padding: 0px;
-	}
+.sharingPopup {
+    &__content {
+        padding: 1.5rem;
+    }
 
-	&__additionalContent {
-		margin: 44px 0;
-	}
+    &__info {
+        display: block;
+        margin-bottom: 1rem
+    }
+
+    &__additionalContent {
+        margin: 3rem 0;
+    }
+
+    &__fileinfo {
+        font-size: 14px;
+        margin: 1rem 0;
+    }
+
+    &__divider {
+        border-bottom: 1px solid var(--color-border);
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+
+    &__or {
+        background-color: var(--color-main-background);
+        bottom: -0.75rem;
+        font-size: 14px;
+        padding: 0.75rem;;
+        position: relative;
+    }
 }
 </style>

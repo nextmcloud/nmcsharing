@@ -4,7 +4,7 @@ import { translate as t } from '@nextcloud/l10n'
 import { action as sidebarAction } from './sidebarAction.js'
 
 export const action = new FileAction({
-	id: 'sharing-status-magentacloud',
+	id: 'sharing-popup-magentacloud',
 	displayName(nodes) {
 		/*
 		const node = nodes[0]
@@ -14,7 +14,7 @@ export const action = new FileAction({
 			return t('files_sharing', 'Shared')
 		}
 		*/
-		return 'Sharing Tab'
+		return 'Sharing Popup'
 	},
 
 	title(nodes) {
@@ -48,7 +48,7 @@ export const action = new FileAction({
 
 	async exec(node, view, dir) {
 		if ((node.permissions & Permission.READ) !== 0) {
-			OCA.Files.Sidebar.setActiveTab('sharing-tab')
+			OCA.Files.Sidebar.setActiveTab('sharing-popup')
 			return sidebarAction.exec(node, view, dir)
 		}
 		return null

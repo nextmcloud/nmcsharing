@@ -22,16 +22,6 @@
 
 <template>
 	<li :class="{'sharing-entry--share': share}" class="sharing-entry sharing-entry__link">
-		<NcAvatar :is-no-user="true"
-			class="sharing-entry__avatar">
-			<template #icon>
-				<span class="icon"
-					:class="{
-						'icon-default': !share,
-						'icon-user': isEmailShareType,
-						'icon-link': isLinkShareType}" />
-			</template>
-		</NcAvatar>
 		<div class="sharing-entry__desc" @click.prevent="toggleQuickShareSelect">
 			<span class="sharing-entry__title" :title="title">
 				{{ title }}
@@ -192,7 +182,6 @@ import NcActionInput from '@nextcloud/vue/dist/Components/NcActionInput.js'
 import NcActionLink from '@nextcloud/vue/dist/Components/NcActionLink.js'
 import NcActionText from '@nextcloud/vue/dist/Components/NcActionText.js'
 import NcActions from '@nextcloud/vue/dist/Components/NcActions.js'
-import NcAvatar from '@nextcloud/vue/dist/Components/NcAvatar.js'
 
 import QuickShareSelect from './SharingEntryQuickShareSelect.vue'
 
@@ -210,7 +199,6 @@ export default {
 		NcActionInput,
 		NcActionLink,
 		NcActionText,
-		NcAvatar,
 		QuickShareSelect,
 	},
 
