@@ -57,7 +57,7 @@ window.addEventListener('DOMContentLoaded', function() {
 			icon: 'icon-share',
 
 			async mount(el, fileInfo, context) {
-				const SharingTab = (await import('./views/SharingTab.vue')).default
+				const SharingTab = (await import('./views/SharingPopup.vue')).default
 
 				const View = Vue.extend(SharingTab)
 

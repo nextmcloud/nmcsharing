@@ -22,13 +22,13 @@
 
 <template>
 	<div class="sharing-search">
-		<label v-if="canReshare" for="sharing-search-input">
+		<!-- <label v-if="canReshare" for="sharing-search-input">
 			{{ isSharedWithMe ? `${t('nmcsharing', 'Resharing is allowed')}. ` : '' }}
 			{{ t('nmcsharing', 'You can create links or send shares by mail. If you invite MagentaCLOUD users, you have more opportunities for collaboration.') }}
 		</label>
 		<label v-else>
 			{{ t('files_sharing', 'Resharing is not allowed') }}
-		</label>
+		</label> -->
 		<ul v-if="filteredEmailArr.length > 0" :style="{ display: 'flex', flexWrap: 'wrap' }">
 			<li v-for="(emailShare, index) in filteredEmailArr"
 				v-show="isShownArr[index].isVisible === true"
