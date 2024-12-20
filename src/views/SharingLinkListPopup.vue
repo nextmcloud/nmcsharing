@@ -22,23 +22,21 @@
 
 <template>
 	<div>
-		<ul v-if="canLinkShare && canReshare" class="sharing-link-list">	
-			<template v-if="hasLinkShares">
-				<h2 class="sharing-link-list-caption">
-					<strong>{{ t('nmcsharing', 'Links to Copy') }}</strong>
-				</h2>
-				<template v-for="(share, index) in shares">
-					<SharingEntryLink v-if="share.type === shareTypeLink"
-						:key="share.id"
-						:index="shares.length > 1 ? index + 1 : null"
-						:can-reshare="canReshare"
-						:share.sync="shares[index]"
-						:file-info="fileInfo"
-						@add:share="addShare(...arguments)"
-						@update:share="awaitForShare(...arguments)"
-						@remove:share="removeShare"
-						@open-sharing-details="openSharingDetails(share)" />
-				</template>
+		<h2 class="sharing-link-list-caption">
+			<strong>{{ t('nmcsharing', 'Links to Copy') }}</strong>
+		</h2>
+		<ul v-if="canLinkShare && canReshare && hasLinkShares" class="sharing-link-list">
+			<template v-for="(share, index) in shares">
+				<SharingEntryLink v-if="share.type === shareTypeLink"
+					:key="share.id"
+					:index="shares.length > 1 ? index + 1 : null"
+					:can-reshare="canReshare"
+					:share.sync="shares[index]"
+					:file-info="fileInfo"
+					@add:share="addShare(...arguments)"
+					@update:share="awaitForShare(...arguments)"
+					@remove:share="removeShare"
+					@open-sharing-details="openSharingDetails(share)" />
 			</template>
 		</ul>
 		<AddLinkButton :file-info="fileInfo" @add:share="addShare" />
@@ -166,9 +164,14 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.sharing-link-list {
+	margin-bottom: 1rem;
+}
+
 .sharing-link-list-caption {
 	display: flex;
 	align-items: center;
-	min-height: 44px;
+	min-height: 2rem;
+	margin-bottom: 1rem;
 }
 </style>

@@ -10,9 +10,9 @@ export default {
 			this.$emit('open-sharing-details', shareRequestObject)
 		},
 		openSharingDetailsAll(share) {
-			let shareRequestObjects = []
-			for (let element of share) {
-				let shareRequestObject = {
+			const shareRequestObjects = []
+			for (const element of share) {
+				const shareRequestObject = {
 					fileInfo: this.fileInfo,
 					share: this.mapShareRequestToShareObject(element),
 				}

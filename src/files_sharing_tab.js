@@ -23,26 +23,24 @@
 
 import Vue from 'vue'
 import { translate as t, translatePlural as n } from '@nextcloud/l10n'
+import { getRequestToken } from '@nextcloud/auth'
 
 import SharingTab from './views/SharingTab.vue'
-import VTooltip from 'v-tooltip'
+
+// eslint-disable-next-line camelcase
+__webpack_nonce__ = btoa(getRequestToken())
+__webpack_public_path__ = '/customapps/nmcsharing/js/'
 
 Vue.prototype.t = t
 Vue.prototype.n = n
-
-Vue.use(VTooltip)
 
 // Init Sharing tab component
 const View = Vue.extend(SharingTab)
 let TabInstance = null
 
-function checkTabs(id) {
-	return id !== 'sharing' && id !== 'photos' && id !== 'comments' && id !== 'version_vue'
-}
-
 const sharingTab = new OCA.Files.Sidebar.Tab({
-	id: 'sharing',
-	name: t('files_sharing', 'Sharing'),
+	id: 'sharing-manage',
+	name: t('nmcsharing', 'Manage shares'),
 	icon: 'icon-share',
 
 	async mount(el, fileInfo, context) {
@@ -68,9 +66,6 @@ const sharingTab = new OCA.Files.Sidebar.Tab({
 
 window.addEventListener('DOMContentLoaded', () => {
 	if (OCA.Files && OCA.Files.Sidebar) {
-		// remove all unused tabs
-		const tabsState = OCA.Files.Sidebar.state.tabs
-		OCA.Files.Sidebar.state.tabs = tabsState.filter((tab) => checkTabs(tab.id))
 		// register new sharing tab
 		OCA.Files.Sidebar.registerTab(sharingTab)
 	}

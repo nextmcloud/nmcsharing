@@ -1,30 +1,14 @@
 import { FileAction, Permission } from '@nextcloud/files'
 import { translate as t } from '@nextcloud/l10n'
 
-import { action as sidebarAction } from './sidebarAction.js'
-
 export const action = new FileAction({
-	id: 'sharing-status-magentacloud',
-	displayName(nodes) {
-		/*
-		const node = nodes[0]
-		const shareTypes = Object.values(node?.attributes?.['share-types'] || {}).flat()
-
-		if (shareTypes.length > 0) {
-			return t('files_sharing', 'Shared')
-		}
-		*/
-		return 'Sharing Tab'
+	id: 'sharing-manage',
+	displayName() {
+		return t('nmcsharing', 'Manage shares')
 	},
 
-	title(nodes) {
-		const node = nodes[0]
-
-		if (Array.isArray(node.attributes?.['share-types'])) {
-			return t('files_sharing', 'Shared multiple times with different people')
-		}
-
-		return t('files_sharing', 'Show sharing options')
+	title() {
+		return t('nmcsharing', 'Manage shares')
 	},
 
 	iconSvgInline() {
@@ -37,8 +21,11 @@ export const action = new FileAction({
 		}
 
 		const node = nodes[0]
-		const isMixed = Array.isArray(node.attributes?.['share-types'])
+		const shareTypes = node.attributes?.['share-types']
+		const isMixed = Array.isArray(shareTypes) && shareTypes.length > 0
 
+		// If the node is shared multiple times with
+		// different share types to the current user
 		if (isMixed) {
 			return true
 		}
@@ -47,11 +34,32 @@ export const action = new FileAction({
 	},
 
 	async exec(node, view, dir) {
+		// You need read permissions to see the sidebar
 		if ((node.permissions & Permission.READ) !== 0) {
-			OCA.Files.Sidebar.setActiveTab('sharing-tab')
-			return sidebarAction.exec(node, view, dir)
+
+			window.OCA.Files.Sidebar.close()
+
+			window.OCA.Files.Sidebar.setActiveTab('sharing')
+			window.OCA.Files.Sidebar.setActiveTab('sharing-manage')
+
+			try {
+				// Silently update current fileid
+				window.OCP.Files.Router.goToRoute(
+					null,
+					{ view: view.id, fileid: node.fileid },
+					{ dir },
+					true,
+				)
+
+				// TODO: migrate Sidebar to use a Node instead
+				await window.OCA.Files.Sidebar.open(node.path)
+
+				return null
+			} catch (error) {
+				return false
+			}
 		}
-		return null
 	},
 
+	order: -60,
 })

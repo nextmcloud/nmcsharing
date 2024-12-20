@@ -36,24 +36,30 @@
 				@open-sharing-details="openShareDetailsForCustomSettings(share)" />
 		</div>
 
-		<!-- clipboard -->
-		<NcActions v-if="share && !isEmailShareType && share.token"
-			ref="copyButton"
-			class="sharing-entry__copy">
-			<NcActionLink :href="shareLink"
-				target="_blank"
-				:title="copyLinkTooltip"
-				:aria-label="copyLinkTooltip"
-				@click.stop.prevent="copyLink">
-				<template #icon>
-					<span class="icon"
-						:class="{
-							'icon-checkmark-magenta': copied && copySuccess,
-							'icon-clipboard': !(copied && copySuccess)
-						}" />
-				</template>
-			</NcActionLink>
-		</NcActions>
+		<NcButton v-if="share && !isEmailShareType && share.token"
+			:disabled="saving"
+			@click.prevent="copyLink">
+			<template #icon>
+				<span :class="{
+					'icon icon-checkmark-magenta': copied && copySuccess,
+					'icon icon-clipboard': !(copied && copySuccess)
+				}" />
+			</template>
+			<template #default>
+				{{ copyText }}
+			</template>
+		</NcButton>
+
+		<NcButton v-if="share.canDelete"
+			:disabled="saving"
+			@click.prevent="onDelete">
+			<template #icon>
+				<span class="icon icon-delete" />
+			</template>
+			<template #default>
+				{{ t('files_sharing', 'Delete') }}
+			</template>
+		</NcButton>
 
 		<!-- pending actions -->
 		<NcActions v-if="!pending && (pendingPassword || pendingEnforcedPassword || pendingExpirationDate)"
@@ -123,51 +129,6 @@
 				{{ t('files_sharing', 'Cancel') }}
 			</NcActionButton>
 		</NcActions>
-
-		<!-- actions -->
-		<NcActions v-else-if="!loading"
-			class="sharing-entry__actions"
-			:aria-label="actionsTooltip"
-			menu-align="right"
-			:open.sync="open"
-			@close="onMenuClose">
-			<template v-if="share">
-				<template v-if="share.canEdit && canReshare">
-					<NcActionButton icon="icon-edit"
-						:disabled="saving"
-						@click.prevent="openSharingDetails">
-						{{ t('nmcsharing', 'Advanced permissions') }}
-					</NcActionButton>
-				</template>
-
-				<!-- external actions -->
-				<!-- <ExternalShareAction v-for="action in externalLinkActions"
-					:id="action.id"
-					:key="action.id"
-					:action="action"
-					:file-info="fileInfo"
-					:share="share" /> -->
-
-				<!-- external legacy sharing via url (social...) -->
-				<NcActionLink v-for="({icon, url, name}, index) in externalLegacyLinkActions"
-					:key="index"
-					:href="url(shareLink)"
-					:icon="icon"
-					target="_blank">
-					{{ name }}
-				</NcActionLink>
-
-				<NcActionButton v-if="share.canDelete"
-					icon="icon-delete"
-					:disabled="saving"
-					@click.prevent="onDelete">
-					{{ t('files_sharing', 'Unshare') }}
-				</NcActionButton>
-			</template>
-		</NcActions>
-
-		<!-- loading indicator to replace the menu -->
-		<div v-else class="icon-loading-small sharing-entry__loading" />
 	</li>
 </template>
 
@@ -179,9 +140,9 @@ import Vue from 'vue'
 
 import NcActionButton from '@nextcloud/vue/dist/Components/NcActionButton.js'
 import NcActionInput from '@nextcloud/vue/dist/Components/NcActionInput.js'
-import NcActionLink from '@nextcloud/vue/dist/Components/NcActionLink.js'
 import NcActionText from '@nextcloud/vue/dist/Components/NcActionText.js'
 import NcActions from '@nextcloud/vue/dist/Components/NcActions.js'
+import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
 
 import QuickShareSelect from './SharingEntryQuickShareSelect.vue'
 
@@ -194,10 +155,10 @@ export default {
 	name: 'SharingEntryLink',
 
 	components: {
+		NcButton,
 		NcActions,
 		NcActionButton,
 		NcActionInput,
-		NcActionLink,
 		NcActionText,
 		QuickShareSelect,
 	},
@@ -230,6 +191,14 @@ export default {
 	},
 
 	computed: {
+
+		copyText() {
+			if (this.copied && this.copySuccess) {
+				return t('files_sharing', 'Copied')
+			}
+			return t('files_sharing', 'Copy')
+		},
+
 		/**
 		 * Link share label
 		 *
@@ -646,7 +615,6 @@ export default {
 				await navigator.clipboard.writeText(this.shareLink)
 				showSuccess(t('files_sharing', 'Link copied'))
 				// focus and show the tooltip
-				this.$refs.copyButton.$el.focus()
 				this.copySuccess = true
 				this.copied = true
 			} catch (error) {
@@ -758,19 +726,20 @@ export default {
 .sharing-entry {
 	display: flex;
 	align-items: center;
-	min-height: 44px;
+	min-height: 2rem;
 
 	&__desc {
 		display: flex;
 		flex-direction: column;
 		justify-content: space-between;
-		padding: 8px;
-		line-height: 1.2em;
+		padding: 0.5rem;
+		line-height: 1rem;
 
 		p {
 			color: var(--color-text-maxcontrast);
 		}
 	}
+
 	&__title {
 		text-overflow: ellipsis;
 		overflow: hidden;

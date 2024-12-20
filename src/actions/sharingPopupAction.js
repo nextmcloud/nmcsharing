@@ -1,20 +1,17 @@
 import { FileAction, Permission } from '@nextcloud/files'
 import { translate as t } from '@nextcloud/l10n'
 
-import { action as sidebarAction } from './sidebarAction.js'
-
 export const action = new FileAction({
-	id: 'sharing-popup-magentacloud',
+	id: 'sharing-popup',
 	displayName(nodes) {
-		/*
 		const node = nodes[0]
 		const shareTypes = Object.values(node?.attributes?.['share-types'] || {}).flat()
 
 		if (shareTypes.length > 0) {
 			return t('files_sharing', 'Shared')
 		}
-		*/
-		return 'Sharing Popup'
+
+		return ''
 	},
 
 	title(nodes) {
@@ -37,8 +34,11 @@ export const action = new FileAction({
 		}
 
 		const node = nodes[0]
-		const isMixed = Array.isArray(node.attributes?.['share-types'])
+		const shareTypes = node.attributes?.['share-types']
+		const isMixed = Array.isArray(shareTypes) && shareTypes.length > 0
 
+		// If the node is shared multiple times with
+		// different share types to the current user
 		if (isMixed) {
 			return true
 		}
@@ -47,11 +47,33 @@ export const action = new FileAction({
 	},
 
 	async exec(node, view, dir) {
+		// You need read permissions to see the sidebar
 		if ((node.permissions & Permission.READ) !== 0) {
-			OCA.Files.Sidebar.setActiveTab('sharing-popup')
-			return sidebarAction.exec(node, view, dir)
+
+			window.OCA.Files.Sidebar.close()
+
+			window.OCA.Files.Sidebar.setActiveTab('sharing-manage')
+			window.OCA.Files.Sidebar.setActiveTab('sharing')
+
+			// TODO: migrate Sidebar to use a Node instead
+			await window.OCA.Files.Sidebar.open(node.path)
+
+			try {
+				// Silently update current fileid
+				window.OCP.Files.Router.goToRoute(
+					null,
+					{ view: view.id, fileid: node.fileid },
+					{ ...window.OCP.Files.Router.query, dir, popup: 'true' },
+					true,
+				)
+
+				return null
+			} catch (error) {
+				return false
+			}
 		}
-		return null
 	},
+
+	inline: () => true,
 
 })

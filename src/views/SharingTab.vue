@@ -45,7 +45,7 @@
 			<SharingEntrySimple v-if="isSharedWithMe" v-bind="sharedWithMe" class="sharing-entry__reshare" />
 
 			<!-- add new share input -->
-			<SharingInput v-if="!loading"
+			<SharingInput v-if="!loading && false"
 				:can-reshare="canReshare"
 				:file-info="fileInfo"
 				:link-shares="linkShares"
@@ -383,13 +383,12 @@ export default {
 		},
 
 		toggleShareDetailsView(eventData) {
-			console.log(eventData)
 			if (eventData) {
 				this.shareDetailsData = eventData
 			}
 			this.showSharingDetailsView = !this.showSharingDetailsView
 		},
-		
+
 		toggleShareDetailsViewAll(eventData) {
 			if (eventData) {
 				this.shareDetailsData = eventData[0]

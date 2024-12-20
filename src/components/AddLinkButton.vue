@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<NcButton id="addlink_button" type="secondary" @click.prevent.stop="onNewLinkShare">
-			{{ t('nmcsharing', 'Add New link') }}
+			{{ t('nmcsharing', 'Create new link') }}
 		</NcButton>
 	</div>
 </template>

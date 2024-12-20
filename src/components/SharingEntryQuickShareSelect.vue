@@ -6,11 +6,14 @@
 			:aria-expanded="showDropdown"
 			:aria-haspopup="true"
 			aria-label="Quick share options dropdown"
-			@click="toggleDropdown">
+			@click="openSharingDetails">
+			<EyeIcon v-if="canView" :size="16" />
+			<PencilIcon v-if="canEdit" :size="16" />
+			<UploadIcon v-if="fileDrop" :size="16" />
 			{{ selectedOption }}
-			<EyeIcon v-if="canView" :size="15" />
-			<PencilIcon v-if="canEdit" :size="15" />
-			<UploadIcon v-if="fileDrop" :size="15" />
+			<LockOutlineIcon v-if="hasPassword" :size="16" />
+			<CalendarMonthIcon v-if="hasExpireDate" :size="16" />
+			<ChevronRightIcon :size="18" />
 		</span>
 		<div v-if="showDropdown"
 			ref="quickShareDropdown"
@@ -35,6 +38,9 @@
 import EyeIcon from 'vue-material-design-icons/EyeCircleOutline.vue'
 import PencilIcon from 'vue-material-design-icons/Pencil.vue'
 import UploadIcon from 'vue-material-design-icons/Upload.vue'
+import LockOutlineIcon from 'vue-material-design-icons/LockOutline.vue'
+import CalendarMonthIcon from 'vue-material-design-icons/CalendarMonth.vue'
+import ChevronRightIcon from 'vue-material-design-icons/ChevronRight.vue'
 import SharesMixin from '../mixins/SharesMixin.js'
 import ShareDetails from '../mixins/ShareDetails.js'
 import ShareTypes from '../mixins/ShareTypes.js'
@@ -52,6 +58,9 @@ export default {
 		EyeIcon,
 		PencilIcon,
 		UploadIcon,
+		LockOutlineIcon,
+		CalendarMonthIcon,
+		ChevronRightIcon,
 	},
 	mixins: [SharesMixin, ShareDetails, ShareTypes],
 	props: {
@@ -80,14 +89,26 @@ export default {
 		}
 	},
 	computed: {
+		hasExpireDate() {
+			if (this.share.expireDate) {
+				return true
+			}
+			return false
+		},
+		hasPassword() {
+			if (this.share.password !== '') {
+				return true
+			}
+			return false
+		},
 		canViewText() {
-			return t('nmcsharing', 'Read only')
+			return t('nmcsharing', 'Anyone with the link can only view')
 		},
 		canEditText() {
-			return t('nmcsharing', 'Can edit')
+			return t('nmcsharing', 'Anyone with the link can edit')
 		},
 		fileDropText() {
-			return t('nmcsharing', 'File drop')
+			return t('nmcsharing', 'Anyone with the link can file drop')
 		},
 		customPermissionsText() {
 			return t('files_sharing', 'Custom permissions')
@@ -99,13 +120,13 @@ export default {
 				permissions = this.share.permissions & ~ATOMIC_PERMISSIONS.SHARE
 			}
 			if (permissions === BUNDLED_PERMISSIONS.READ_ONLY) {
-				this.canView = true
+				this.setCanView(true)
 				return this.canViewText
 			} else if (permissions === BUNDLED_PERMISSIONS.ALL || permissions === BUNDLED_PERMISSIONS.ALL_FILE) {
-				this.canEdit = true
+				this.setCanEdit(true)
 				return this.canEditText
 			} else if (permissions === BUNDLED_PERMISSIONS.FILE_DROP) {
-				this.fileDrop = true
+				this.setFileDrop(true)
 				return this.fileDropText
 			}
 
@@ -131,22 +152,22 @@ export default {
 		dropDownPermissionValue() {
 			switch (this.selectedOption) {
 			case this.canEditText:
-				this.canView = true
-				this.canEdit = true
-				this.fileDrop = false
+				this.setCanView(true)
+				this.setCanEdit(true)
+				this.setFileDrop(false)
 				return this.isFolder ? BUNDLED_PERMISSIONS.ALL : BUNDLED_PERMISSIONS.ALL_FILE
 			case this.fileDropText:
-				this.canView = true
-				this.canEdit = true
-				this.fileDrop = true
+				this.setCanView(false)
+				this.setCanEdit(false)
+				this.setFileDrop(true)
 				return BUNDLED_PERMISSIONS.FILE_DROP
 			// case this.customPermissionsText:
 			// return 'custom'
 			case this.canViewText:
 			default:
-				this.canView = true
-				this.canEdit = false
-				this.fileDrop = false
+				this.setCanView(true)
+				this.setCanEdit(false)
+				this.setFileDrop(false)
 				return BUNDLED_PERMISSIONS.READ_ONLY
 			}
 		},
@@ -169,6 +190,18 @@ export default {
 		window.removeEventListener('click', this.handleClickOutside)
 	},
 	methods: {
+		setCanView(value) {
+			this.canView = value
+		},
+
+		setCanEdit(value) {
+			this.canEdit = value
+		},
+
+		setFileDrop(value) {
+			this.fileDrop = value
+		},
+
 		toggleDropdown() {
 			if (!this.isPermissionEditAllowed) {
 				return
@@ -195,6 +228,9 @@ export default {
 			this.share.permissions = this.dropDownPermissionValue
 			this.queueUpdate('permissions')
 			this.showDropdown = false
+		},
+		openSharingDetails() {
+			this.$emit('open-sharing-details')
 		},
 		initializeComponent() {
 			this.selectedOption = this.preSelectedOption

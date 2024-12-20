@@ -41,11 +41,10 @@
 			</template>
 		</NcSelect>
 		<div class="button-group">
-			<NcButton 
-				type="primary" 
+			<NcButton type="primary"
 				:disabled="!isValidValue"
 				@click="triggerSharingDetails">
-					{{ t('nmcsharing', 'Send') }}
+				{{ t('nmcsharing', 'Send') }}
 			</NcButton>
 		</div>
 	</div>
@@ -507,7 +506,7 @@ export default {
 			}
 
 			this.loading = true
-			
+
 			try {
 				let password = null
 

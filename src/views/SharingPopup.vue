@@ -1,67 +1,76 @@
 <template>
-    <div :class="{ 'icon-loading': loading }">
-        <NcModal size="normal">
-            <!-- error message -->
-            <div v-if="error" class="emptycontent" :class="{ emptyContentWithSections: sections.length > 0 }">
-                <div class="icon icon-error" />
-                <h2>{{ error }}</h2>
-            </div>
+	<NcModal size="normal"
+		:show.sync="modal"
+		:has-next="false"
+		:has-previous="false"
+		@close="closeThisModal">
+		<!-- error message -->
+		<div v-if="error" class="emptycontent" :class="{ emptyContentWithSections: sections.length > 0 }">
+			<div class="icon icon-error" />
+			<h2>{{ error }}</h2>
+		</div>
 
-            <!-- shares content -->
-            <div v-if="!showSharingDetailsView" class="sharingPopup__content">
-                <h2 class="sharingPopup__header" style="margin-bottom: 0;">
-                    {{ t('nmcsharing', 'Send link by E-Mail') }}
-                </h2>
+		<div v-if="!shareSent">
+			<!-- shares content -->
+			<div v-if="!showSharingDetailsView" class="sharingPopup__content">
+				<h2 class="sharingPopup__header" style="margin-bottom: 0;">
+					{{ t('nmcsharing', 'Send link via E-Mail') }}
+				</h2>
 
-                <span class="sharingPopup__fileinfo">{{ fileInfo.name }} ⸱ {{ size }}</span>
+				<span class="sharingPopup__fileinfo">{{ fileInfo.name }} ⸱ {{ size }}</span>
 
-                <!-- shared with me information -->
-                <SharingEntrySimple v-if="isSharedWithMe" v-bind="sharedWithMe" class="sharing-entry__reshare" />
+				<!-- shared with me information -->
+				<SharingEntrySimple v-if="isSharedWithMe" v-bind="sharedWithMe" class="sharing-entry__reshare" />
 
-                <template v-if="!loading">
-                    <!-- add new share input -->
-                    <SharingInput v-if="!loading"
-                        :can-reshare="canReshare"
-                        :file-info="fileInfo"
-                        :link-shares="linkShares"
-                        :reshare="reshare"
-                        :shares="shares"
-                        :is-shared-with-me="isSharedWithMe"
-                        @open-sharing-details="toggleShareDetailsView"
-                        @open-sharing-details-all="toggleShareDetailsViewAll" />
-                </template>
+				<template>
+					<!-- add new share input -->
+					<SharingInput :can-reshare="canReshare"
+						:file-info="fileInfo"
+						:link-shares="linkShares"
+						:reshare="reshare"
+						:shares="shares"
+						:is-shared-with-me="isSharedWithMe"
+						@open-sharing-details="toggleShareDetailsView"
+						@open-sharing-details-all="toggleShareDetailsViewAll" />
+				</template>
 
-                <div class="sharingPopup__divider"><span class="sharingPopup__or">{{ t('nmcsharing', 'Or') }}</span></div>
-                
-                <!-- link shares list -->
-                <SharingLinkListPopup v-if="!loading"
-                    ref="linkShareList"
-                    :can-reshare="canReshare"
-                    :file-info="fileInfo"
-                    :shares="linkShares"
-                    @open-sharing-details="toggleShareDetailsView" />
-            </div>
+				<div class="sharingPopup__divider">
+					<span class="sharingPopup__or">{{ t('nmcsharing', 'Or') }}</span>
+				</div>
 
-            <!-- share details -->
-            <div v-else>
-                <SharingDetailsTab :file-info="shareDetailsData.fileInfo"
-                    :share="shareDetailsData.share"
-                    :share-all="shareDetailsDataAll"
-                    :resharing-allowed-global="config.isResharingAllowed"
-                    @close-sharing-details="toggleShareDetailsView"
-                    @add:share="addShare"
-                    @remove:share="removeShare" />
-            </div>
+				<!-- link shares list -->
+				<SharingLinkListPopup ref="linkShareList"
+					:can-reshare="canReshare"
+					:file-info="fileInfo"
+					:shares="linkShares"
+					@open-sharing-details="toggleShareDetailsView" />
+			</div>
 
-            <!-- additional entries, use it with cautious -->
-            <div v-for="(section, index) in sections"
-                :ref="'section-' + index"
-                :key="index"
-                class="sharingPopup__additionalContent">
-                <component :is="section($refs['section-' + index], fileInfo)" :file-info="fileInfo" />
-            </div>
-        </NcModal>
-    </div>
+			<!-- share details -->
+			<div v-else>
+				<SharingDetailsTab :file-info="shareDetailsData.fileInfo"
+					:share="shareDetailsData.share"
+					:share-all="shareDetailsDataAll"
+					:resharing-allowed-global="config.isResharingAllowed"
+					@close-sharing-details="toggleShareDetailsView"
+					@add:share="addShare"
+					@remove:share="removeShare" />
+			</div>
+		</div>
+
+		<!-- share sent -->
+		<div v-else>
+			<div class="sharingPopup__success">
+				<CheckCircleOutlineIcon :size="128" />
+				<div class="message">
+					{{ t('nmcsharing', 'Link to "{fileName}" was sent.', { fileName: shareDetailsData.fileInfo.name }) }}
+				</div>
+				<div class="recipients">
+					{{ t('nmcsharing', 'To') }}: {{ recipients }}
+				</div>
+			</div>
+		</div>
+	</NcModal>
 </template>
 <!-- eslint-disable @nextcloud/no-deprecations -->
 <script>
@@ -77,36 +86,33 @@ import SharingEntrySimple from '../components/SharingEntrySimple.vue'
 import SharingInput from '../components/SharingInput.vue'
 
 import SharingLinkListPopup from './SharingLinkListPopup.vue'
-import SharingList from './SharingList.vue'
 import SharingDetailsTab from './SharingDetailsTab.vue'
 
 import { formatFileSize } from '@nextcloud/files'
-import EyeIcon from 'vue-material-design-icons/EyeCircleOutline.vue'
-import ChevronRight from 'vue-material-design-icons/ChevronRight.vue'
+import CheckCircleOutlineIcon from 'vue-material-design-icons/CheckCircleOutline.vue'
 
 export default {
-    name: 'SharingPopup',
+	name: 'SharingPopup',
 
-    components: {
-        SharingEntrySimple,
-        SharingInput,
-        SharingLinkListPopup,
-        SharingList,
-        SharingDetailsTab,
-        NcModal,
-        EyeIcon,
-        ChevronRight
-    },
+	components: {
+		SharingEntrySimple,
+		SharingInput,
+		SharingLinkListPopup,
+		SharingDetailsTab,
+		NcModal,
+		CheckCircleOutlineIcon,
+	},
 
-    mixins: [ShareTypes],
+	mixins: [ShareTypes],
 
-    data() {
-        return {
+	data() {
+		return {
 			config: new Config(),
 			deleteEvent: null,
 			error: '',
 			expirationInterval: null,
 			loading: true,
+			modal: false,
 
 			fileInfo: null,
 
@@ -121,34 +127,48 @@ export default {
 			showSharingDetailsView: false,
 			shareDetailsData: {},
 			shareDetailsDataAll: [],
-        }
-    },
+			shareSent: false,
+			recipients: '',
+		}
+	},
 
-    computed: {
-        /**
-         * Is this share shared with me?
-         *
-         * @return {boolean}
-         */
-        isSharedWithMe() {
-            return Object.keys(this.sharedWithMe).length > 0
-        },
+	computed: {
+		/**
+		 * Is this share shared with me?
+		 *
+		 * @return {boolean}
+		 */
+		isSharedWithMe() {
+			if (this.$parent.getActiveTab() === 'sharing') {
+				this.showThisModal()
+			}
+			return Object.keys(this.sharedWithMe).length > 0
+		},
 
-        canReshare() {
-            return !!(this.fileInfo.permissions & OC.PERMISSION_SHARE)
+		canReshare() {
+			return !!(this.fileInfo.permissions & OC.PERMISSION_SHARE)
                 || !!(this.reshare && this.reshare.hasSharePermission && this.config.isResharingAllowed)
-        },
+		},
 
-        size() {
-            const size = parseInt(this.fileInfo.size, 10)
-            if (typeof size !== 'number' || isNaN(size) || size < 0) {
-                return this.t('files', 'Pending')
-            }
-            return formatFileSize(size, true)
-        },
-    },
+		size() {
+			const size = parseInt(this.fileInfo.size, 10)
+			if (typeof size !== 'number' || isNaN(size) || size < 0) {
+				return this.t('files', 'Pending')
+			}
+			return formatFileSize(size, true)
+		},
+	},
 
 	methods: {
+		showThisModal() {
+			this.modal = true
+		},
+
+		async closeThisModal() {
+			await window.OCA.Files.Sidebar.close()
+			this.modal = false
+		},
+
 		/**
 		 * Update current fileInfo and fetch new data
 		 *
@@ -213,6 +233,7 @@ export default {
 		resetState() {
 			clearInterval(this.expirationInterval)
 			this.loading = true
+			this.modal = false
 			this.error = ''
 			this.sharedWithMe = {}
 			this.shares = []
@@ -220,6 +241,7 @@ export default {
 			this.showSharingDetailsView = false
 			this.shareDetailsData = {}
 			this.shareDetailsDataAll = []
+			this.shareSent = false
 		},
 
 		/**
@@ -324,6 +346,7 @@ export default {
 			// meaning: not from the ShareInput
 			if (share.type === this.SHARE_TYPES.SHARE_TYPE_EMAIL) {
 				this.linkShares.unshift(share)
+				this.shareSent = true
 			} else {
 				this.shares.unshift(share)
 			}
@@ -367,22 +390,27 @@ export default {
 		},
 
 		toggleShareDetailsView(eventData) {
-			console.log(eventData)
 			if (eventData) {
 				this.shareDetailsData = eventData
 			}
 			this.showSharingDetailsView = !this.showSharingDetailsView
 		},
-		
+
 		toggleShareDetailsViewAll(eventData) {
 			if (eventData) {
 				this.shareDetailsData = eventData[0]
 				this.shareDetailsDataAll = eventData
+
+				const sharedWith = []
+				for (const data of eventData) {
+					sharedWith.push(data.share.shareWith)
+				}
+				this.recipients = sharedWith.join(', ')
 			}
 			this.showSharingDetailsView = !this.showSharingDetailsView
 		},
 
-        formatFileSize
+		formatFileSize,
 	},
 }
 </script>

@@ -22,10 +22,10 @@
 
 <template>
 	<div>
-		<ul v-if="canLinkShare && canReshare" class="sharing-link-list">		
+		<ul v-if="canLinkShare && canReshare" class="sharing-link-list">
 			<template v-if="hasMailShares">
 				<li class="sharing-link-list-caption">
-					<strong>{{ t('nmcsharing', 'Links sent per E-mail') }}</strong>
+					<strong>{{ t('nmcsharing', 'Links sent via E-Mail') }}</strong>
 				</li>
 				<template v-for="(share, index) in shares">
 					<!-- using shares[index] to work with .sync -->
@@ -43,7 +43,7 @@
 			</template>
 		</ul>
 
-		<ul v-if="canLinkShare && canReshare" class="sharing-link-list">	
+		<ul v-if="canLinkShare && canReshare" class="sharing-link-list">
 			<template v-if="hasLinkShares">
 				<li class="sharing-link-list-caption">
 					<strong>{{ t('nmcsharing', 'Links to Copy') }}</strong>
@@ -187,9 +187,13 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.sharing-link-list {
+	margin-bottom: 1rem;
+}
+
 .sharing-link-list-caption {
 	display: flex;
 	align-items: center;
-	min-height: 44px;
+	min-height: 2rem;
 }
 </style>

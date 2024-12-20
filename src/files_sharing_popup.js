@@ -23,21 +23,32 @@
 
 import Vue from 'vue'
 import { translate as t, translatePlural as n } from '@nextcloud/l10n'
+import { getRequestToken } from '@nextcloud/auth'
 
 import SharingPopup from './views/SharingPopup.vue'
-import VTooltip from 'v-tooltip'
+
+// eslint-disable-next-line camelcase
+__webpack_nonce__ = btoa(getRequestToken())
+__webpack_public_path__ = '/customapps/nmcsharing/js/'
 
 Vue.prototype.t = t
 Vue.prototype.n = n
-
-Vue.use(VTooltip)
 
 // Init Sharing tab component
 const View = Vue.extend(SharingPopup)
 let TabInstance = null
 
+/**
+ * Check if tap should be removed
+ *
+ * @param id
+ */
+function checkTabs(id) {
+	return id !== 'sharing' && id !== 'photos' && id !== 'comments' && id !== 'version_vue'
+}
+
 const sharingTab = new OCA.Files.Sidebar.Tab({
-	id: 'sharing-popup',
+	id: 'sharing',
 	name: t('files_sharing', 'Sharing Popup'),
 	icon: 'icon-share',
 
@@ -64,6 +75,9 @@ const sharingTab = new OCA.Files.Sidebar.Tab({
 
 window.addEventListener('DOMContentLoaded', () => {
 	if (OCA.Files && OCA.Files.Sidebar) {
+		// remove all unused tabs
+		const tabsState = OCA.Files.Sidebar.state.tabs
+		OCA.Files.Sidebar.state.tabs = tabsState.filter((tab) => checkTabs(tab.id))
 		// register new sharing popup
 		OCA.Files.Sidebar.registerTab(sharingTab)
 	}

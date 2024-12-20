@@ -652,7 +652,7 @@ export default {
 			}
 
 			if (this.isNewShare) {
-				for (let thisShare of this.shareAll) {
+				for (const thisShare of this.shareAll) {
 					const incomingShare = {
 						permissions: this.share.permissions,
 						shareType: thisShare.share.type,
@@ -671,7 +671,7 @@ export default {
 					}
 
 					const newShare = await this.addShare(incomingShare, this.fileInfo, this.config)
-					//this.share = share
+					// this.share = share
 					this.$emit('add:share', newShare)
 				}
 			} else {
@@ -761,7 +761,7 @@ export default {
 			}
 		},
 
-		formatFileSize
+		formatFileSize,
 	},
 }
 </script>
