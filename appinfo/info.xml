@@ -5,7 +5,7 @@
     <name>MagentaCLOUD sharing</name>
     <summary>Customisation of sharing.</summary>
     <description><![CDATA[MagentaCLOUD sharing handling with changed sidebars and views.]]></description>
-    <version>2.0.1</version>
+    <version>3.0.0</version>
     <licence>agpl</licence>
     <author mail="aleksei.efremov@t-systems.com">Aleksei Efremov</author>
     <namespace>Nmcsharing</namespace>
