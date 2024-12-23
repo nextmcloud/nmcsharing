@@ -130,6 +130,7 @@ export default {
 			// eslint-disable-next-line vue/no-mutating-props
 			this.shares.unshift(share)
 			this.awaitForShare(share, resolve)
+			this.$emit('link-share-created')
 		},
 
 		/**

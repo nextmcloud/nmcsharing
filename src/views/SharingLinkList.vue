@@ -62,7 +62,6 @@
 				</template>
 			</template>
 		</ul>
-		<AddLinkButton :file-info="fileInfo" @add:share="addShare" />
 	</div>
 </template>
 
@@ -72,14 +71,12 @@ import Share from '../models/Share.js'
 import ShareDetails from '../mixins/ShareDetails.js'
 import ShareTypes from '../mixins/ShareTypes.js'
 import SharingEntryLink from '../components/SharingEntryLink.vue'
-import AddLinkButton from '../components/AddLinkButton.vue'
 
 export default {
 	name: 'SharingLinkList',
 
 	components: {
 		SharingEntryLink,
-		AddLinkButton,
 	},
 
 	mixins: [ShareTypes, ShareDetails],

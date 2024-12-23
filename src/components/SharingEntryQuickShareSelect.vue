@@ -96,7 +96,7 @@ export default {
 			return false
 		},
 		hasPassword() {
-			if (this.share.password !== '') {
+			if (this.share.password) {
 				return true
 			}
 			return false
@@ -297,6 +297,11 @@ export default {
 		font-size: 14px;
 		gap: 2px;
 		color: var(--color-primary-element);
+		cursor: pointer;
+
+		&:hover {
+			text-decoration: underline;
+		}
 	}
 
 	.share-select-dropdown {

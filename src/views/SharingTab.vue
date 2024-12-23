@@ -33,16 +33,21 @@
 				{{ t('nmcsharing', 'Manage shares') }}
 			</h2>
 
-			<label v-if="canReshare" for="sharing-search-input">
-				{{ isSharedWithMe ? `${t('nmcsharing', 'Resharing is allowed')}. ` : '' }}
-				{{ t('nmcsharing', 'Here you can see who has access to your file/folder.') }}
-			</label>
-			<label v-else>
-				{{ t('files_sharing', 'Resharing is not allowed') }}
-			</label>
-
 			<!-- shared with me information -->
 			<SharingEntrySimple v-if="isSharedWithMe" v-bind="sharedWithMe" class="sharing-entry__reshare" />
+
+			<p v-if="canReshare">
+				{{ isSharedWithMe ? `${t('nmcsharing', 'Resharing is allowed')}. ` : '' }}
+				<span v-if="shares.length === 0 && linkShares.length === 0">
+					{{ t('nmcsharing', "You haven't shared your file/folder yet. Share to give others access.") }}
+				</span>
+				<span v-else>
+					{{ t('nmcsharing', 'Here you can see who has access to your file/folder.') }}
+				</span>
+			</p>
+			<p v-else>
+				{{ t('files_sharing', 'Resharing is not allowed') }}
+			</p>
 
 			<!-- add new share input -->
 			<SharingInput v-if="!loading && false"
@@ -63,16 +68,14 @@
 				:shares="linkShares"
 				@open-sharing-details="toggleShareDetailsView" />
 
-			<p v-if="!loading && shares.length === 0 && linkShares.length === 0 && canReshare">
-				{{ t('nmcsharing', 'No shares created yet.') }}
-			</p>
-
 			<!-- other shares list -->
 			<SharingList v-if="!loading && canReshare"
 				ref="shareList"
 				:shares="shares"
 				:file-info="fileInfo"
 				@open-sharing-details="toggleShareDetailsView" />
+
+			<OpenSharingButton :file-info="fileInfo" />
 		</div>
 
 		<!-- share details -->
@@ -106,6 +109,7 @@ import Share from '../models/Share.js'
 import ShareTypes from '../mixins/ShareTypes.js'
 import SharingEntrySimple from '../components/SharingEntrySimple.vue'
 import SharingInput from '../components/SharingInput.vue'
+import OpenSharingButton from '../components/OpenSharingButton.vue'
 
 import SharingLinkList from './SharingLinkList.vue'
 import SharingList from './SharingList.vue'
@@ -120,6 +124,7 @@ export default {
 		SharingLinkList,
 		SharingList,
 		SharingDetailsTab,
+		OpenSharingButton,
 	},
 
 	mixins: [ShareTypes],
@@ -277,8 +282,8 @@ export default {
 				this.linkShares = shares.filter(share => share.type === this.SHARE_TYPES.SHARE_TYPE_LINK || share.type === this.SHARE_TYPES.SHARE_TYPE_EMAIL)
 				this.shares = shares.filter(share => share.type !== this.SHARE_TYPES.SHARE_TYPE_LINK && share.type !== this.SHARE_TYPES.SHARE_TYPE_EMAIL)
 
-				console.debug('Processed', this.linkShares.length, 'link share(s)')
-				console.debug('Processed', this.shares.length, 'share(s)')
+				// console.debug('Processed', this.linkShares.length, 'link share(s)')
+				// console.debug('Processed', this.shares.length, 'share(s)')
 			}
 		},
 
@@ -412,10 +417,14 @@ export default {
 .sharingTab {
 	&__content {
 		padding: 0px;
+
+		p, .sharing-entry__noshare {
+			margin-bottom: 1rem
+		}
 	}
 
 	&__additionalContent {
-		margin: 44px 0;
+		margin: 3rem 0;
 	}
 }
 </style>

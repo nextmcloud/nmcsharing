@@ -43,7 +43,8 @@
 					:can-reshare="canReshare"
 					:file-info="fileInfo"
 					:shares="linkShares"
-					@open-sharing-details="toggleShareDetailsView" />
+					@open-sharing-details="toggleShareDetailsView"
+					@link-share-created="linkShareCreated" />
 			</div>
 
 			<!-- share details -->
@@ -128,6 +129,7 @@ export default {
 			shareDetailsData: {},
 			shareDetailsDataAll: [],
 			shareSent: false,
+			newLinkShare: false,
 			recipients: '',
 		}
 	},
@@ -160,13 +162,42 @@ export default {
 	},
 
 	methods: {
+		linkShareCreated() {
+			this.newLinkShare = true
+		},
+
 		showThisModal() {
 			this.modal = true
 		},
 
-		async closeThisModal() {
-			await window.OCA.Files.Sidebar.close()
+		closeThisModal() {
 			this.modal = false
+
+			if (this.newLinkShare || this.shareSent) {
+				this.openSharingManage()
+			} else {
+				window.OCA.Files.Sidebar.close()
+				window.OCA.Files.Sidebar.setFullScreenMode(false)
+			}
+		},
+
+		async openSharingManage() {
+			try {
+				const fileInfoPathName = this.fileInfo.path + '/' + this.fileInfo.name
+
+				window.OCA.Files.Sidebar.close()
+
+				window.OCA.Files.Sidebar.setActiveTab('sharing')
+				window.OCA.Files.Sidebar.setActiveTab('sharing-manage')
+				window.OCA.Files.Sidebar.setFullScreenMode(false)
+
+				// TODO: migrate Sidebar to use a Node instead
+				window.OCA.Files.Sidebar.open(fileInfoPathName)
+
+				return null
+			} catch (error) {
+				return false
+			}
 		},
 
 		/**
@@ -242,6 +273,7 @@ export default {
 			this.shareDetailsData = {}
 			this.shareDetailsDataAll = []
 			this.shareSent = false
+			this.newLinkShare = false
 		},
 
 		/**
@@ -283,8 +315,8 @@ export default {
 				this.linkShares = shares.filter(share => share.type === this.SHARE_TYPES.SHARE_TYPE_LINK || share.type === this.SHARE_TYPES.SHARE_TYPE_EMAIL)
 				this.shares = shares.filter(share => share.type !== this.SHARE_TYPES.SHARE_TYPE_LINK && share.type !== this.SHARE_TYPES.SHARE_TYPE_EMAIL)
 
-				console.debug('Processed', this.linkShares.length, 'link share(s)')
-				console.debug('Processed', this.shares.length, 'share(s)')
+				// console.debug('Processed', this.linkShares.length, 'link share(s)')
+				// console.debug('Processed', this.shares.length, 'share(s)')
 			}
 		},
 
@@ -450,7 +482,7 @@ export default {
     }
 
     &__or {
-        background-color: var(--color-main-background);
+        background-color: var(--telekom-color-background-surface);
         bottom: -0.75rem;
         font-size: 14px;
         padding: 0.75rem;;

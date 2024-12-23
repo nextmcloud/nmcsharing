@@ -45,7 +45,7 @@ export default async function() {
 				return request.data.ocs.data.password
 			}
 		} catch (error) {
-			console.info('Error generating password from password_policy', error)
+			// console.info('Error generating password from password_policy', error)
 			showError(t('files_sharing', 'Error generating password from password policy'))
 		}
 	}

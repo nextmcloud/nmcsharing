@@ -2,16 +2,9 @@ import { FileAction, Permission } from '@nextcloud/files'
 import { translate as t } from '@nextcloud/l10n'
 
 export const action = new FileAction({
-	id: 'sharing-popup',
+	id: 'sharing-popup-menu',
 	displayName(nodes) {
-		const node = nodes[0]
-		const shareTypes = Object.values(node?.attributes?.['share-types'] || {}).flat()
-
-		if (shareTypes.length > 0) {
-			return t('files_sharing', 'Shared')
-		}
-
-		return ''
+		return t('files_sharing', 'Share')
 	},
 
 	title(nodes) {
@@ -75,6 +68,6 @@ export const action = new FileAction({
 		}
 	},
 
-	inline: () => true,
+	order: -61,
 
 })

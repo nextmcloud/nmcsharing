@@ -529,8 +529,8 @@ export default {
 	beforeMount() {
 		this.initializePermissions()
 		this.initializeAttributes()
-		console.debug('shareSentIn', this.share)
-		console.debug('config', this.config)
+		// console.debug('shareSentIn', this.share)
+		// console.debug('config', this.config)
 	},
 
 	methods: {
@@ -699,7 +699,7 @@ export default {
 			}
 
 			// this.loading = true // Are we adding loaders the new share flow?
-			console.debug('Adding a new share from the input for', value)
+			// console.debug('Adding a new share from the input for', value)
 			try {
 				const path = (fileInfo.path + '/' + fileInfo.name).replace('//', '/')
 				const share = await this.createShare({

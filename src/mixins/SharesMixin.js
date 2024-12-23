@@ -250,7 +250,7 @@ export default {
 				this.loading = true
 				this.open = false
 				await this.deleteShare(this.share.id)
-				console.debug('Share deleted', this.share.id)
+				// console.debug('Share deleted', this.share.id)
 				const message = this.share.itemType === 'file'
 					? t('files_sharing', 'File "{path}" has been unshared', { path: this.share.path })
 					: t('files_sharing', 'Folder "{path}" has been unshared', { path: this.share.path })
@@ -318,11 +318,11 @@ export default {
 						this.saving = false
 					}
 				})
-				return
+
 			}
 
 			// This share does not exists on the server yet
-			console.debug('Updated local share', this.share)
+			// console.debug('Updated local share', this.share)
 		},
 
 		/**

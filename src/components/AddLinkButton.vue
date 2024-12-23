@@ -42,10 +42,11 @@ export default {
 					shareType: ShareTypes.SHARE_TYPE_LINK,
 				}
 
-				console.debug('Creating link share with options', options)
+				// console.debug('Creating link share with options', options)
+
 				const newShare = await this.createShare(options)
 
-				console.debug('Link share created', newShare)
+				// console.debug('Link share created', newShare)
 
 				await new Promise(resolve => {
 					this.$emit('add:share', newShare, resolve)

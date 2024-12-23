@@ -26,7 +26,7 @@
 			<span class="sharing-entry__title" :title="title">
 				{{ title }}
 			</span>
-			<p v-if="subtitle">
+			<p v-if="subtitle && false">
 				{{ subtitle }}
 			</p>
 			<QuickShareSelect v-if="share && share.permissions !== undefined"
@@ -267,7 +267,7 @@ export default {
 				this.share.expireDate = enabled
 					? this.formatDateToString(defaultExpirationDate)
 					: ''
-				console.debug('Expiration date status', enabled, this.share.expireDate)
+				// console.debug('Expiration date status', enabled, this.share.expireDate)
 			},
 		},
 
@@ -559,11 +559,11 @@ export default {
 					// (currently not supported on create, only update)
 				}
 
-				console.debug('Creating link share with options', options)
+				// console.debug('Creating link share with options', options)
 				const newShare = await this.createShare(options)
 
 				this.open = false
-				console.debug('Link share created', newShare)
+				// console.debug('Link share created', newShare)
 
 				// if share already exists, copy link directly on next tick
 				let component
@@ -727,6 +727,7 @@ export default {
 	display: flex;
 	align-items: center;
 	min-height: 2rem;
+	justify-content: flex-end;
 
 	&__desc {
 		display: flex;
@@ -734,6 +735,7 @@ export default {
 		justify-content: space-between;
 		padding: 0.5rem;
 		line-height: 1rem;
+		margin-right: auto;
 
 		p {
 			color: var(--color-text-maxcontrast);
