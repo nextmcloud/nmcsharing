@@ -2,13 +2,26 @@ import { FileAction, Permission } from '@nextcloud/files'
 import { translate as t } from '@nextcloud/l10n'
 
 export const action = new FileAction({
-	id: 'sharing-manage',
-	displayName() {
-		return t('nmcsharing', 'Manage shares')
+	id: 'sharing-popup',
+	displayName(nodes) {
+		const node = nodes[0]
+		const shareTypes = Object.values(node?.attributes?.['share-types'] || {}).flat()
+
+		if (shareTypes.length > 0) {
+			return t('files_sharing', 'Shared')
+		}
+
+		return ''
 	},
 
-	title() {
-		return t('nmcsharing', 'Manage shares')
+	title(nodes) {
+		const node = nodes[0]
+
+		if (Array.isArray(node.attributes?.['share-types'])) {
+			return t('files_sharing', 'Shared multiple times with different people')
+		}
+
+		return t('files_sharing', 'Show sharing options')
 	},
 
 	iconSvgInline() {
@@ -39,20 +52,21 @@ export const action = new FileAction({
 
 			window.OCA.Files.Sidebar.close()
 
-			window.OCA.Files.Sidebar.setActiveTab('sharing')
 			window.OCA.Files.Sidebar.setActiveTab('sharing-manage')
+			window.OCA.Files.Sidebar.setActiveTab('sharing')
+			window.OCA.Files.Sidebar.setFullScreenMode(true)
+
+			// TODO: migrate Sidebar to use a Node instead
+			window.OCA.Files.Sidebar.open(node.path)
 
 			try {
 				// Silently update current fileid
 				window.OCP.Files.Router.goToRoute(
 					null,
 					{ view: view.id, fileid: node.fileid },
-					{ dir },
+					{ ...window.OCP.Files.Router.query, dir, popup: 'true' },
 					true,
 				)
-
-				// TODO: migrate Sidebar to use a Node instead
-				await window.OCA.Files.Sidebar.open(node.path)
 
 				return null
 			} catch (error) {
@@ -61,5 +75,6 @@ export const action = new FileAction({
 		}
 	},
 
-	order: -60,
+	inline: () => true,
+
 })

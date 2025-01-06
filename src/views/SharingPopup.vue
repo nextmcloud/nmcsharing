@@ -1,106 +1,82 @@
-<!--
-  - @copyright Copyright (c) 2019 John Molakvoæ <skjnldsv@protonmail.com>
-  -
-  - @author John Molakvoæ <skjnldsv@protonmail.com>
-  -
-  - @license GNU AGPL version 3 or any later version
-  -
-  - This program is free software: you can redistribute it and/or modify
-  - it under the terms of the GNU Affero General Public License as
-  - published by the Free Software Foundation, either version 3 of the
-  - License, or (at your option) any later version.
-  -
-  - This program is distributed in the hope that it will be useful,
-  - but WITHOUT ANY WARRANTY; without even the implied warranty of
-  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  - GNU Affero General Public License for more details.
-  -
-  - You should have received a copy of the GNU Affero General Public License
-  - along with this program. If not, see <http://www.gnu.org/licenses/>.
-  -
-  -->
 <template>
-	<div :class="{ 'icon-loading': loading }">
+	<NcModal size="normal"
+		:show.sync="modal"
+		:has-next="false"
+		:has-previous="false"
+		@close="closeThisModal">
 		<!-- error message -->
 		<div v-if="error" class="emptycontent" :class="{ emptyContentWithSections: sections.length > 0 }">
 			<div class="icon icon-error" />
 			<h2>{{ error }}</h2>
 		</div>
 
-		<!-- shares content -->
-		<div v-if="!showSharingDetailsView" class="sharingTab__content">
-			<h2 class="sharingTab__header">
-				{{ t('nmcsharing', 'Manage shares') }}
-			</h2>
+		<div v-if="!shareSent">
+			<!-- shares content -->
+			<div v-if="!showSharingDetailsView" class="sharingPopup__content">
+				<h2 class="sharingPopup__header" style="margin-bottom: 0;">
+					{{ t('nmcsharing', 'Send link via E-Mail') }}
+				</h2>
 
-			<!-- shared with me information -->
-			<SharingEntrySimple v-if="isSharedWithMe" v-bind="sharedWithMe" class="sharing-entry__reshare" />
+				<span class="sharingPopup__fileinfo">{{ fileInfo.name }} ⸱ {{ size }}</span>
 
-			<p v-if="canReshare">
-				{{ isSharedWithMe ? `${t('nmcsharing', 'Resharing is allowed')}. ` : '' }}
-				<span v-if="shares.length === 0 && linkShares.length === 0">
-					{{ t('nmcsharing', "You haven't shared your file/folder yet. Share to give others access.") }}
-				</span>
-				<span v-else>
-					{{ t('nmcsharing', 'Here you can see who has access to your file/folder.') }}
-				</span>
-			</p>
-			<p v-else>
-				{{ t('files_sharing', 'Resharing is not allowed') }}
-			</p>
+				<!-- shared with me information -->
+				<SharingEntrySimple v-if="isSharedWithMe" v-bind="sharedWithMe" class="sharing-entry__reshare" />
 
-			<!-- add new share input -->
-			<SharingInput v-if="!loading && false"
-				:can-reshare="canReshare"
-				:file-info="fileInfo"
-				:link-shares="linkShares"
-				:reshare="reshare"
-				:shares="shares"
-				:is-shared-with-me="isSharedWithMe"
-				@open-sharing-details="toggleShareDetailsView"
-				@open-sharing-details-all="toggleShareDetailsViewAll" />
+				<template>
+					<!-- add new share input -->
+					<SharingInput :can-reshare="canReshare"
+						:file-info="fileInfo"
+						:link-shares="linkShares"
+						:reshare="reshare"
+						:shares="shares"
+						:is-shared-with-me="isSharedWithMe"
+						@open-sharing-details="toggleShareDetailsView"
+						@open-sharing-details-all="toggleShareDetailsViewAll" />
+				</template>
 
-			<!-- link shares list -->
-			<SharingLinkList v-if="!loading"
-				ref="linkShareList"
-				:can-reshare="canReshare"
-				:file-info="fileInfo"
-				:shares="linkShares"
-				@open-sharing-details="toggleShareDetailsView" />
+				<div class="sharingPopup__divider">
+					<span class="sharingPopup__or">{{ t('nmcsharing', 'Or') }}</span>
+				</div>
 
-			<!-- other shares list -->
-			<SharingList v-if="!loading && canReshare"
-				ref="shareList"
-				:shares="shares"
-				:file-info="fileInfo"
-				@open-sharing-details="toggleShareDetailsView" />
+				<!-- link shares list -->
+				<SharingLinkListPopup ref="linkShareList"
+					:can-reshare="canReshare"
+					:file-info="fileInfo"
+					:shares="linkShares"
+					@open-sharing-details="toggleShareDetailsView"
+					@link-share-created="linkShareCreated" />
+			</div>
 
-			<OpenSharingButton :file-info="fileInfo" />
+			<!-- share details -->
+			<div v-else>
+				<SharingDetailsTab :file-info="shareDetailsData.fileInfo"
+					:share="shareDetailsData.share"
+					:share-all="shareDetailsDataAll"
+					:resharing-allowed-global="config.isResharingAllowed"
+					@close-sharing-details="toggleShareDetailsView"
+					@add:share="addShare"
+					@remove:share="removeShare" />
+			</div>
 		</div>
 
-		<!-- share details -->
+		<!-- share sent -->
 		<div v-else>
-			<SharingDetailsTab :file-info="shareDetailsData.fileInfo"
-				:share="shareDetailsData.share"
-				:share-all="shareDetailsDataAll"
-				:resharing-allowed-global="config.isResharingAllowed"
-				@close-sharing-details="toggleShareDetailsView"
-				@add:share="addShare"
-				@remove:share="removeShare" />
+			<div class="sharingPopup__success">
+				<CheckCircleOutlineIcon :size="128" />
+				<div class="message">
+					{{ t('nmcsharing', 'Link to "{fileName}" was sent.', { fileName: shareDetailsData.fileInfo.name }) }}
+				</div>
+				<div class="recipients">
+					{{ t('nmcsharing', 'To') }}: {{ recipients }}
+				</div>
+			</div>
 		</div>
-
-		<!-- additional entries, use it with cautious -->
-		<div v-for="(section, index) in sections"
-			:ref="'section-' + index"
-			:key="index"
-			class="sharingTab__additionalContent">
-			<component :is="section($refs['section-'+index], fileInfo)" :file-info="fileInfo" />
-		</div>
-	</div>
+	</NcModal>
 </template>
 <!-- eslint-disable @nextcloud/no-deprecations -->
 <script>
 import { generateOcsUrl } from '@nextcloud/router'
+import NcModal from '@nextcloud/vue/dist/Components/NcModal.js'
 import axios from '@nextcloud/axios'
 
 import Config from '../services/ConfigService.js'
@@ -109,22 +85,23 @@ import Share from '../models/Share.js'
 import ShareTypes from '../mixins/ShareTypes.js'
 import SharingEntrySimple from '../components/SharingEntrySimple.vue'
 import SharingInput from '../components/SharingInput.vue'
-import OpenSharingButton from '../components/OpenSharingButton.vue'
 
-import SharingLinkList from './SharingLinkList.vue'
-import SharingList from './SharingList.vue'
+import SharingLinkListPopup from './SharingLinkListPopup.vue'
 import SharingDetailsTab from './SharingDetailsTab.vue'
 
+import { formatFileSize } from '@nextcloud/files'
+import CheckCircleOutlineIcon from 'vue-material-design-icons/CheckCircleOutline.vue'
+
 export default {
-	name: 'SharingTab',
+	name: 'SharingPopup',
 
 	components: {
 		SharingEntrySimple,
 		SharingInput,
-		SharingLinkList,
-		SharingList,
+		SharingLinkListPopup,
 		SharingDetailsTab,
-		OpenSharingButton,
+		NcModal,
+		CheckCircleOutlineIcon,
 	},
 
 	mixins: [ShareTypes],
@@ -136,6 +113,7 @@ export default {
 			error: '',
 			expirationInterval: null,
 			loading: true,
+			modal: false,
 
 			fileInfo: null,
 
@@ -150,6 +128,9 @@ export default {
 			showSharingDetailsView: false,
 			shareDetailsData: {},
 			shareDetailsDataAll: [],
+			shareSent: false,
+			newLinkShare: false,
+			recipients: '',
 		}
 	},
 
@@ -160,16 +141,65 @@ export default {
 		 * @return {boolean}
 		 */
 		isSharedWithMe() {
+			if (this.$parent.getActiveTab() === 'sharing') {
+				this.showThisModal()
+			}
 			return Object.keys(this.sharedWithMe).length > 0
 		},
 
 		canReshare() {
 			return !!(this.fileInfo.permissions & OC.PERMISSION_SHARE)
-				|| !!(this.reshare && this.reshare.hasSharePermission && this.config.isResharingAllowed)
+                || !!(this.reshare && this.reshare.hasSharePermission && this.config.isResharingAllowed)
+		},
+
+		size() {
+			const size = parseInt(this.fileInfo.size, 10)
+			if (typeof size !== 'number' || isNaN(size) || size < 0) {
+				return this.t('files', 'Pending')
+			}
+			return formatFileSize(size, true)
 		},
 	},
 
 	methods: {
+		linkShareCreated() {
+			this.newLinkShare = true
+		},
+
+		showThisModal() {
+			this.modal = true
+		},
+
+		closeThisModal() {
+			this.modal = false
+
+			if (this.newLinkShare || this.shareSent) {
+				this.openSharingManage()
+			} else {
+				window.OCA.Files.Sidebar.close()
+				window.OCA.Files.Sidebar.setFullScreenMode(false)
+			}
+		},
+
+		async openSharingManage() {
+			try {
+				const fileInfoPathName = this.fileInfo.path + '/' + this.fileInfo.name
+
+				window.OCA.Files.Sidebar.close()
+
+				window.OCA.Files.Sidebar.setActiveTab('sharing')
+				window.OCA.Files.Sidebar.setActiveTab('sharing-manage')
+				window.OCA.Files.Sidebar.setFullScreenMode(false)
+
+				// TODO: migrate Sidebar to use a Node instead
+				window.OCA.Files.Sidebar.open(fileInfoPathName)
+
+				return null
+			} catch (error) {
+				return false
+			}
+		},
+
 		/**
 		 * Update current fileInfo and fetch new data
 		 *
@@ -234,6 +264,7 @@ export default {
 		resetState() {
 			clearInterval(this.expirationInterval)
 			this.loading = true
+			this.modal = false
 			this.error = ''
 			this.sharedWithMe = {}
 			this.shares = []
@@ -241,6 +272,8 @@ export default {
 			this.showSharingDetailsView = false
 			this.shareDetailsData = {}
 			this.shareDetailsDataAll = []
+			this.shareSent = false
+			this.newLinkShare = false
 		},
 
 		/**
@@ -345,6 +378,7 @@ export default {
 			// meaning: not from the ShareInput
 			if (share.type === this.SHARE_TYPES.SHARE_TYPE_EMAIL) {
 				this.linkShares.unshift(share)
+				this.shareSent = true
 			} else {
 				this.shares.unshift(share)
 			}
@@ -398,33 +432,61 @@ export default {
 			if (eventData) {
 				this.shareDetailsData = eventData[0]
 				this.shareDetailsDataAll = eventData
+
+				const sharedWith = []
+				for (const data of eventData) {
+					sharedWith.push(data.share.shareWith)
+				}
+				this.recipients = sharedWith.join(', ')
 			}
 			this.showSharingDetailsView = !this.showSharingDetailsView
 		},
+
+		formatFileSize,
 	},
 }
 </script>
 
 <style scoped lang="scss">
 .emptyContentWithSections {
-	margin: 1rem auto;
+    margin: 1rem auto;
 }
 
-.sharingTab__header {
-	line-height: initial;
+.sharingPopup__header {
+    line-height: initial;
 }
 
-.sharingTab {
-	&__content {
-		padding: 0px;
+.sharingPopup {
+    &__content {
+        padding: 1.5rem;
+    }
 
-		p, .sharing-entry__noshare {
-			margin-bottom: 1rem
-		}
-	}
+    &__info {
+        display: block;
+        margin-bottom: 1rem
+    }
 
-	&__additionalContent {
-		margin: 3rem 0;
-	}
+    &__additionalContent {
+        margin: 3rem 0;
+    }
+
+    &__fileinfo {
+        font-size: 14px;
+        margin: 1rem 0;
+    }
+
+    &__divider {
+        border-bottom: 1px solid var(--color-border);
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+
+    &__or {
+        background-color: var(--telekom-color-background-surface);
+        bottom: -0.75rem;
+        font-size: 14px;
+        padding: 0.75rem;;
+        position: relative;
+    }
 }
 </style>

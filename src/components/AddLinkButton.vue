@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<NcButton id="addlink_button" type="secondary" @click.prevent.stop="onNewLinkShare">
-			{{ t('nmcsharing', 'Add link') }}
+			{{ t('nmcsharing', 'Create new link') }}
 		</NcButton>
 	</div>
 </template>
@@ -42,10 +42,11 @@ export default {
 					shareType: ShareTypes.SHARE_TYPE_LINK,
 				}
 
-				console.debug('Creating link share with options', options)
+				// console.debug('Creating link share with options', options)
+
 				const newShare = await this.createShare(options)
 
-				console.debug('Link share created', newShare)
+				// console.debug('Link share created', newShare)
 
 				await new Promise(resolve => {
 					this.$emit('add:share', newShare, resolve)
@@ -68,10 +69,3 @@ export default {
 	},
 }
 </script>
-
-<style lang="scss" scoped>
-button#addlink_button {
-	font-size: 1rem;
-	margin-bottom: 24px;
-}
-</style>
