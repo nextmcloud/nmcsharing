@@ -22,6 +22,13 @@
 
 <template>
 	<div class="sharing-search">
+		<p>Link goes here</p>
+		<!-- <QuickShareSelect v-if="share && share.permissions !== undefined" -->
+		<QuickShareSelect 
+				:share="share"
+				:file-info="fileInfo"
+				:toggle="showDropdown"
+				@open-sharing-details="openShareDetailsForCustomSettings(share)" />
 		<NcSelect v-if="canReshare"
 			ref="select"
 			v-model="value"
@@ -58,6 +65,8 @@ import { debounce } from 'throttle-debounce'
 import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
 import NcSelect from '@nextcloud/vue/dist/Components/NcSelect.js'
 
+import QuickShareSelect from './SharingEntryQuickShareSelect.vue'
+
 import Config from '../services/ConfigService.js'
 import GeneratePassword from '../utils/GeneratePassword.js'
 import Share from '../models/Share.js'
@@ -71,6 +80,7 @@ export default {
 	components: {
 		NcButton,
 		NcSelect,
+		QuickShareSelect
 	},
 
 	mixins: [ShareTypes, ShareRequests, ShareDetails],
@@ -107,6 +117,7 @@ export default {
 
 	data() {
 		return {
+			showDropdown: true,
 			config: new Config(),
 			loading: false,
 			query: '',
@@ -552,6 +563,12 @@ export default {
 			} finally {
 				this.loading = false
 			}
+		},
+		toggleQuickShareSelect() {
+			if (!this.isPermissionEditAllowed) {
+				return
+			}
+			this.showDropdown = !this.showDropdown
 		},
 	},
 }
