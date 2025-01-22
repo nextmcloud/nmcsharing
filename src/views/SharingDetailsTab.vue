@@ -125,6 +125,7 @@ import EmailIcon from 'vue-material-design-icons/Email.vue'
 import LinkIcon from 'vue-material-design-icons/Link.vue'
 
 import GeneratePassword from '../utils/GeneratePassword.js'
+import Config from '../services/ConfigService.js'
 import Share from '../models/Share.js'
 import ShareRequests from '../mixins/ShareRequests.js'
 import ShareTypes from '../mixins/ShareTypes.js'
@@ -173,6 +174,7 @@ export default {
 	},
 	data() {
 		return {
+			config: new Config(),
 			writeNoteToRecipientIsChecked: false,
 			allowResharingIsChecked: this.share.hasSharePermission,
 			sharingPermission: BUNDLED_PERMISSIONS.ALL.toString(),

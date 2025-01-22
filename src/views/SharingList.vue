@@ -39,6 +39,7 @@
 
 <script>
 // eslint-disable-next-line no-unused-vars
+import Share from '../models/Share.js'
 import SharingEntry from '../components/SharingEntry.vue'
 import ShareTypes from '../mixins/ShareTypes.js'
 import ShareDetails from '../mixins/ShareDetails.js'

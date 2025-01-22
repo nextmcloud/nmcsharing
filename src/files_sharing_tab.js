@@ -38,34 +38,35 @@ Vue.prototype.n = n
 const View = Vue.extend(SharingTab)
 let TabInstance = null
 
-const sharingTab = new OCA.Files.Sidebar.Tab({
-	id: 'sharing-manage',
-	name: t('nmcsharing', 'Manage shares'),
-	icon: 'icon-share',
-
-	async mount(el, fileInfo, context) {
-		if (TabInstance) {
-			TabInstance.$destroy()
-		}
-		TabInstance = new View({
-			// Better integration with vue parent component
-			parent: context,
-		})
-		// Only mount after we have all the info we need
-		await TabInstance.update(fileInfo)
-		TabInstance.$mount(el)
-	},
-	update(fileInfo) {
-		TabInstance.update(fileInfo)
-	},
-	destroy() {
-		TabInstance.$destroy()
-		TabInstance = null
-	},
-})
-
 window.addEventListener('DOMContentLoaded', () => {
 	if (OCA.Files && OCA.Files.Sidebar) {
+
+		const sharingTab = new OCA.Files.Sidebar.Tab({
+			id: 'sharing-manage',
+			name: t('nmcsharing', 'Manage shares'),
+			icon: 'icon-share',
+
+			async mount(el, fileInfo, context) {
+				if (TabInstance) {
+					TabInstance.$destroy()
+				}
+				TabInstance = new View({
+					// Better integration with vue parent component
+					parent: context,
+				})
+				// Only mount after we have all the info we need
+				await TabInstance.update(fileInfo)
+				TabInstance.$mount(el)
+			},
+			update(fileInfo) {
+				TabInstance.update(fileInfo)
+			},
+			destroy() {
+				TabInstance.$destroy()
+				TabInstance = null
+			},
+		})
+
 		// register new sharing tab
 		OCA.Files.Sidebar.registerTab(sharingTab)
 	}
