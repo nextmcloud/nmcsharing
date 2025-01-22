@@ -4,6 +4,7 @@
 			{{ t('nmcsharing', 'Set download limit') }}
 		</NcCheckboxRadioSwitch>
 		<NcInputField v-if="isLimitEnabled"
+			type="number"
 			:title="downloadsLeftTooltip"
 			:value.sync="limit"
 			@update:value="debounceUpdateLimit" />

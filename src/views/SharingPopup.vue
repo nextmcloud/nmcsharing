@@ -12,7 +12,7 @@
 
 		<div v-if="!shareSent">
 			<!-- shares content -->
-			<div v-if="!showSharingDetailsView" class="sharingPopup__content">
+			<div class="sharingPopup__content">
 				<h2 class="sharingPopup__header" style="margin-bottom: 0;">
 					{{ t('nmcsharing', 'Send link via E-Mail') }}
 				</h2>
@@ -22,15 +22,25 @@
 				<!-- shared with me information -->
 				<SharingEntrySimple v-if="isSharedWithMe" v-bind="sharedWithMe" class="sharing-entry__reshare" />
 
+				<!-- share details -->
+				<template v-if="showSharingDetailsView">
+					<SharingInputDetailsTab :file-info="shareDetailsData.fileInfo"
+						:share="shareDetailsData.share"
+						:resharing-allowed-global="config.isResharingAllowed"
+						@close-sharing-details="toggleShareDetailsView"
+						@save:share="saveShare" />
+				</template>
+
 				<template>
 					<!-- add new share input -->
 					<SharingInput :can-reshare="canReshare"
 						:file-info="fileInfo"
 						:link-shares="linkShares"
 						:reshare="reshare"
-						:shares="shares"
+						:shares="newShares"
+						:share-set="shareSet"
 						:is-shared-with-me="isSharedWithMe"
-						@open-sharing-details="toggleShareDetailsView"
+						@add:share="addShare"
 						@open-sharing-details-all="toggleShareDetailsViewAll" />
 				</template>
 
@@ -45,17 +55,6 @@
 					:shares="linkShares"
 					@open-sharing-details="toggleShareDetailsView"
 					@link-share-created="linkShareCreated" />
-			</div>
-
-			<!-- share details -->
-			<div v-else>
-				<SharingDetailsTab :file-info="shareDetailsData.fileInfo"
-					:share="shareDetailsData.share"
-					:share-all="shareDetailsDataAll"
-					:resharing-allowed-global="config.isResharingAllowed"
-					@close-sharing-details="toggleShareDetailsView"
-					@add:share="addShare"
-					@remove:share="removeShare" />
 			</div>
 		</div>
 
@@ -75,9 +74,11 @@
 </template>
 <!-- eslint-disable @nextcloud/no-deprecations -->
 <script>
+import { formatFileSize } from '@nextcloud/files'
 import { generateOcsUrl } from '@nextcloud/router'
-import NcModal from '@nextcloud/vue/dist/Components/NcModal.js'
 import axios from '@nextcloud/axios'
+import NcModal from '@nextcloud/vue/dist/Components/NcModal.js'
+import CheckCircleOutlineIcon from 'vue-material-design-icons/CheckCircleOutline.vue'
 
 import Config from '../services/ConfigService.js'
 import { shareWithTitle } from '../utils/SharedWithMe.js'
@@ -85,23 +86,21 @@ import Share from '../models/Share.js'
 import ShareTypes from '../mixins/ShareTypes.js'
 import SharingEntrySimple from '../components/SharingEntrySimple.vue'
 import SharingInput from '../components/SharingInput.vue'
-
+import SharingInputDetailsLink from '../components/SharingInputDetailsLink.vue'
+import SharingInputDetailsTab from './SharingInputDetailsTab.vue'
 import SharingLinkListPopup from './SharingLinkListPopup.vue'
-import SharingDetailsTab from './SharingDetailsTab.vue'
-
-import { formatFileSize } from '@nextcloud/files'
-import CheckCircleOutlineIcon from 'vue-material-design-icons/CheckCircleOutline.vue'
 
 export default {
 	name: 'SharingPopup',
 
 	components: {
-		SharingEntrySimple,
-		SharingInput,
-		SharingLinkListPopup,
-		SharingDetailsTab,
 		NcModal,
 		CheckCircleOutlineIcon,
+		SharingEntrySimple,
+		SharingInput,
+		SharingInputDetailsLink,
+		SharingInputDetailsTab,
+		SharingLinkListPopup,
 	},
 
 	mixins: [ShareTypes],
@@ -122,12 +121,13 @@ export default {
 			sharedWithMe: {},
 			shares: [],
 			linkShares: [],
+			newShares: [],
+			shareSet: false,
 
 			sections: OCA.Sharing.ShareTabSections.getSections(),
 			// projectsEnabled: loadState('core', 'projects_enabled', false),
 			showSharingDetailsView: false,
 			shareDetailsData: {},
-			shareDetailsDataAll: [],
 			shareSent: false,
 			newLinkShare: false,
 			recipients: '',
@@ -186,7 +186,6 @@ export default {
 				const fileInfoPathName = this.fileInfo.path + '/' + this.fileInfo.name
 
 				window.OCA.Files.Sidebar.close()
-
 				window.OCA.Files.Sidebar.setActiveTab('sharing')
 				window.OCA.Files.Sidebar.setActiveTab('sharing-manage')
 				window.OCA.Files.Sidebar.setFullScreenMode(false)
@@ -269,9 +268,10 @@ export default {
 			this.sharedWithMe = {}
 			this.shares = []
 			this.linkShares = []
+			this.newShares = []
+			this.shareSet = false
 			this.showSharingDetailsView = false
 			this.shareDetailsData = {}
-			this.shareDetailsDataAll = []
 			this.shareSent = false
 			this.newLinkShare = false
 		},
@@ -313,6 +313,7 @@ export default {
 					.sort((a, b) => b.createdTime - a.createdTime)
 
 				this.linkShares = shares.filter(share => share.type === this.SHARE_TYPES.SHARE_TYPE_LINK || share.type === this.SHARE_TYPES.SHARE_TYPE_EMAIL)
+
 				this.shares = shares.filter(share => share.type !== this.SHARE_TYPES.SHARE_TYPE_LINK && share.type !== this.SHARE_TYPES.SHARE_TYPE_EMAIL)
 
 				// console.debug('Processed', this.linkShares.length, 'link share(s)')
@@ -368,12 +369,25 @@ export default {
 
 		/**
 		 * Add a new share into the shares list
+		 * and the share details data
+		 *
+		 * @param {Share} share the share to add to the array
+		 */
+		saveShare(share) {
+			this.shareDetailsData.share = share
+			this.newShares = [ share ];
+			this.shareSet = true
+			this.showSharingDetailsView = false
+		},
+
+		/**
+		 * Add a new share into the shares list
 		 * and return the newly created share component
 		 *
 		 * @param {Share} share the share to add to the array
 		 * @param {Function} [resolve] a function to run after the share is added and its component initialized
 		 */
-		addShare(share, resolve = () => { }) {
+		 addShare(share, resolve = () => { }) {
 			// only catching share type MAIL as link shares are added differently
 			// meaning: not from the ShareInput
 			if (share.type === this.SHARE_TYPES.SHARE_TYPE_EMAIL) {
@@ -383,17 +397,6 @@ export default {
 				this.shares.unshift(share)
 			}
 			this.awaitForShare(share, resolve)
-		},
-
-		/**
-		 * Remove a share from the shares list
-		 *
-		 * @param {Share} share the share to remove
-		 */
-		removeShare(share) {
-			const index = this.shares.findIndex(item => item.id === share.id)
-			// eslint-disable-next-line vue/no-mutating-props
-			this.shares.splice(index, 1)
 		},
 
 		/**
@@ -421,17 +424,13 @@ export default {
 			})
 		},
 
-		toggleShareDetailsView(eventData) {
-			if (eventData) {
-				this.shareDetailsData = eventData
-			}
+		toggleShareDetailsView() {
 			this.showSharingDetailsView = !this.showSharingDetailsView
 		},
 
 		toggleShareDetailsViewAll(eventData) {
-			if (eventData) {
+			if (eventData && !this.shareSet) {
 				this.shareDetailsData = eventData[0]
-				this.shareDetailsDataAll = eventData
 
 				const sharedWith = []
 				for (const data of eventData) {
