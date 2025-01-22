@@ -22,6 +22,11 @@
 
 <template>
 	<div class="sharing-search">
+		<SharingInputDetailsLink
+			:file-info="fileInfo"
+			:disabled="!isValidValue"
+			:share.sync="shares[0]"
+			@open-sharing-details-all="openDetails" />
 		<NcSelect v-if="canReshare"
 			ref="select"
 			v-model="value"
@@ -42,8 +47,8 @@
 		</NcSelect>
 		<div class="button-group">
 			<NcButton type="primary"
-				:disabled="!isValidValue"
-				@click="triggerSharingDetails">
+				:disabled="!isValidValue || !shareSet"
+				@click="sendSharing">
 				{{ t('nmcsharing', 'Send') }}
 			</NcButton>
 		</div>
@@ -59,11 +64,13 @@ import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
 import NcSelect from '@nextcloud/vue/dist/Components/NcSelect.js'
 
 import Config from '../services/ConfigService.js'
-import GeneratePassword from '../utils/GeneratePassword.js'
 import Share from '../models/Share.js'
+import ShareDetails from '../mixins/ShareDetails.js'
+import SharesMixin from '../mixins/SharesMixin.js'
 import ShareRequests from '../mixins/ShareRequests.js'
 import ShareTypes from '../mixins/ShareTypes.js'
-import ShareDetails from '../mixins/ShareDetails.js'
+
+import SharingInputDetailsLink from './SharingInputDetailsLink.vue'
 
 export default {
 	name: 'SharingInput',
@@ -71,9 +78,10 @@ export default {
 	components: {
 		NcButton,
 		NcSelect,
+		SharingInputDetailsLink,
 	},
 
-	mixins: [ShareTypes, ShareRequests, ShareDetails],
+	mixins: [ShareTypes, ShareRequests, SharesMixin, ShareDetails],
 
 	props: {
 		shares: {
@@ -100,6 +108,10 @@ export default {
 			required: true,
 		},
 		isSharedWithMe: {
+			type: Boolean,
+			required: true,
+		},
+		shareSet: {
 			type: Boolean,
 			required: true,
 		},
@@ -174,8 +186,73 @@ export default {
 	},
 
 	methods: {
-		triggerSharingDetails() {
+		openDetails() {
 			this.openSharingDetailsAll(this.value)
+		},
+
+		async sendSharing() {
+			let thisShare = this.shares[0]
+
+			for (const thisValue of this.value) {
+
+				const incomingShare = {
+					permissions: thisShare.permissions,
+					shareType: thisValue.shareType,
+					shareWith: thisValue.shareWith,
+					shareWithDisplayName: thisValue.displayName,
+					shareWithDisplayNameUnique: thisValue.shareWithDisplayNameUnique,
+					attributes: thisShare.attributes,
+					label: thisShare.label,
+					note: thisShare.note,
+					expireDate: thisShare.expireDate,
+					password: thisShare.password,
+				}
+
+				const newShare = await this.addShare(incomingShare, this.fileInfo, this.config)
+
+				this.$emit('add:share', newShare)
+			}
+		},
+
+		/**
+		 * Process the new share request
+		 *
+		 * @param {object} value the multiselect option
+		 * @param {object} fileInfo file data
+		 * @param {Config} config instance configs
+		 */
+		async addShare(value, fileInfo, config) {
+			// Clear the displayed selection
+			this.value = null
+
+			// handle externalResults from OCA.Sharing.ShareSearch
+			if (value.handler) {
+				const share = await value.handler(this)
+				this.$emit('add:share', new Share(share))
+				return true
+			}
+
+			// this.loading = true // Are we adding loaders the new share flow?
+			// console.debug('Adding a new share from the input for', value)
+			try {
+				const path = (fileInfo.path + '/' + fileInfo.name).replace('//', '/')
+				const share = await this.createShare({
+					path,
+					shareType: value.shareType,
+					shareWith: value.shareWith,
+					permissions: value.permissions,
+					attributes: JSON.stringify(fileInfo.shareAttributes),
+					...(value.note ? { note: value.note } : {}),
+					...(value.password ? { password: value.password } : {}),
+					...(value.expireDate ? { expireDate: value.expireDate } : {}),
+					...(value.label ? { label: value.label } : {}),
+				})
+				return share
+			} catch (error) {
+				console.error('Error while adding new share', error)
+			} finally {
+				// this.loading = false // No loader here yet
+			}
 		},
 
 		async asyncFind(query) {
@@ -478,81 +555,6 @@ export default {
 				...this.shareTypeToIcon(result.value.shareType),
 			}
 		},
-
-		/**
-		 * Process the new share request
-		 *
-		 * @param {object} value the multiselect option
-		 */
-		async addShare(value) {
-			// Clear the displayed selection
-			this.value = null
-
-			if (value.lookup) {
-				await this.getSuggestions(this.query, true)
-
-				this.$nextTick(() => {
-					// open the dropdown again
-					this.$refs.select.$children[0].open = true
-				})
-				return true
-			}
-
-			// handle externalResults from OCA.Sharing.ShareSearch
-			if (value.handler) {
-				const share = await value.handler(this)
-				this.$emit('add:share', new Share(share))
-				return true
-			}
-
-			this.loading = true
-
-			try {
-				let password = null
-
-				if (this.config.enforcePasswordForPublicLink
-					&& value.shareType === this.SHARE_TYPES.SHARE_TYPE_EMAIL) {
-					password = await GeneratePassword()
-				}
-
-				const path = (this.fileInfo.path + '/' + this.fileInfo.name).replace('//', '/')
-				const share = await this.createShare({
-					path,
-					shareType: value.shareType,
-					shareWith: value.shareWith,
-					password,
-					permissions: this.fileInfo.sharePermissions & OC.getCapabilities().files_sharing.default_permissions,
-					attributes: JSON.stringify(this.fileInfo.shareAttributes),
-				})
-
-				// If we had a password, we need to show it to the user as it was generated
-				if (password) {
-					share.newPassword = password
-					// Wait for the newly added share
-					const component = await new Promise(resolve => {
-						this.$emit('add:share', share, resolve)
-					})
-
-					// open the menu on the
-					// freshly created share component
-					component.open = true
-				} else {
-					// Else we just add it normally
-					this.$emit('add:share', share)
-				}
-
-				await this.getRecommendations()
-			} catch (error) {
-				this.$nextTick(() => {
-					// open the dropdown again on error
-					this.$refs.select.$children[0].open = true
-				})
-				this.query = value.shareWith
-				console.error('Error while adding new share', error)
-			} finally {
-				this.loading = false
-			}
-		},
 	},
 }
 </script>
@@ -570,7 +572,7 @@ export default {
 	&__input.v-select.select {
 		min-width: auto;
 		width: 100%;
-		margin: 1rem 0 0.75rem;
+		margin: 0.75rem 0;
 
 		input {
 			opacity: 1;
