@@ -31,18 +31,17 @@
 						@save:share="saveShare" />
 				</template>
 
-				<template>
-					<!-- add new share input -->
-					<SharingInput :can-reshare="canReshare"
-						:file-info="fileInfo"
-						:link-shares="linkShares"
-						:reshare="reshare"
-						:shares="newShares"
-						:share-set="shareSet"
-						:is-shared-with-me="isSharedWithMe"
-						@add:share="addShare"
-						@open-sharing-details-all="toggleShareDetailsViewAll" />
-				</template>
+				<!-- add new share input -->
+				<SharingInput :can-reshare="canReshare"
+					:file-info="fileInfo"
+					:link-shares="linkShares"
+					:reshare="reshare"
+					:shares="newShares"
+					:share-set="shareSet"
+					:is-shared-with-me="isSharedWithMe"
+					@add:share="addShare"
+					@done:share="doneSharing"
+					@open-sharing-details-all="toggleShareDetailsViewAll" />
 
 				<div class="sharingPopup__divider">
 					<span class="sharingPopup__or">{{ t('nmcsharing', 'Or') }}</span>
@@ -63,7 +62,7 @@
 			<div class="sharingPopup__success">
 				<CheckCircleOutlineIcon :size="128" />
 				<div class="message">
-					{{ t('nmcsharing', 'Link to "{fileName}" was sent.', { fileName: shareDetailsData.fileInfo.name }) }}
+					{{ t('nmcsharing', 'Link to "{fileName}" was sent.', { fileName: fileInfo.name }) }}
 				</div>
 				<div class="recipients">
 					{{ t('nmcsharing', 'To') }}: {{ recipients }}
@@ -86,7 +85,6 @@ import Share from '../models/Share.js'
 import ShareTypes from '../mixins/ShareTypes.js'
 import SharingEntrySimple from '../components/SharingEntrySimple.vue'
 import SharingInput from '../components/SharingInput.vue'
-import SharingInputDetailsLink from '../components/SharingInputDetailsLink.vue'
 import SharingInputDetailsTab from './SharingInputDetailsTab.vue'
 import SharingLinkListPopup from './SharingLinkListPopup.vue'
 
@@ -98,7 +96,6 @@ export default {
 		CheckCircleOutlineIcon,
 		SharingEntrySimple,
 		SharingInput,
-		SharingInputDetailsLink,
 		SharingInputDetailsTab,
 		SharingLinkListPopup,
 	},
@@ -130,7 +127,7 @@ export default {
 			shareDetailsData: {},
 			shareSent: false,
 			newLinkShare: false,
-			recipients: '',
+			sharedWith: [],
 		}
 	},
 
@@ -158,6 +155,9 @@ export default {
 				return this.t('files', 'Pending')
 			}
 			return formatFileSize(size, true)
+		},
+		recipients() {
+			return this.sharedWith.join(', ')
 		},
 	},
 
@@ -375,7 +375,7 @@ export default {
 		 */
 		saveShare(share) {
 			this.shareDetailsData.share = share
-			this.newShares = [ share ];
+			this.newShares = [share]
 			this.shareSet = true
 			this.showSharingDetailsView = false
 		},
@@ -392,10 +392,10 @@ export default {
 			// meaning: not from the ShareInput
 			if (share.type === this.SHARE_TYPES.SHARE_TYPE_EMAIL) {
 				this.linkShares.unshift(share)
-				this.shareSent = true
 			} else {
 				this.shares.unshift(share)
 			}
+			this.sharedWith.push(share.shareWith)
 			this.awaitForShare(share, resolve)
 		},
 
@@ -424,6 +424,10 @@ export default {
 			})
 		},
 
+		doneSharing() {
+			this.shareSent = true
+		},
+
 		toggleShareDetailsView() {
 			this.showSharingDetailsView = !this.showSharingDetailsView
 		},
@@ -431,12 +435,6 @@ export default {
 		toggleShareDetailsViewAll(eventData) {
 			if (eventData && !this.shareSet) {
 				this.shareDetailsData = eventData[0]
-
-				const sharedWith = []
-				for (const data of eventData) {
-					sharedWith.push(data.share.shareWith)
-				}
-				this.recipients = sharedWith.join(', ')
 			}
 			this.showSharingDetailsView = !this.showSharingDetailsView
 		},

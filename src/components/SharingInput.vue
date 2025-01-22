@@ -22,8 +22,7 @@
 
 <template>
 	<div class="sharing-search">
-		<SharingInputDetailsLink
-			:file-info="fileInfo"
+		<SharingInputDetailsLink :file-info="fileInfo"
 			:disabled="!isValidValue"
 			:share.sync="shares[0]"
 			@open-sharing-details-all="openDetails" />
@@ -47,7 +46,7 @@
 		</NcSelect>
 		<div class="button-group">
 			<NcButton type="primary"
-				:disabled="!isValidValue || !shareSet"
+				:disabled="!isValidValue"
 				@click="sendSharing">
 				{{ t('nmcsharing', 'Send') }}
 			</NcButton>
@@ -126,6 +125,7 @@ export default {
 			ShareSearch: OCA.Sharing.ShareSearch.state,
 			suggestions: [],
 			value: null,
+			fallbackShare: { permissions: 1 },
 		}
 	},
 
@@ -191,10 +191,15 @@ export default {
 		},
 
 		async sendSharing() {
-			let thisShare = this.shares[0]
+			const promises = []
+			
+			let thisShare = this.fallbackShare
+
+			if (this.shareSet) {
+				thisShare = this.shares[0]
+			}
 
 			for (const thisValue of this.value) {
-
 				const incomingShare = {
 					permissions: thisShare.permissions,
 					shareType: thisValue.shareType,
@@ -208,10 +213,20 @@ export default {
 					password: thisShare.password,
 				}
 
-				const newShare = await this.addShare(incomingShare, this.fileInfo, this.config)
-
-				this.$emit('add:share', newShare)
+				promises.push(
+					this.addShare(incomingShare, this.fileInfo, this.config)
+						.then(newShare => {
+							this.$emit('add:share', newShare) // Emit nach Abschluss
+						})
+						.catch(error => {
+							console.error('Error adding share:', error) // Fehlerbehandlung
+						}),
+				)
 			}
+
+			await Promise.all(promises) // Warte auf alle Promises
+
+			this.$emit('done:share') // Emit nach Abschluss
 		},
 
 		/**
