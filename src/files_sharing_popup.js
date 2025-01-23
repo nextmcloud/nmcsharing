@@ -39,42 +39,43 @@ const View = Vue.extend(SharingPopup)
 let TabInstance = null
 
 /**
- * Check if tap should be removed
+ * Check if tab should be removed
  *
- * @param id
+ * @param {string} id id of tabs to be removed
  */
 function checkTabs(id) {
 	return id !== 'sharing' && id !== 'photos' && id !== 'comments' && id !== 'version_vue'
 }
 
-const sharingTab = new OCA.Files.Sidebar.Tab({
-	id: 'sharing',
-	name: t('files_sharing', 'Sharing Popup'),
-	icon: 'icon-share',
-
-	async mount(el, fileInfo, context) {
-		if (TabInstance) {
-			TabInstance.$destroy()
-		}
-		TabInstance = new View({
-			// Better integration with vue parent component
-			parent: context,
-		})
-		// Only mount after we have all the info we need
-		await TabInstance.update(fileInfo)
-		TabInstance.$mount(el)
-	},
-	update(fileInfo) {
-		TabInstance.update(fileInfo)
-	},
-	destroy() {
-		TabInstance.$destroy()
-		TabInstance = null
-	},
-})
-
 window.addEventListener('DOMContentLoaded', () => {
 	if (OCA.Files && OCA.Files.Sidebar) {
+
+		const sharingTab = new OCA.Files.Sidebar.Tab({
+			id: 'sharing',
+			name: t('files_sharing', 'Sharing Popup'),
+			icon: 'icon-share',
+
+			async mount(el, fileInfo, context) {
+				if (TabInstance) {
+					TabInstance.$destroy()
+				}
+				TabInstance = new View({
+					// Better integration with vue parent component
+					parent: context,
+				})
+				// Only mount after we have all the info we need
+				await TabInstance.update(fileInfo)
+				TabInstance.$mount(el)
+			},
+			update(fileInfo) {
+				TabInstance.update(fileInfo)
+			},
+			destroy() {
+				TabInstance.$destroy()
+				TabInstance = null
+			},
+		})
+
 		// remove all unused tabs
 		const tabsState = OCA.Files.Sidebar.state.tabs
 		OCA.Files.Sidebar.state.tabs = tabsState.filter((tab) => checkTabs(tab.id))

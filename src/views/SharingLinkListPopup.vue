@@ -104,14 +104,14 @@ export default {
 		},
 
 		/**
-		 * @return {int}
+		 * @return {number}
 		 */
 		shareTypeLink() {
 			return this.SHARE_TYPES.SHARE_TYPE_LINK
 		},
 
 		/**
-		 * @return {int}
+		 * @return {number}
 		 */
 		shareTypeMail() {
 			return this.SHARE_TYPES.SHARE_TYPE_EMAIL

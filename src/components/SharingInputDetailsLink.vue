@@ -53,11 +53,6 @@ export default {
 			default: false,
 		},
 	},
-	data() {
-		return {
-			canViewPermission: 1,
-		}
-	},
 	computed: {
 		canView() {
 			if (this.selectedOption === this.canViewText) {
@@ -98,25 +93,19 @@ export default {
 		fileDropText() {
 			return t('nmcsharing', 'Anyone with the link can file drop')
 		},
-		customPermissionsText() {
-			return t('nmcsharing', 'No share permissions set yet')
-		},
 		selectedOption() {
 			let permissions = this.share.permissions
-			console.log(this.share)
-			console.log(this.share.permissions)
 			if (hasPermissions(this.share.permissions, ATOMIC_PERMISSIONS.SHARE)) {
 				// We remove the share permission for the comparison as it is not relevant for bundled permissions.
 				permissions = this.share.permissions & ~ATOMIC_PERMISSIONS.SHARE
 			}
-			if (permissions === BUNDLED_PERMISSIONS.READ_ONLY) {
-				return this.canViewText
-			} else if (permissions === BUNDLED_PERMISSIONS.ALL || permissions === BUNDLED_PERMISSIONS.ALL_FILE) {
+			if (permissions === BUNDLED_PERMISSIONS.ALL || permissions === BUNDLED_PERMISSIONS.ALL_FILE) {
 				return this.canEditText
 			} else if (permissions === BUNDLED_PERMISSIONS.FILE_DROP) {
 				return this.fileDropText
 			}
-			return this.customPermissionsText
+			// view permission is default setting
+			return this.canViewText
 		},
 		dropdownId() {
 			// Generate a unique ID for ARIA attributes
@@ -139,7 +128,7 @@ export default {
 
 <style lang="scss" scoped>
 .share-select {
-	cursor: pointer;    
+	cursor: pointer;
 	position: relative;
 	margin-top: 0.5rem;
 

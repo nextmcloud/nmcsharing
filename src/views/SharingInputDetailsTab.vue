@@ -123,7 +123,6 @@ import NcDateTimePickerNative from '@nextcloud/vue/dist/Components/NcDateTimePic
 import NcCheckboxRadioSwitch from '@nextcloud/vue/dist/Components/NcCheckboxRadioSwitch.js'
 
 import GeneratePassword from '../utils/GeneratePassword.js'
-import Share from '../models/Share.js'
 import ShareRequests from '../mixins/ShareRequests.js'
 import ShareTypes from '../mixins/ShareTypes.js'
 import SharesMixin from '../mixins/SharesMixin.js'
@@ -472,7 +471,7 @@ export default {
 			return capitalizeFirstAndJoin(perms)
 		},
 	},
-	
+
 	watch: {
 		setCustomPermissions(isChecked) {
 			if (isChecked) {
@@ -584,7 +583,7 @@ export default {
 				// It's not possible to create an existing file.
 				this.share.permissions = BUNDLED_PERMISSIONS.ALL_FILE
 			}
-			
+
 			// add SHARE permission if share doesn't have it, 'Allow resharing' is checked and Resharing is enabled globally
 			if (this.allowResharingIsChecked && !this.canReshare && this.resharingAllowedGlobal) {
 				this.share.permissions |= ATOMIC_PERMISSIONS.SHARE
@@ -611,8 +610,6 @@ export default {
 				this.share.expireDate = ''
 			}
 
-			let setShare = {}
-
 			const incomingShare = {
 				permissions: this.share.permissions,
 				shareType: this.share.type,
@@ -620,7 +617,7 @@ export default {
 				attributes: this.share.attributes,
 				label: this.mutableShare.label,
 				note: this.mutableShare.note,
-				shareSet: true
+				shareSet: true,
 			}
 
 			if (this.hasExpirationDate) {
@@ -632,15 +629,13 @@ export default {
 				incomingShare.password = this.mutableShare.password
 			}
 
-			setShare = incomingShare;
-
 			this.share.label = this.mutableShare.label
 			this.share.note = this.mutableShare.note
 			this.share.shareSet = true
 
 			this.$emit('save:share', this.share)
 		},
-		
+
 		/**
 		 * Update newPassword values
 		 * of share. If password is set but not newPassword
@@ -678,7 +673,7 @@ export default {
     padding: 1.5rem;
     position: absolute;
     z-index: 10;
-    background: #fff;
+    background: var(--telekom-color-background-surface);
     top: 0;
     left: 0;
     min-width: calc(100% - 3rem);
