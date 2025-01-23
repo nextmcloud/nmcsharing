@@ -120,7 +120,9 @@ export default {
 	},
 	methods: {
 		openDetails() {
-			this.$emit('open-sharing-details-all')
+			if (!this.disabled) {
+				this.$emit('open-sharing-details-all')
+			}
 		},
 	},
 }
