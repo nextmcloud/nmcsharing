@@ -12,7 +12,7 @@
 
 		<div v-if="!shareSent">
 			<!-- shares content -->
-			<div class="sharingPopup__content">
+			<div class="sharingPopup__content" v-if="!loading">
 				<h2 class="sharingPopup__header" style="margin-bottom: 0;">
 					{{ t('nmcsharing', 'Send link via E-Mail') }}
 				</h2>
@@ -34,9 +34,10 @@
 				<!-- add new share input -->
 				<SharingInput :can-reshare="canReshare"
 					:file-info="fileInfo"
+					:shares="shares"
 					:link-shares="linkShares"
+					:new-share="newShare"
 					:reshare="reshare"
-					:shares="newShares"
 					:share-set="shareSet"
 					:is-shared-with-me="isSharedWithMe"
 					@add:share="addShare"
@@ -110,17 +111,14 @@ export default {
 			expirationInterval: null,
 			loading: true,
 			modal: false,
-
 			fileInfo: null,
-
 			// reshare Share object
 			reshare: null,
 			sharedWithMe: {},
 			shares: [],
 			linkShares: [],
-			newShares: [],
+			newShare: {},
 			shareSet: false,
-
 			sections: OCA.Sharing.ShareTabSections.getSections(),
 			// projectsEnabled: loadState('core', 'projects_enabled', false),
 			showSharingDetailsView: false,
@@ -268,7 +266,7 @@ export default {
 			this.sharedWithMe = {}
 			this.shares = []
 			this.linkShares = []
-			this.newShares = []
+			this.newShare = {}
 			this.shareSet = false
 			this.showSharingDetailsView = false
 			this.shareDetailsData = {}
@@ -313,7 +311,6 @@ export default {
 					.sort((a, b) => b.createdTime - a.createdTime)
 
 				this.linkShares = shares.filter(share => share.type === this.SHARE_TYPES.SHARE_TYPE_LINK || share.type === this.SHARE_TYPES.SHARE_TYPE_EMAIL)
-
 				this.shares = shares.filter(share => share.type !== this.SHARE_TYPES.SHARE_TYPE_LINK && share.type !== this.SHARE_TYPES.SHARE_TYPE_EMAIL)
 
 				// console.debug('Processed', this.linkShares.length, 'link share(s)')
@@ -375,7 +372,7 @@ export default {
 		 */
 		saveShare(share) {
 			this.shareDetailsData.share = share
-			this.newShares = [share]
+			this.newShare = share
 			this.shareSet = true
 			this.showSharingDetailsView = false
 		},

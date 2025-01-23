@@ -21,17 +21,15 @@
   -->
 
 <template>
-	<div class="sharing-search">
+	<div v-if="canReshare" class="sharing-search">
 		<SharingInputDetailsLink :file-info="fileInfo"
 			:disabled="!isValidValue"
-			:share.sync="shares[0]"
+			:share.sync="newShare"
 			@open-sharing-details-all="openDetails" />
-		<NcSelect v-if="canReshare"
-			ref="select"
+		<NcSelect ref="select"
 			v-model="value"
 			input-id="sharing-search-input"
 			class="sharing-search__input"
-			:disabled="!canReshare"
 			:loading="loading"
 			:filterable="false"
 			:placeholder="inputPlaceholder"
@@ -91,6 +89,11 @@ export default {
 		linkShares: {
 			type: Array,
 			default: () => [],
+			required: true,
+		},
+		newShare: {
+			type: Object,
+			default: () => {},
 			required: true,
 		},
 		fileInfo: {
@@ -192,11 +195,11 @@ export default {
 
 		async sendSharing() {
 			const promises = []
-			
+
 			let thisShare = this.fallbackShare
 
 			if (this.shareSet) {
-				thisShare = this.shares[0]
+				thisShare = this.newShare
 			}
 
 			for (const thisValue of this.value) {
@@ -430,7 +433,7 @@ export default {
 		 * @param {object[]} shares the array of shares object
 		 * @return {object[]}
 		 */
-		filterOutExistingShares(shares) {
+		 filterOutExistingShares(shares) {
 			return shares.reduce((arr, share) => {
 				// only check proper objects
 				if (typeof share !== 'object') {
