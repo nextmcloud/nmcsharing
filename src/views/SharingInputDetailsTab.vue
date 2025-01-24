@@ -1,5 +1,5 @@
 <template>
-	<div class="sharingTabDetailsView">
+	<div class="sharingPopupDetailsView">
 		<h2 class="sharingTabDetailsView__header" style="margin-bottom: 0;">
 			{{ t('nmcsharing', 'Permissions') }}
 		</h2>
@@ -105,10 +105,10 @@
 
 		<div class="sharingTabDetailsView__footer">
 			<div class="button-group">
-				<NcButton @click="$emit('close-sharing-details')">
+				<NcButton class="button-details" @click="$emit('close-sharing-details')">
 					{{ t('files_sharing', 'Cancel') }}
 				</NcButton>
-				<NcButton type="primary" @click="saveShareSettings">
+				<NcButton class="button-details" type="primary" @click="saveShareSettings">
 					{{ shareButtonText }}
 				</NcButton>
 			</div>
@@ -357,7 +357,7 @@ export default {
 			return this.share.permissions === this.bundledPermissions.FILE_DROP
 		},
 		shareButtonText() {
-			return t('files_sharing', 'Save share settings')
+			return t('nmcsharing', 'Accept settings')
 		},
 		/**
 		 * Can the sharer set whether the sharee can edit the file ?
@@ -669,7 +669,7 @@ export default {
 </script>
 
 <style lang="scss">
-.sharingTabDetailsView {
+.sharingPopupDetailsView {
     padding: 1.5rem;
     position: absolute;
     z-index: 10;
@@ -760,6 +760,10 @@ export default {
 			gap: 1rem;
 			justify-content: end;
 			margin-top: 1rem;
+
+			.button-details {
+				padding: 0 1.5rem !important;
+			}
 		}
 	}
 
