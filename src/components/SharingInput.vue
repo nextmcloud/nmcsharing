@@ -43,7 +43,7 @@
 			</template>
 		</NcSelect>
 		<div class="button-group">
-			<NcButton type="primary"
+			<NcButton type="primary" class="button-send"
 				:disabled="!isValidValue"
 				@click="sendSharing">
 				{{ t('nmcsharing', 'Send') }}
@@ -605,8 +605,8 @@ export default {
 		display: flex;
 		justify-content: end;
 
-		button {
-			font-size: 14px;
+		.button-send {
+			padding: 0 1.5rem !important;
 		}
 	}
 };

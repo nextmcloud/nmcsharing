@@ -13,48 +13,62 @@
 		<div v-if="!shareSent">
 			<!-- shares content -->
 			<div class="sharingPopup__content" v-if="!loading">
-				<h2 class="sharingPopup__header" style="margin-bottom: 0;">
-					{{ t('nmcsharing', 'Send link via E-Mail') }}
-				</h2>
 
-				<span class="sharingPopup__fileinfo">{{ fileInfo.name }} ⸱ {{ size }}</span>
-
-				<!-- shared with me information -->
-				<SharingEntrySimple v-if="isSharedWithMe" v-bind="sharedWithMe" class="sharing-entry__reshare" />
-
-				<!-- share details -->
-				<template v-if="showSharingDetailsView">
-					<SharingInputDetailsTab :file-info="shareDetailsData.fileInfo"
-						:share="shareDetailsData.share"
+				<!-- share link details -->
+				<template v-if="showShareLinkDetailsView">
+					<SharingDetailsTab :file-info="shareLinkDetailsData.fileInfo"
+						:share="shareLinkDetailsData.share"
 						:resharing-allowed-global="config.isResharingAllowed"
-						@close-sharing-details="toggleShareDetailsView"
-						@save:share="saveShare" />
+						@close-sharing-details="toggleShareLinkDetailsView"
+						@save:share="addShare"
+						@remove:share="removeShare" />
 				</template>
 
-				<!-- add new share input -->
-				<SharingInput :can-reshare="canReshare"
-					:file-info="fileInfo"
-					:shares="shares"
-					:link-shares="linkShares"
-					:new-share="newShare"
-					:reshare="reshare"
-					:share-set="shareSet"
-					:is-shared-with-me="isSharedWithMe"
-					@add:share="addShare"
-					@done:share="doneSharing"
-					@open-sharing-details-all="toggleShareDetailsViewAll" />
+				<div v-else>
+					<h2 class="sharingPopup__header" style="margin-bottom: 0;">
+						{{ t('nmcsharing', 'Send link via E-Mail') }}
+					</h2>
 
-				<div class="sharingPopup__divider">
-					<span class="sharingPopup__or">{{ t('nmcsharing', 'Or') }}</span>
+					<span class="sharingPopup__fileinfo">{{ fileInfo.name }} ⸱ {{ size }}</span>
+
+					<!-- shared with me information -->
+					<SharingEntrySimple v-if="isSharedWithMe" v-bind="sharedWithMe" class="sharing-entry__reshare" />
+
+					<!-- share details -->
+					<template v-if="showShareDetailsView">
+						<SharingInputDetailsTab :file-info="shareDetailsData.fileInfo"
+							:share="shareDetailsData.share"
+							:resharing-allowed-global="config.isResharingAllowed"
+							@close-sharing-details="toggleShareDetailsView"
+							@save:share="saveShare" />
+					</template>
+
+					<!-- add new share input -->
+					<SharingInput :can-reshare="canReshare"
+						:file-info="fileInfo"
+						:shares="shares"
+						:link-shares="linkShares"
+						:new-share="newShare"
+						:reshare="reshare"
+						:share-set="shareSet"
+						:is-shared-with-me="isSharedWithMe"
+						@add:share="addShare"
+						@done:share="doneSharing"
+						@open-sharing-details-all="toggleShareDetailsViewAll" />
+
+					<div class="sharingPopup__divider">
+						<span class="sharingPopup__or">{{ t('nmcsharing', 'Or') }}</span>
+					</div>
+
+					<!-- link shares list -->
+					<SharingLinkListPopup ref="linkShareList"
+						:can-reshare="canReshare"
+						:file-info="fileInfo"
+						:shares="linkShares"
+						@open-sharing-details="toggleShareLinkDetailsView"
+						@link-share-created="linkShareCreated" />
+
 				</div>
-
-				<!-- link shares list -->
-				<SharingLinkListPopup ref="linkShareList"
-					:can-reshare="canReshare"
-					:file-info="fileInfo"
-					:shares="linkShares"
-					@open-sharing-details="toggleShareDetailsView"
-					@link-share-created="linkShareCreated" />
 			</div>
 		</div>
 
@@ -86,6 +100,7 @@ import Share from '../models/Share.js'
 import ShareTypes from '../mixins/ShareTypes.js'
 import SharingEntrySimple from '../components/SharingEntrySimple.vue'
 import SharingInput from '../components/SharingInput.vue'
+import SharingDetailsTab from './SharingDetailsTab.vue'
 import SharingInputDetailsTab from './SharingInputDetailsTab.vue'
 import SharingLinkListPopup from './SharingLinkListPopup.vue'
 
@@ -97,6 +112,7 @@ export default {
 		CheckCircleOutlineIcon,
 		SharingEntrySimple,
 		SharingInput,
+		SharingDetailsTab,
 		SharingInputDetailsTab,
 		SharingLinkListPopup,
 	},
@@ -121,8 +137,10 @@ export default {
 			shareSet: false,
 			sections: OCA.Sharing.ShareTabSections.getSections(),
 			// projectsEnabled: loadState('core', 'projects_enabled', false),
-			showSharingDetailsView: false,
+			showShareDetailsView: false,
+			showShareLinkDetailsView: false,
 			shareDetailsData: {},
+			shareLinkDetailsData: {},
 			shareSent: false,
 			newLinkShare: false,
 			sharedWith: [],
@@ -268,8 +286,10 @@ export default {
 			this.linkShares = []
 			this.newShare = {}
 			this.shareSet = false
-			this.showSharingDetailsView = false
+			this.showShareDetailsView = false
+			this.showShareLinkDetailsView = false
 			this.shareDetailsData = {}
+			this.shareLinkDetailsData = {}
 			this.shareSent = false
 			this.newLinkShare = false
 		},
@@ -374,7 +394,7 @@ export default {
 			this.shareDetailsData.share = share
 			this.newShare = share
 			this.shareSet = true
-			this.showSharingDetailsView = false
+			this.showShareDetailsView = false
 		},
 
 		/**
@@ -388,12 +408,24 @@ export default {
 			// only catching share type MAIL as link shares are added differently
 			// meaning: not from the ShareInput
 			if (share.type === this.SHARE_TYPES.SHARE_TYPE_EMAIL) {
+				this.sharedWith.push(share.shareWith)
 				this.linkShares.unshift(share)
 			} else {
+				this.sharedWith.push(share.shareWith)
 				this.shares.unshift(share)
 			}
-			this.sharedWith.push(share.shareWith)
 			this.awaitForShare(share, resolve)
+		},
+
+		/**
+		 * Remove a share from the shares list
+		 *
+		 * @param {Share} share the share to remove
+		 */
+		removeShare(share) {
+			const index = this.shares.findIndex(item => item.id === share.id)
+			// eslint-disable-next-line vue/no-mutating-props
+			this.shares.splice(index, 1)
 		},
 
 		/**
@@ -426,14 +458,21 @@ export default {
 		},
 
 		toggleShareDetailsView() {
-			this.showSharingDetailsView = !this.showSharingDetailsView
+			this.showShareDetailsView = !this.showShareDetailsView
+		},
+
+		toggleShareLinkDetailsView(eventData) {
+			if (eventData) {
+				this.shareLinkDetailsData = eventData
+			}
+			this.showShareLinkDetailsView = !this.showShareLinkDetailsView
 		},
 
 		toggleShareDetailsViewAll(eventData) {
 			if (eventData && !this.shareSet) {
 				this.shareDetailsData = eventData[0]
 			}
-			this.showSharingDetailsView = !this.showSharingDetailsView
+			this.showShareDetailsView = !this.showShareDetailsView
 		},
 
 		formatFileSize,
