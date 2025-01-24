@@ -16,5 +16,4 @@ export const COLLABORA_MIME_TYPES = [
 	'application/vnd.visio',
 	'text/plain',
 	'text/markdown',
-	'image/png',
 ]

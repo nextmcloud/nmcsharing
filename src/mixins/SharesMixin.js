@@ -40,6 +40,7 @@ import {
 	BUNDLED_PERMISSIONS,
 } from '../lib/SharePermissionsToolBox.js'
 import { COLLABORA_MIME_TYPES } from '../utils/CollaboraMimeTypes.js'
+import { MEDIA_MIME_TYPES } from '../utils/MediaMimeTypes.js'
 
 export default {
 	mixins: [SharesRequests, ShareTypes],
@@ -147,7 +148,7 @@ export default {
 		},
 		isPermissionEditAllowed() {
 			if (this.fileInfo.type === 'dir') return true
-			return !this.isPublicShare || COLLABORA_MIME_TYPES.includes(this.fileInfo.mimetype)
+			return !this.isPublicShare || COLLABORA_MIME_TYPES.includes(this.fileInfo.mimetype) || MEDIA_MIME_TYPES.includes(this.fileInfo.mimetype)
 		},
 	},
 
