@@ -13,8 +13,8 @@
 		"Read and write": "Read and write",
 		"File drop (upload only)": "File drop (upload only)",
 		"With File drop, only uploading is allowed. Only you can see files and folders that have been uploaded.": "With File drop, only uploading is allowed. Only you can see files and folders that have been uploaded.",
-		"Advanced": "Advanced",
-		"Set password": "Set password",
+		"Advanced settings": "Advanced settings",
+		"Set password": "Passwort setzen",
 		"Your shares": "Your shares",
 		"Manage access": "Manage Access",
 		"Here you can see who has access to your file/folder.": "Here you can see who has access to your file/folder.",
@@ -27,6 +27,9 @@
 		"Link to \"{fileName}\" was sent.": "Link to \"{fileName}\" was sent.",
 		"To": "To",
 		"Links to Copy": "Links to Copy",
+		"Anyone with the link can": "Anyone with the link can",
+		"only view": "only view",
+		"edit": "edit",
 		"Anyone with the link can edit": "Anyone with the link can edit",
 		"Anyone with the link can only view": "Anyone with the link can only view",
 		"Anyone with the link can file drop": "Anyone with the link can file drop",
@@ -39,7 +42,8 @@
 		"Resharing is allowed": "Resharing is allowed",
 		"You can create links or send shares by mail. If you invite MagentaCLOUD users, you have more opportunities for collaboration.": "You can create links or send shares by mail. If you invite MagentaCLOUD users, you have more opportunities for collaboration.",
 		"Share updated": "Share updated",
-		"This share was limited to {limit} downloads. There is still {downloadsLeft} left allowed.": "This share was limited to {limit} downloads. There is still {downloadsLeft} left allowed."
+		"This share was limited to {limit} downloads. There is still {downloadsLeft} left allowed.": "This share was limited to {limit} downloads. There is still {downloadsLeft} left allowed.",
+		"Deny download": "Deny download"
 	},
 	"pluralForm": "nplurals=2; plural=(n != 1);"
 }

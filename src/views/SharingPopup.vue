@@ -12,8 +12,7 @@
 
 		<div v-if="!shareSent">
 			<!-- shares content -->
-			<div class="sharingPopup__content" v-if="!loading">
-
+			<div v-if="!loading" class="sharingPopup__content">
 				<!-- share link details -->
 				<template v-if="showShareLinkDetailsView">
 					<SharingDetailsTab :file-info="shareLinkDetailsData.fileInfo"
@@ -67,7 +66,6 @@
 						:shares="linkShares"
 						@open-sharing-details="toggleShareLinkDetailsView"
 						@link-share-created="linkShareCreated" />
-
 				</div>
 			</div>
 		</div>

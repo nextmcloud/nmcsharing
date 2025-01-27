@@ -13,8 +13,8 @@
 		"Read and write": "Kann bearbeiten",
 		"File drop (upload only)": "Sammelbox",
 		"With File drop, only uploading is allowed. Only you can see files and folders that have been uploaded.": "Bei der Sammelbox ist nur das Hochladen erlaubt. Nur Sie sehen Dateien und Ordner die hochgeladen worden sind.",
-		"Advanced": "Erweiterte",
-		"Set password": "Passwortschutz",
+		"Advanced settings": "Erweiterte Einstellungen",
+		"Set password": "Passwort setzen",
 		"Your shares": "Ihre Freigaben",
 		"Manage access": "Zugriff verwalten",
 		"Here you can see who has access to your file/folder.": "Hier sehen Sie wer Zugriff auf Ihre Datei/Ihren Ordner hat.",
@@ -27,6 +27,9 @@
 		"Link to \"{fileName}\" was sent.": "Link zu \"{fileName}\" gesendet.",
 		"To": "An",
 		"Links to Copy": "Links zum Kopieren",
+		"Anyone with the link can": "Jeder mit dem Link kann",
+		"only view": "nur anzeigen",
+		"edit": "bearbeiten",
 		"Anyone with the link can edit": "Jeder mit dem Link kann bearbeiten",
 		"Anyone with the link can only view": "Jeder mit dem Link kann nur anzeigen",
 		"Anyone with the link can file drop": "Jeder mit dem Link kann Dateien hinzufügen",
@@ -39,7 +42,8 @@
 		"Resharing is allowed": "Weiterteilen ist erlaubt",
 		"You can create links or send shares by mail. If you invite MagentaCLOUD users, you have more opportunities for collaboration.": "Sie können Links erstellen oder Freigaben per Mail versenden. Wenn Sie MagentaCLOUD Nutzer einladen, bieten sich Ihnen mehr Möglichkeiten der Zusammenarbeit.",
 		"Share updated": "Freigabe aktualisiert",
-		"This share was limited to {limit} downloads. There is still {downloadsLeft} left allowed.": "Diese Freigabe ist auf {limit} Downloads beschränkt. Es sind noch {downloadsLeft} Downloads zugelassen."
+		"This share was limited to {limit} downloads. There is still {downloadsLeft} left allowed.": "Diese Freigabe ist auf {limit} Downloads beschränkt. Es sind noch {downloadsLeft} Downloads zugelassen.",
+		"Deny download": "Download verhindern"
 	},
 	"pluralForm": "nplurals=2; plural=(n != 1);"
 }
