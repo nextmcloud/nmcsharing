@@ -1,29 +1,48 @@
 <template>
 	<div class="sharingPopupDetailsView">
-		<h2 class="sharingTabDetailsView__header" style="margin-bottom: 0;">
-			{{ t('nmcsharing', 'Permissions') }}
-		</h2>
+		<span class="header-permissions">
+			<ChevronLeftIcon :size="20" class="back-button" @click="$emit('close-sharing-details')" />
+			<h2 class="sharingTabDetailsView__header" style="margin-bottom: 0;">
+				{{ t('nmcsharing', 'Permissions') }}
+			</h2>
+		</span>
 
 		<span class="sharingPopup__fileinfo">{{ fileInfo.name }} ⸱ {{ size }}</span>
 
 		<div class="sharingTabDetailsView__quick-permissions">
 			<div>
-				<NcCheckboxRadioSwitch :checked.sync="sharingPermission"
-					:disabled="!isPermissionEditAllowed"
-					:value="bundledPermissions.READ_ONLY.toString()"
-					name="sharing_permission_radio"
-					type="radio"
-					@update:checked="toggleCustomPermissions">
-					{{ t('nmcsharing', 'Read only') }}
-				</NcCheckboxRadioSwitch>
-				<NcCheckboxRadioSwitch :checked.sync="sharingPermission"
-					:disabled="!isPermissionEditAllowed"
-					:value="isFolder ? bundledPermissions.ALL.toString() : bundledPermissions.ALL_FILE.toString()"
-					name="sharing_permission_radio"
-					type="radio"
-					@update:checked="toggleCustomPermissions">
-					{{ isFolder ? t('nmcsharing', 'Read, write and upload') : t('nmcsharing', 'Read and write') }}
-				</NcCheckboxRadioSwitch>
+				<span class="checkbox-text">
+					<NcCheckboxRadioSwitch :checked.sync="sharingPermission"
+						:disabled="!isPermissionEditAllowed"
+						:value="bundledPermissions.READ_ONLY.toString()"
+						class="checkbox-switch"
+						name="sharing_permission_radio"
+						type="radio"
+						@update:checked="toggleCustomPermissions">
+						{{ t('nmcsharing', 'Anyone with the link can') }}
+						{{ t('nmcsharing', ' ') }}
+						<strong>
+							{{ t('nmcsharing', 'only view') }}
+						</strong>
+					</NcCheckboxRadioSwitch>
+					<EyeIcon :size="16" />
+				</span>
+				<span class="checkbox-text">
+					<NcCheckboxRadioSwitch :checked.sync="sharingPermission"
+						:disabled="!isPermissionEditAllowed"
+						:value="isFolder ? bundledPermissions.ALL.toString() : bundledPermissions.ALL_FILE.toString()"
+						class="checkbox-switch"
+						name="sharing_permission_radio"
+						type="radio"
+						@update:checked="toggleCustomPermissions">
+						{{ t('nmcsharing', 'Anyone with the link can') }}
+						{{ t('nmcsharing', ' ') }}
+						<strong>
+							{{ t('nmcsharing', 'edit') }}
+						</strong>
+					</NcCheckboxRadioSwitch>
+					<PencilIcon :size="16" />
+				</span>
 				<NcCheckboxRadioSwitch v-if="allowsFileDrop"
 					:checked.sync="sharingPermission"
 					:value="bundledPermissions.FILE_DROP.toString()"
@@ -38,12 +57,7 @@
 			</div>
 		</div>
 		<div class="sharingTabDetailsView__advanced-control">
-			<button id="btn-advanced"
-				type="button"
-				:class="{ open: advancedSectionAccordionExpanded }"
-				@click="advancedSectionAccordionExpanded = !advancedSectionAccordionExpanded">
-				{{ t('nmcsharing', 'Advanced') }}
-			</button>
+			<strong>{{ t('nmcsharing', 'Advanced settings') }}</strong>
 		</div>
 		<div v-if="advancedSectionAccordionExpanded" class="sharingTabDetailsView__advanced">
 			<section>
@@ -51,7 +65,7 @@
 					:disabled="canChangeHideDownload"
 					:checked.sync="share.hideDownload"
 					@update:checked="queueUpdate('hideDownload')">
-					{{ t('files_sharing', 'Hide download') }}
+					{{ t('nmcsharing', 'Deny download') }}
 				</NcCheckboxRadioSwitch>
 				<template v-if="isPublicShare">
 					<NcCheckboxRadioSwitch :checked.sync="isPasswordProtected" :disabled="isPasswordEnforced">
@@ -117,6 +131,10 @@
 </template>
 
 <script>
+import EyeIcon from 'vue-material-design-icons/EyeCircleOutline.vue'
+import PencilIcon from 'vue-material-design-icons/Pencil.vue'
+import ChevronLeftIcon from 'vue-material-design-icons/ChevronLeftCircleOutline.vue'
+
 import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
 import NcInputField from '@nextcloud/vue/dist/Components/NcInputField.js'
 import NcDateTimePickerNative from '@nextcloud/vue/dist/Components/NcDateTimePickerNative.js'
@@ -139,6 +157,9 @@ import DownloadLimit from '../components/DownloadLimit.vue'
 export default {
 	name: 'SharingInputDetailsTab',
 	components: {
+		EyeIcon,
+		PencilIcon,
+		ChevronLeftIcon,
 		NcButton,
 		NcInputField,
 		NcDateTimePickerNative,
@@ -669,6 +690,33 @@ export default {
 </script>
 
 <style lang="scss">
+.header-permissions {
+	margin-top: -14px;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+
+	.back-button {
+		padding: 4px;
+
+		&:hover {
+				color: var(--telekom-color-primary-hovered);
+				background-color: initial;
+				cursor: pointer;
+			}
+	}
+}
+
+.checkbox-text {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+
+	.checkbox-switch {
+		margin-right: -8px;
+	}
+}
+
 .sharingPopupDetailsView {
     padding: 1.5rem;
     position: absolute;
@@ -679,6 +727,10 @@ export default {
     min-width: calc(100% - 3rem);
     min-height: calc(100% - 3rem);
 	border-radius: var(--border-radius-large);
+
+	.sharingPopup__fileinfo {
+		color: var(--telekom-color-ui-regular);
+	}
 
 	&__header {
 		font-weight: bold;

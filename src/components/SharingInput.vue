@@ -43,7 +43,8 @@
 			</template>
 		</NcSelect>
 		<div class="button-group">
-			<NcButton type="primary" class="button-send"
+			<NcButton type="primary"
+				class="button-send"
 				:disabled="!isValidValue"
 				@click="sendSharing">
 				{{ t('nmcsharing', 'Send') }}
