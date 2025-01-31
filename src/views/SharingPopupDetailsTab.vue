@@ -61,13 +61,13 @@
 		</div>
 		<div v-if="advancedSectionAccordionExpanded" class="sharingTabDetailsView__advanced">
 			<section>
-				<NcCheckboxRadioSwitch v-if="isPublicShare"
+				<NcCheckboxRadioSwitch v-if="isPublicShare || isMixedShare"
 					:disabled="canChangeHideDownload"
 					:checked.sync="share.hideDownload"
 					@update:checked="queueUpdate('hideDownload')">
 					{{ t('nmcsharing', 'Deny download') }}
 				</NcCheckboxRadioSwitch>
-				<template v-if="isPublicShare">
+				<template v-if="isPublicShare || isMixedShare">
 					<NcCheckboxRadioSwitch :checked.sync="isPasswordProtected" :disabled="isPasswordEnforced">
 						{{ t('nmcsharing', 'Set password') }}
 					</NcCheckboxRadioSwitch>
@@ -77,14 +77,6 @@
 						:error="passwordError"
 						:required="isPasswordEnforced"
 						@update:value="onPasswordChange" />
-
-					<!-- Migrate icons and remote -> icon="icon-info"-->
-					<span v-if="isEmailShareType && passwordExpirationTime" icon="icon-info">
-						{{ t('files_sharing', 'Password expires {passwordExpirationTime}', { passwordExpirationTime }) }}
-					</span>
-					<span v-else-if="isEmailShareType && passwordExpirationTime !== null" icon="icon-error">
-						{{ t('files_sharing', 'Password expired') }}
-					</span>
 				</template>
 				<NcCheckboxRadioSwitch :checked.sync="hasExpirationDate" :disabled="isExpiryDateEnforced">
 					{{ isExpiryDateEnforced
@@ -101,16 +93,16 @@
 					:placeholder="t('files_sharing', 'Expiration date')"
 					type="date"
 					@input="onExpirationChange" />
-				<NcCheckboxRadioSwitch v-if="isEmailShare" :checked.sync="writeNoteToRecipientIsChecked">
+				<NcCheckboxRadioSwitch v-if="isEmailShare || isMixedShare" :checked.sync="writeNoteToRecipientIsChecked">
 					{{ t('files_sharing', 'Note to recipient') }}
 				</NcCheckboxRadioSwitch>
-				<template v-if="writeNoteToRecipientIsChecked && isEmailShare">
+				<template v-if="writeNoteToRecipientIsChecked && (isEmailShare || isMixedShare)">
 					<textarea :value="mutableShare.note" @input="mutableShare.note = $event.target.value" />
 				</template>
-				<DownloadLimit v-if="(isLinkShare || isEmailShare) && !isNewShare && !isFolder"
+				<DownloadLimit v-if="(isLinkShare || isEmailShare || isMixedShare) && !isNewShare && !isFolder"
 					:share="share"
 					:file-info="fileInfo" />
-				<NcCheckboxRadioSwitch v-if="!isPublicShare && resharingAllowedGlobal"
+				<NcCheckboxRadioSwitch v-if="(!isPublicShare || isMixedShare) && resharingAllowedGlobal"
 					:checked.sync="allowResharingIsChecked">
 					{{ t('nmcsharing', 'Allow resharing') }}
 				</NcCheckboxRadioSwitch>
@@ -178,6 +170,10 @@ export default {
 		},
 		share: {
 			type: Object,
+			required: true,
+		},
+		shareType: {
+			type: String,
 			required: true,
 		},
 		resharingAllowedGlobal: {
@@ -368,7 +364,7 @@ export default {
 		},
 		allowsFileDrop() {
 			if (this.isFolder) {
-				if (this.share.type === this.SHARE_TYPES.SHARE_TYPE_LINK || this.share.type === this.SHARE_TYPES.SHARE_TYPE_EMAIL) {
+				if (this.share.type === this.SHARE_TYPES.SHARE_TYPE_LINK || this.share.type === this.SHARE_TYPES.SHARE_TYPE_EMAIL || this.shareType === 'MIXED') {
 					return true
 				}
 			}
@@ -463,6 +459,14 @@ export default {
 				? this.share.type === this.SHARE_TYPES.SHARE_TYPE_EMAIL
 				: false
 		},
+		/**
+		 * Is the current share a mixed share ?
+		 *
+		 * @return {boolean}
+		 */
+		isMixedShare() {
+			return this.shareType === 'MIXED';
+		},
 		canChangeHideDownload() {
 			const hasDisabledDownload = (shareAttribute) => shareAttribute.key === 'download' && shareAttribute.scope === 'permissions' && shareAttribute.enabled === false
 			return this.fileInfo.shareAttributes.some(hasDisabledDownload)
@@ -504,6 +508,7 @@ export default {
 	beforeMount() {
 		this.initializePermissions()
 		this.initializeAttributes()
+		console.log(this.shareType)
 		// console.debug('shareSentIn', this.share)
 		// console.debug('config', this.config)
 	},
@@ -589,7 +594,7 @@ export default {
 		async saveShareSettings() {
 			const permissionsAndAttributes = ['permissions', 'attributes', 'note', 'expireDate']
 			const publicShareAttributes = ['label', 'password', 'hideDownload']
-			if (this.isPublicShare) {
+			if (this.isPublicShare || this.isMixedShare) {
 				permissionsAndAttributes.push(...publicShareAttributes)
 			}
 			const sharePermissionsSet = parseInt(this.sharingPermission)
@@ -609,7 +614,7 @@ export default {
 			if (this.allowResharingIsChecked && !this.canReshare && this.resharingAllowedGlobal) {
 				this.share.permissions |= ATOMIC_PERMISSIONS.SHARE
 			// remove SHARE permission if internal share, 'Allow resharing' is unchecked and it initially had SHARE permission
-			} else if (!this.isPublicShare && this.canReshare && !this.allowResharingIsChecked) {
+			} else if ((!this.isPublicShare || this.isMixedShare)  && this.canReshare && !this.allowResharingIsChecked) {
 				this.share.permissions = this.share.permissions & ~ATOMIC_PERMISSIONS.SHARE
 			}
 

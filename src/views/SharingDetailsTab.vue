@@ -2,7 +2,6 @@
 	<div class="sharingTabDetailsView">
 		<span class="header-permissions">
 			<ChevronLeftIcon :size="24" class="back-button" @click="$emit('close-sharing-details')" />
-
 			<h2 class="sharingTabDetailsView__header" style="margin-bottom: 0;">
 				{{ t('nmcsharing', 'Permissions') }}
 			</h2>
@@ -801,10 +800,10 @@ export default {
 		padding: 4px;
 
 		&:hover {
-				color: var(--telekom-color-primary-hovered);
-				background-color: initial;
-				cursor: pointer;
-			}
+			color: var(--telekom-color-primary-hovered);
+			background-color: initial;
+			cursor: pointer;
+		}
 	}
 
 }

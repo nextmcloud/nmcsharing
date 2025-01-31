@@ -35,8 +35,9 @@
 
 					<!-- share details -->
 					<template v-if="showShareDetailsView">
-						<SharingInputDetailsTab :file-info="shareDetailsData.fileInfo"
+						<SharingPopupDetailsTab :file-info="shareDetailsData.fileInfo"
 							:share="shareDetailsData.share"
+							:share-type="shareType"
 							:resharing-allowed-global="config.isResharingAllowed"
 							@close-sharing-details="toggleShareDetailsView"
 							@save:share="saveShare" />
@@ -60,7 +61,7 @@
 					</div>
 
 					<!-- link shares list -->
-					<SharingLinkListPopup ref="linkShareList"
+					<SharingPopupLinkList ref="linkShareList"
 						:can-reshare="canReshare"
 						:file-info="fileInfo"
 						:shares="linkShares"
@@ -99,8 +100,8 @@ import ShareTypes from '../mixins/ShareTypes.js'
 import SharingEntrySimple from '../components/SharingEntrySimple.vue'
 import SharingInput from '../components/SharingInput.vue'
 import SharingDetailsTab from './SharingDetailsTab.vue'
-import SharingInputDetailsTab from './SharingInputDetailsTab.vue'
-import SharingLinkListPopup from './SharingLinkListPopup.vue'
+import SharingPopupDetailsTab from './SharingPopupDetailsTab.vue'
+import SharingPopupLinkList from './SharingPopupLinkList.vue'
 
 export default {
 	name: 'SharingPopup',
@@ -111,8 +112,8 @@ export default {
 		SharingEntrySimple,
 		SharingInput,
 		SharingDetailsTab,
-		SharingInputDetailsTab,
-		SharingLinkListPopup,
+		SharingPopupDetailsTab,
+		SharingPopupLinkList,
 	},
 
 	mixins: [ShareTypes],
@@ -138,6 +139,7 @@ export default {
 			showShareDetailsView: false,
 			showShareLinkDetailsView: false,
 			shareDetailsData: {},
+			shareDetailsDataAll: [],
 			shareLinkDetailsData: {},
 			shareSent: false,
 			newLinkShare: false,
@@ -172,6 +174,25 @@ export default {
 		},
 		recipients() {
 			return this.sharedWith.join(', ')
+		},
+
+		shareType() {
+			let isUser = false
+			let isEmail = false
+			for (const element of this.shareDetailsDataAll) {
+				if (element.share.type === 0) {
+					isUser = true
+				} else if (element.share.type === 4) {
+					isEmail = true
+				}
+				if (isUser && isEmail) {
+					return 'MIXED'
+				} 
+			}
+			if (isUser) {
+				return 'USER'
+			}
+			return 'EMAIL'
 		},
 	},
 
@@ -287,9 +308,11 @@ export default {
 			this.showShareDetailsView = false
 			this.showShareLinkDetailsView = false
 			this.shareDetailsData = {}
+			this.shareDetailsDataAll = []
 			this.shareLinkDetailsData = {}
 			this.shareSent = false
 			this.newLinkShare = false
+			this.sharedWith = []
 		},
 
 		/**
@@ -467,8 +490,11 @@ export default {
 		},
 
 		toggleShareDetailsViewAll(eventData) {
-			if (eventData && !this.shareSet) {
-				this.shareDetailsData = eventData[0]
+			if (eventData) {
+				if (!this.shareSet) {
+					this.shareDetailsData = eventData[0]
+				}
+				this.shareDetailsDataAll = eventData
 			}
 			this.showShareDetailsView = !this.showShareDetailsView
 		},
