@@ -52,7 +52,7 @@ import SharingEntryLink from '../components/SharingEntryLink.vue'
 import AddLinkButton from '../components/AddLinkButton.vue'
 
 export default {
-	name: 'SharingLinkListPopup',
+	name: 'SharingPopupLinkList',
 
 	components: {
 		SharingEntryLink,
