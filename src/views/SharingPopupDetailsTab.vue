@@ -54,6 +54,9 @@
 				<p v-if="allowsFileDrop" class="sharing_permission-desc">
 					{{ t('nmcsharing', 'With File drop, only uploading is allowed. Only you can see files and folders that have been uploaded.') }}
 				</p>
+				<p v-if="isMixedShare">
+					{{ t('nmcsharing', 'Please note that file drop is not available for internal sharing, i.e. sharing with other MagentaCLOUD users.') }}
+				</p>
 			</div>
 		</div>
 		<div class="sharingTabDetailsView__advanced-control">
@@ -61,7 +64,7 @@
 		</div>
 		<div v-if="advancedSectionAccordionExpanded" class="sharingTabDetailsView__advanced">
 			<section>
-				<NcCheckboxRadioSwitch v-if="isPublicShare || isMixedShare"
+				<NcCheckboxRadioSwitch v-if="isPublicShare || isMixedShare"
 					:disabled="canChangeHideDownload"
 					:checked.sync="share.hideDownload"
 					@update:checked="queueUpdate('hideDownload')">
@@ -83,9 +86,9 @@
 						? t('files_sharing', 'Expiration date (enforced)')
 						: t('files_sharing', 'Set expiration date') }}
 				</NcCheckboxRadioSwitch>
-				<NcDateTimePickerNative v-if="hasExpirationDate"
+				<NcDateTimePickerNative
 					id="share-date-picker"
-					:value="new Date(share.expireDate)"
+					:value="defaultExpiryDate"
 					:min="dateTomorrow"
 					:max="dateMaxEnforced"
 					:hide-label="true"
@@ -93,16 +96,16 @@
 					:placeholder="t('files_sharing', 'Expiration date')"
 					type="date"
 					@input="onExpirationChange" />
-				<NcCheckboxRadioSwitch v-if="isEmailShare || isMixedShare" :checked.sync="writeNoteToRecipientIsChecked">
+				<NcCheckboxRadioSwitch v-if="isEmailShare || isMixedShare" :checked.sync="writeNoteToRecipientIsChecked">
 					{{ t('files_sharing', 'Note to recipient') }}
 				</NcCheckboxRadioSwitch>
 				<template v-if="writeNoteToRecipientIsChecked && (isEmailShare || isMixedShare)">
 					<textarea :value="mutableShare.note" @input="mutableShare.note = $event.target.value" />
 				</template>
-				<DownloadLimit v-if="(isLinkShare || isEmailShare || isMixedShare) && !isNewShare && !isFolder"
+				<DownloadLimit v-if="(isLinkShare || isEmailShare || isMixedShare) && !isNewShare && !isFolder"
 					:share="share"
 					:file-info="fileInfo" />
-				<NcCheckboxRadioSwitch v-if="(!isPublicShare || isMixedShare) && resharingAllowedGlobal"
+				<NcCheckboxRadioSwitch v-if="(!isPublicShare || isMixedShare) && resharingAllowedGlobal"
 					:checked.sync="allowResharingIsChecked">
 					{{ t('nmcsharing', 'Allow resharing') }}
 				</NcCheckboxRadioSwitch>
@@ -290,12 +293,10 @@ export default {
 		 */
 		hasExpirationDate: {
 			get() {
-				return !!this.share.expireDate || this.config.isDefaultInternalExpireDateEnforced
+				return true
 			},
-			set(enabled) {
-				this.share.expireDate = enabled
-					? this.formatDateToString(this.defaultExpiryDate)
-					: ''
+			set() {
+				this.share.expireDate = this.formatDateToString(this.defaultExpiryDate)
 			},
 		},
 		/**
@@ -342,7 +343,7 @@ export default {
 			} else if (this.isPublicShare && this.config.isDefaultExpireDateEnabled) {
 				return new Date(this.config.defaultExpirationDate)
 			}
-			return new Date(new Date().setDate(new Date().getDate() + 1))
+			return new Date(new Date().setFullYear(new Date().getFullYear() + 1))
 		},
 		isUserShare() {
 			return this.share.type === this.SHARE_TYPES.SHARE_TYPE_USER
