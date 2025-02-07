@@ -45,6 +45,7 @@
 				</span>
 				<NcCheckboxRadioSwitch v-if="allowsFileDrop"
 					:checked.sync="sharingPermission"
+					:disabled="isMixedShare"
 					:value="bundledPermissions.FILE_DROP.toString()"
 					name="sharing_permission_radio"
 					type="radio"
@@ -54,7 +55,7 @@
 				<p v-if="allowsFileDrop" class="sharing_permission-desc">
 					{{ t('nmcsharing', 'With File drop, only uploading is allowed. Only you can see files and folders that have been uploaded.') }}
 				</p>
-				<p v-if="isMixedShare">
+				<p v-if="isMixedShare" class="sharing_permission-desc">
 					{{ t('nmcsharing', 'Please note that file drop is not available for internal sharing, i.e. sharing with other MagentaCLOUD users.') }}
 				</p>
 			</div>
@@ -62,7 +63,7 @@
 		<div class="sharingTabDetailsView__advanced-control">
 			<strong>{{ t('nmcsharing', 'Advanced settings') }}</strong>
 		</div>
-		<div v-if="advancedSectionAccordionExpanded" class="sharingTabDetailsView__advanced">
+		<div class="sharingTabDetailsView__advanced">
 			<section>
 				<NcCheckboxRadioSwitch v-if="isPublicShare || isMixedShare"
 					:disabled="canChangeHideDownload"
@@ -105,7 +106,9 @@
 					:share="share"
 					:file-info="fileInfo" />
 				<NcCheckboxRadioSwitch v-if="(!isPublicShare || isMixedShare) && resharingAllowedGlobal"
-					:checked.sync="allowResharingIsChecked">
+					:disabled="isMixedShare"
+					:checked.sync="allowResharingIsChecked"
+					:title="t('nmcsharing', 'Please note that resharing is only available for internal sharing, i.e. sharing with other MagentaCLOUD users.')">
 					{{ t('nmcsharing', 'Allow resharing') }}
 				</NcCheckboxRadioSwitch>
 			</section>
@@ -189,7 +192,6 @@ export default {
 			passwordError: false,
 			setCustomPermissions: false,
 			writeNoteToRecipientIsChecked: false,
-			advancedSectionAccordionExpanded: true,
 			bundledPermissions: BUNDLED_PERMISSIONS,
 			sharingPermission: BUNDLED_PERMISSIONS.ALL.toString(),
 			mutableShare: {
@@ -534,38 +536,22 @@ export default {
 			}
 		},
 
-		expandCustomPermissions() {
-			if (!this.advancedSectionAccordionExpanded) {
-				this.advancedSectionAccordionExpanded = true
-			}
-			this.toggleCustomPermissions()
-		},
-
 		toggleCustomPermissions() {
 			this.setCustomPermissions = this.sharingPermission === 'custom'
 		},
 
 		initializeAttributes() {
-			let hasAdvancedAttributes = false
+			this.writeNoteToRecipientIsChecked = false
+			this.isPasswordProtected = false
+			this.hasExpirationDate = false
 			if (this.isValidShareAttribute(this.share.note)) {
 				this.writeNoteToRecipientIsChecked = true
-				hasAdvancedAttributes = true
 			}
-
 			if (this.isValidShareAttribute(this.share.password)) {
-				hasAdvancedAttributes = true
+				this.isPasswordProtected = true
 			}
-
 			if (this.isValidShareAttribute(this.share.expireDate)) {
-				hasAdvancedAttributes = true
-			}
-
-			if (this.isValidShareAttribute(this.share.label)) {
-				hasAdvancedAttributes = true
-			}
-
-			if (hasAdvancedAttributes) {
-				this.advancedSectionAccordionExpanded = true
+				this.hasExpirationDate = true
 			}
 		},
 
@@ -641,20 +627,14 @@ export default {
 				shareWith: this.share.shareWith,
 				attributes: this.share.attributes,
 				label: this.mutableShare.label,
+				password: this.mutableShare.password,
 				note: this.mutableShare.note,
+				expireDate: this.share.expireDate,
 				shareSet: true,
 			}
 
-			if (this.hasExpirationDate) {
-				incomingShare.expireDate = this.share.expireDate
-			}
-
-			if (this.isPasswordProtected) {
-				this.share.password = this.mutableShare.password
-				incomingShare.password = this.mutableShare.password
-			}
-
 			this.share.label = this.mutableShare.label
+			this.share.password = this.mutableShare.password
 			this.share.note = this.mutableShare.note
 			this.share.shareSet = true
 
