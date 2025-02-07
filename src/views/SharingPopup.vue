@@ -187,7 +187,7 @@ export default {
 				}
 				if (isUser && isEmail) {
 					return 'MIXED'
-				} 
+				}
 			}
 			if (isUser) {
 				return 'USER'
