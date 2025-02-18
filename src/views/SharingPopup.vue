@@ -432,7 +432,7 @@ export default {
 				this.sharedWith.push(share.shareWith)
 				this.linkShares.unshift(share)
 			} else {
-				this.sharedWith.push(share.shareWith)
+				this.sharedWith.push(share.shareWithDisplayName)
 				this.shares.unshift(share)
 			}
 			this.awaitForShare(share, resolve)

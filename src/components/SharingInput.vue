@@ -156,7 +156,7 @@ export default {
 				return t('files_sharing', 'Name or email …')
 			}
 
-			return t('files_sharing', 'Name, email, or Federated Cloud ID …')
+			return t('nmcsharing', 'Name, email')
 		},
 
 		isValidValue() {
@@ -215,6 +215,7 @@ export default {
 					note: thisShare.note,
 					expireDate: thisShare.expireDate,
 					password: thisShare.password,
+					hideDownload: thisShare.hideDownload,
 				}
 
 				promises.push(
@@ -265,6 +266,7 @@ export default {
 					...(value.password ? { password: value.password } : {}),
 					...(value.expireDate ? { expireDate: value.expireDate } : {}),
 					...(value.label ? { label: value.label } : {}),
+					...(value.hideDownload ? { hideDownload: value.hideDownload ? 1 : 0 } : {}),
 				})
 				return share
 			} catch (error) {
