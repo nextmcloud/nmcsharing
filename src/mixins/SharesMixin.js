@@ -25,6 +25,8 @@
  *
  */
 
+/* global utag */
+
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { getCurrentUser } from '@nextcloud/auth'
 // eslint-disable-next-line import/no-unresolved, n/no-missing-import
@@ -375,5 +377,10 @@ export default {
 		debounceQueueUpdate: debounce(500, function(property) {
 			this.queueUpdate(property)
 		}),
+
+		sendUtagInfo: (data) => {
+			if (typeof utag === 'undefined' || !utag.view()) return
+			utag.view(data)
+		},
 	},
 }
