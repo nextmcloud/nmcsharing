@@ -68,7 +68,7 @@
 				<NcCheckboxRadioSwitch v-if="(isPublicShare || isMixedShare) && false"
 					:disabled="canChangeHideDownload"
 					:checked.sync="share.hideDownload"
-					@update:checked="onHideDownloadChange">
+					@update:checked="queueUpdate('hideDownload')">
 					{{ t('nmcsharing', 'Deny download') }}
 				</NcCheckboxRadioSwitch>
 				<template v-if="isPublicShare || isMixedShare">
@@ -197,7 +197,6 @@ export default {
 			mutableShare: {
 				note: this.share.note,
 				password: this.share.password,
-				hideDownload: this.share.hideDownload,
 				label: this.share.label,
 			},
 		}
@@ -622,22 +621,8 @@ export default {
 				this.share.expireDate = ''
 			}
 
-			const incomingShare = {
-				permissions: this.share.permissions,
-				shareType: this.share.type,
-				shareWith: this.share.shareWith,
-				attributes: this.share.attributes,
-				label: this.mutableShare.label,
-				password: this.mutableShare.password,
-				hideDownload: this.mutableShare.hideDownload,
-				note: this.mutableShare.note,
-				expireDate: this.share.expireDate,
-				shareSet: true,
-			}
-
 			this.share.label = this.mutableShare.label
 			this.share.password = this.mutableShare.password
-			this.share.hideDownload = this.mutableShare.hideDownload
 			this.share.note = this.mutableShare.note
 			this.share.shareSet = true
 
@@ -658,17 +643,6 @@ export default {
 			this.passwordError = !this.isValidShareAttribute(password)
 			this.mutableShare.password = password
 			// this.$set(this.share, 'newPassword', password)
-		},
-
-		/**
-		 * Save given value to hideDownload
-		 *
-		 * @param {boolean} hide
-		 */
-		onHideDownloadChange(hide) {
-			try {
-				this.mutableShare.hideDownload = hide
-			} catch (error) {}
 		},
 
 		isValidShareAttribute(value) {
