@@ -46,7 +46,7 @@
 		<ul v-if="canLinkShare && canReshare" class="sharing-link-list">
 			<template v-if="hasLinkShares">
 				<li class="sharing-link-list-caption">
-					<strong>{{ t('nmcsharing', 'Links to Copy') }}</strong>
+					<strong>{{ t('nmcsharing', 'Link to copy') }}</strong>
 				</li>
 				<template v-for="(share, index) in shares">
 					<SharingEntryLink v-if="share.type === shareTypeLink"

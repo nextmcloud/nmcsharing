@@ -43,6 +43,7 @@
 
 		<NcButton v-if="share.canDelete"
 			:disabled="saving"
+			:title="t('files_sharing', 'Delete')"
 			@click.prevent="onDelete">
 			<template #icon>
 				<span class="icon icon-delete" />

@@ -57,7 +57,7 @@
 						@open-sharing-details-all="toggleShareDetailsViewAll" />
 
 					<div class="sharingPopup__divider">
-						<span class="sharingPopup__or">{{ t('nmcsharing', 'Or') }}</span>
+						<span class="sharingPopup__or">{{ t('nmcsharing', 'or') }}</span>
 					</div>
 
 					<!-- link shares list -->

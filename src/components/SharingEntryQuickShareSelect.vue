@@ -1,8 +1,9 @@
 <template>
 	<div ref="quickShareDropdownContainer"
 		:class="{ 'active': showDropdown, 'share-select': true, 'disabled': !isPermissionEditAllowed }">
-		<span :id="dropdownId"
+		<button :id="dropdownId"
 			class="trigger-text"
+			tabindex="0"
 			:aria-expanded="showDropdown"
 			:aria-haspopup="true"
 			aria-label="Quick share options dropdown"
@@ -14,7 +15,7 @@
 			<LockOutlineIcon v-if="hasPassword" :size="16" />
 			<CalendarMonthIcon v-if="hasExpireDate" :size="16" />
 			<ChevronRightIcon :size="18" />
-		</span>
+		</button>
 		<div v-if="showDropdown"
 			ref="quickShareDropdown"
 			class="share-select-dropdown"
@@ -298,6 +299,13 @@ export default {
 		gap: 2px;
 		color: var(--color-primary-element);
 		cursor: pointer;
+
+		background: none;
+		border: none;
+		border-radius: 0;
+		margin: 0;
+		min-height: 1.5rem;
+		padding: 0;
 
 		&:hover {
 			text-decoration: underline;

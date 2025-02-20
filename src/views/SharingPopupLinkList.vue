@@ -23,7 +23,7 @@
 <template>
 	<div>
 		<h2 class="sharing-link-list-caption">
-			<strong>{{ t('nmcsharing', 'Links to Copy') }}</strong>
+			<strong>{{ t('nmcsharing', 'Link to copy') }}</strong>
 		</h2>
 		<ul v-if="canLinkShare && canReshare && hasLinkShares" class="sharing-link-list">
 			<template v-for="(share, index) in shares">

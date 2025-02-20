@@ -25,10 +25,12 @@
 		"Send link via E-Mail": "Link per E-Mail senden",
 		"Links sent via E-Mail": "Links per E-Mail versandt",
 		"Accept settings": "Übernehmen",
-		"Or": "Oder",
+		"or": "oder",
 		"Link to \"{fileName}\" was sent.": "Link zu \"{fileName}\" gesendet.",
 		"To": "An",
-		"Links to Copy": "Links zum Kopieren",
+		"Link to copy": "Link zum Kopieren",
+		"Copy": "Kopieren",
+		"Copied": "Kopiert",
 		"Anyone with the link can": "Jeder mit dem Link kann",
 		"only view": "nur anzeigen",
 		"edit": "bearbeiten",
@@ -46,7 +48,8 @@
 		"Share updated": "Freigabe aktualisiert",
 		"This share was limited to {limit} downloads. There is still {downloadsLeft} left allowed.": "Diese Freigabe ist auf {limit} Downloads beschränkt. Es sind noch {downloadsLeft} Downloads zugelassen.",
 		"Deny download": "Download verhindern",
-		"Name, email": "Name, E-Mail-Adresse"
+		"Name, email": "Name, E-Mail-Adresse",
+		"Password must be at least 6 characters long": "Passwort muss mindestens 6 Zeichen lang sein"
 	},
 	"pluralForm": "nplurals=2; plural=(n != 1);"
 }

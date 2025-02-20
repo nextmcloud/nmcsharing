@@ -17,8 +17,7 @@
 						:value="bundledPermissions.READ_ONLY.toString()"
 						class="checkbox-switch"
 						name="sharing_permission_radio"
-						type="radio"
-						@update:checked="toggleCustomPermissions">
+						type="radio">
 						{{ t('nmcsharing', 'Anyone with the link can') }}
 						{{ t('nmcsharing', ' ') }}
 						<strong>
@@ -33,8 +32,7 @@
 						:value="isFolder ? bundledPermissions.ALL.toString() : bundledPermissions.ALL_FILE.toString()"
 						class="checkbox-switch"
 						name="sharing_permission_radio"
-						type="radio"
-						@update:checked="toggleCustomPermissions">
+						type="radio">
 						{{ t('nmcsharing', 'Anyone with the link can') }}
 						{{ t('nmcsharing', ' ') }}
 						<strong>
@@ -48,8 +46,7 @@
 					:disabled="isMixedShare"
 					:value="bundledPermissions.FILE_DROP.toString()"
 					name="sharing_permission_radio"
-					type="radio"
-					@update:checked="toggleCustomPermissions">
+					type="radio">
 					{{ t('nmcsharing', 'File drop (upload only)') }}
 				</NcCheckboxRadioSwitch>
 				<p v-if="allowsFileDrop" class="sharing_permission-desc">
@@ -67,18 +64,19 @@
 			<section>
 				<NcCheckboxRadioSwitch v-if="(isPublicShare || isMixedShare) && false"
 					:disabled="canChangeHideDownload"
-					:checked.sync="share.hideDownload"
+					:checked.sync="mutableShare.hideDownload"
 					@update:checked="queueUpdate('hideDownload')">
-					{{ t('nmcsharing', 'Deny download') }}
+					{{ t('files_sharing', 'Hide download') }}
 				</NcCheckboxRadioSwitch>
 				<template v-if="isPublicShare || isMixedShare">
 					<NcCheckboxRadioSwitch :checked.sync="isPasswordProtected" :disabled="isPasswordEnforced">
 						{{ t('nmcsharing', 'Set password') }}
 					</NcCheckboxRadioSwitch>
-					<NcInputField v-if="isPasswordProtected"
-						:type="hasUnsavedPassword ? 'text' : 'password'"
-						:value="hasUnsavedPassword ? mutableShare.password : '***************'"
+					<NcPasswordField v-if="isPasswordProtected"
+						id="share-password-input"
+						:value="mutableShare.password"
 						:error="passwordError"
+						:helper-text="errorPasswordLabel"
 						:required="isPasswordEnforced"
 						@update:value="onPasswordChange" />
 				</template>
@@ -88,11 +86,12 @@
 						: t('files_sharing', 'Set expiration date') }}
 				</NcCheckboxRadioSwitch>
 				<NcDateTimePickerNative id="share-date-picker"
-					:value="defaultExpiryDate"
+					:value="new Date(share.expireDate ?? defaultExpiryDate)"
 					:min="dateTomorrow"
 					:max="dateMaxEnforced"
 					:hide-label="true"
 					:disabled="isExpiryDateEnforced"
+					:label="t('files_sharing', 'Expiration date')"
 					:placeholder="t('files_sharing', 'Expiration date')"
 					type="date"
 					@input="onExpirationChange" />
@@ -102,9 +101,6 @@
 				<template v-if="writeNoteToRecipientIsChecked && (isEmailShare || isMixedShare)">
 					<textarea :value="mutableShare.note" @input="mutableShare.note = $event.target.value" />
 				</template>
-				<DownloadLimit v-if="(isLinkShare || isEmailShare || isMixedShare) && !isNewShare && !isFolder"
-					:share="share"
-					:file-info="fileInfo" />
 				<NcCheckboxRadioSwitch v-if="(!isPublicShare || isMixedShare) && resharingAllowedGlobal"
 					:disabled="isMixedShare"
 					:checked.sync="allowResharingIsChecked"
@@ -119,7 +115,10 @@
 				<NcButton class="button-details" @click="$emit('close-sharing-details')">
 					{{ t('files_sharing', 'Cancel') }}
 				</NcButton>
-				<NcButton class="button-details" type="primary" @click="saveShareSettings">
+				<NcButton class="button-details"
+					type="primary"
+					:disabled="passwordError"
+					@click="saveShareSettings">
 					{{ shareButtonText }}
 				</NcButton>
 			</div>
@@ -133,9 +132,9 @@ import PencilIcon from 'vue-material-design-icons/Pencil.vue'
 import ChevronLeftIcon from 'vue-material-design-icons/ChevronLeftCircleOutline.vue'
 
 import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
-import NcInputField from '@nextcloud/vue/dist/Components/NcInputField.js'
 import NcDateTimePickerNative from '@nextcloud/vue/dist/Components/NcDateTimePickerNative.js'
 import NcCheckboxRadioSwitch from '@nextcloud/vue/dist/Components/NcCheckboxRadioSwitch.js'
+import NcPasswordField from '@nextcloud/vue/dist/Components/NcPasswordField.js'
 
 import GeneratePassword from '../utils/GeneratePassword.js'
 import ShareRequests from '../mixins/ShareRequests.js'
@@ -149,7 +148,6 @@ import {
 	BUNDLED_PERMISSIONS,
 	hasPermissions,
 } from '../lib/SharePermissionsToolBox.js'
-import DownloadLimit from '../components/DownloadLimit.vue'
 
 export default {
 	name: 'SharingPopupDetailsTab',
@@ -158,10 +156,9 @@ export default {
 		PencilIcon,
 		ChevronLeftIcon,
 		NcButton,
-		NcInputField,
 		NcDateTimePickerNative,
 		NcCheckboxRadioSwitch,
-		DownloadLimit,
+		NcPasswordField,
 	},
 	mixins: [ShareTypes, ShareRequests, SharesMixin],
 	props: {
@@ -190,7 +187,6 @@ export default {
 		return {
 			allowResharingIsChecked: this.share.hasSharePermission,
 			passwordError: false,
-			setCustomPermissions: false,
 			writeNoteToRecipientIsChecked: false,
 			bundledPermissions: BUNDLED_PERMISSIONS,
 			sharingPermission: BUNDLED_PERMISSIONS.ALL.toString(),
@@ -296,8 +292,10 @@ export default {
 			get() {
 				return true
 			},
-			set() {
-				this.share.expireDate = this.formatDateToString(this.defaultExpiryDate)
+			set(enabled) {
+				if (!this.share.expireDate) {
+					this.share.expireDate = this.formatDateToString(this.defaultExpiryDate)
+				}
 			},
 		},
 		/**
@@ -311,7 +309,12 @@ export default {
 					|| !!this.mutableShare.password
 			},
 			async set(enabled) {
-				this.mutableShare.password = enabled ? await GeneratePassword() : ''
+				if (this.share.password) {
+					this.mutableShare.password = this.share.password
+				} else {
+					this.mutableShare.password = enabled ? await GeneratePassword() : ''
+				}
+				this.passwordError = false
 			},
 		},
 		/**
@@ -497,13 +500,11 @@ export default {
 
 			return capitalizeFirstAndJoin(perms)
 		},
-	},
-
-	watch: {
-		setCustomPermissions(isChecked) {
-			if (isChecked) {
-				this.sharingPermission = 'custom'
+		errorPasswordLabel() {
+			if (this.passwordError) {
+				return t('nmcsharing', 'Password must be at least 6 characters long')
 			}
+			return undefined
 		},
 	},
 
@@ -534,10 +535,6 @@ export default {
 			if (this.share.hasDownloadPermission !== isDownloadChecked) {
 				this.$set(this.share, 'hasDownloadPermission', isDownloadChecked)
 			}
-		},
-
-		toggleCustomPermissions() {
-			this.setCustomPermissions = this.sharingPermission === 'custom'
 		},
 
 		initializeAttributes() {
@@ -584,11 +581,7 @@ export default {
 			}
 			const sharePermissionsSet = parseInt(this.sharingPermission)
 
-			if (this.setCustomPermissions) {
-				this.updateAtomicPermissions()
-			} else {
-				this.share.permissions = sharePermissionsSet
-			}
+			this.share.permissions = sharePermissionsSet
 
 			if (!this.isFolder && this.share.permissions === BUNDLED_PERMISSIONS.ALL) {
 				// It's not possible to create an existing file.
@@ -640,9 +633,12 @@ export default {
 		 * @param {string} password the changed password
 		 */
 		onPasswordChange(password) {
+			if (password.length < 6) {
+				this.passwordError = true
+				return
+			}
 			this.passwordError = !this.isValidShareAttribute(password)
 			this.mutableShare.password = password
-			// this.$set(this.share, 'newPassword', password)
 		},
 
 		isValidShareAttribute(value) {
@@ -791,9 +787,20 @@ export default {
 		}
 	}
 
-	#share-date-picker {
+	#share-date-picker, #share-password-input {
 		border: var(--telekom-spacing-composition-space-01) solid var(--telekom-color-ui-border-standard);
 		height: 44px;
+		position: relative;
+
+		&::-webkit-calendar-picker-indicator {
+			//display: none;
+			position: absolute;
+			right: 6px;
+			top: 50%;
+			transform: translateY(-50%);
+			cursor: pointer;
+			width: 1.5rem;
+		}
 	}
 
 	#btn-advanced {

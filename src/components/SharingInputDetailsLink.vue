@@ -1,7 +1,8 @@
 <template>
 	<div :class="{ 'share-select': true, 'disabled': disabled }">
-		<span :id="dropdownId"
+		<button :id="dropdownId"
 			class="trigger-text"
+			tabindex="0"
 			@click="openDetails">
 			<EyeIcon v-if="canView" :size="16" />
 			<PencilIcon v-if="canEdit" :size="16" />
@@ -10,7 +11,7 @@
 			<LockOutlineIcon v-if="hasPassword" :size="16" />
 			<CalendarMonthIcon v-if="hasExpireDate" :size="16" />
 			<ChevronRightIcon :size="18" />
-		</span>
+		</button>
 	</div>
 </template>
 
@@ -142,6 +143,13 @@ export default {
 		gap: 2px;
 		color: var(--color-primary-element);
 		cursor: pointer;
+
+		background: none;
+		border: none;
+		border-radius: 0;
+		margin: 0;
+		min-height: 1.5rem;
+		padding: 0;
 
 		&:hover {
 			text-decoration: underline;

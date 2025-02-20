@@ -38,6 +38,7 @@
 
 		<NcButton v-if="share && !isEmailShareType && share.token"
 			:disabled="saving"
+			:title="copyText"
 			@click.prevent="copyLink">
 			<template #icon>
 				<span :class="{
@@ -45,18 +46,16 @@
 					'icon icon-clipboard': !(copied && copySuccess)
 				}" />
 			</template>
-			<template #default>
-				{{ copyText }}
-			</template>
 		</NcButton>
 
 		<NcButton v-if="share.canDelete"
 			:disabled="saving"
+			:title="t('files_sharing', 'Delete')"
 			@click.prevent="onDelete">
 			<template #icon>
 				<span class="icon icon-delete" />
 			</template>
-			<template #default>
+			<template v-if="isEmailShareType" #default>
 				{{ t('files_sharing', 'Delete') }}
 			</template>
 		</NcButton>
@@ -194,9 +193,9 @@ export default {
 
 		copyText() {
 			if (this.copied && this.copySuccess) {
-				return t('files_sharing', 'Copied')
+				return t('nmcsharing', 'Copied')
 			}
-			return t('files_sharing', 'Copy')
+			return t('nmcsharing', 'Copy')
 		},
 
 		/**

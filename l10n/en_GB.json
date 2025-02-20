@@ -25,10 +25,12 @@
 		"Send link via E-Mail": "Send link via E-Mail",
 		"Links sent via E-Mail": "Links sent via E-Mail",
 		"Accept settings": "Accept settings",
-		"Or": "Or",
+		"or": "or",
 		"Link to \"{fileName}\" was sent.": "Link to \"{fileName}\" was sent.",
 		"To": "To",
-		"Links to Copy": "Links to Copy",
+		"Link to copy": "Link to Copy",
+		"Copy": "Copy",
+		"Copied": "Copied",
 		"Anyone with the link can": "Anyone with the link can",
 		"only view": "only view",
 		"edit": "edit",
@@ -46,7 +48,8 @@
 		"Share updated": "Share updated",
 		"This share was limited to {limit} downloads. There is still {downloadsLeft} left allowed.": "This share was limited to {limit} downloads. There is still {downloadsLeft} left allowed.",
 		"Deny download": "Deny download",
-		"Name, email": "Name, email"
+		"Name, email": "Name, email",
+		"Password must be at least 6 characters long": "Password must be at least 6 characters long"
 	},
 	"pluralForm": "nplurals=2; plural=(n != 1);"
 }

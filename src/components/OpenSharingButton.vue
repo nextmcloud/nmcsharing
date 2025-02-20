@@ -51,6 +51,6 @@ export default {
 
 <style lang="scss" scoped>
 #openSharing_button {
-	margin-top: 1rem;
+	margin-top: 1rem !important;
 }
 </style>
