@@ -5,6 +5,12 @@ export const action = new FileAction({
 	id: 'sharing-popup',
 	displayName(nodes) {
 		const node = nodes[0]
+		const sharedWithMe = node?.attributes?.['mount-type'] === "shared";
+
+		if (sharedWithMe) {
+			return t('nmcsharing', 'Shared with me')
+		}
+
 		const shareTypes = Object.values(node?.attributes?.['share-types'] || {}).flat()
 
 		if (shareTypes.length > 0) {
@@ -43,7 +49,9 @@ export const action = new FileAction({
 			return true
 		}
 
-		return (node.permissions & Permission.SHARE) !== 0
+		// enable popup button in any case
+		return true
+		// return (node.permissions & Permission.SHARE) !== 0
 	},
 
 	async exec(node, view, dir) {

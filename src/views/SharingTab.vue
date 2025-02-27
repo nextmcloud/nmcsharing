@@ -75,7 +75,7 @@
 				:file-info="fileInfo"
 				@open-sharing-details="toggleShareDetailsView" />
 
-			<OpenSharingButton :file-info="fileInfo" />
+			<OpenSharingButton v-if="canReshare" :file-info="fileInfo" />
 		</div>
 
 		<!-- share details -->

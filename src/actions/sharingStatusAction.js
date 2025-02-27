@@ -30,6 +30,8 @@ export const action = new FileAction({
 			return true
 		}
 
+		// enable sharing button in any case
+		return true
 		return (node.permissions & Permission.SHARE) !== 0
 	},
 

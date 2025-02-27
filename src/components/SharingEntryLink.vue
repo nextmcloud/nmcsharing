@@ -39,10 +39,11 @@
 		<NcButton v-if="share && !isEmailShareType && share.token"
 			:disabled="saving"
 			:title="copyText"
+			:type="copied && copySuccess ? 'success' : 'secondary'"
 			@click.prevent="copyLink">
 			<template #icon>
 				<span :class="{
-					'icon icon-checkmark-magenta': copied && copySuccess,
+					'icon icon-checkmark': copied && copySuccess,
 					'icon icon-clipboard': !(copied && copySuccess)
 				}" />
 			</template>
@@ -781,10 +782,6 @@ export default {
 
 	.icon-checkmark-color {
 		opacity: 1;
-	}
-
-	.button-vue:hover:not(:disabled) {
-		background-color: initial;
 	}
 }
 </style>

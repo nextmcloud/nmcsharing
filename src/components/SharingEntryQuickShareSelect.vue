@@ -1,6 +1,6 @@
 <template>
 	<div ref="quickShareDropdownContainer"
-		:class="{ 'active': showDropdown, 'share-select': true, 'disabled': !isPermissionEditAllowed }">
+		:class="{ 'active': showDropdown, 'share-select': true }">
 		<button :id="dropdownId"
 			class="trigger-text"
 			tabindex="0"

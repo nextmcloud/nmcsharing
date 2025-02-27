@@ -56,12 +56,14 @@
 						@done:share="doneSharing"
 						@open-sharing-details-all="toggleShareDetailsViewAll" />
 
-					<div class="sharingPopup__divider">
+					<div v-if="canReshare" 
+						class="sharingPopup__divider">
 						<span class="sharingPopup__or">{{ t('nmcsharing', 'or') }}</span>
 					</div>
 
 					<!-- link shares list -->
-					<SharingPopupLinkList ref="linkShareList"
+					<SharingPopupLinkList v-if="canReshare" 
+						ref="linkShareList"
 						:can-reshare="canReshare"
 						:file-info="fileInfo"
 						:shares="linkShares"
@@ -380,6 +382,10 @@ export default {
 				}
 				this.reshare = share
 
+				if (this.reshare?.hasSharePermission === false) { 
+					this.sharedWithMe.reshare = t('files_sharing', 'Resharing is not allowed')
+				}
+
 				// If we have an expiration date, use it as subtitle
 				// Refresh the status every 10s and clear if expired
 				// eslint-disable-next-line no-undef
@@ -542,7 +548,7 @@ export default {
         background-color: var(--telekom-color-background-surface);
         bottom: -0.75rem;
         font-size: 14px;
-        padding: 0.75rem;;
+        padding: 0.75rem;
         position: relative;
     }
 }

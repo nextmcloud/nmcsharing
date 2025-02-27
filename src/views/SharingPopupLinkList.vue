@@ -21,7 +21,7 @@
   -->
 
 <template>
-	<div>
+	<div v-if="canReshare">
 		<h2 class="sharing-link-list-caption">
 			<strong>{{ t('nmcsharing', 'Link to copy') }}</strong>
 		</h2>

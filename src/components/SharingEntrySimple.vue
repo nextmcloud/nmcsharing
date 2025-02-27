@@ -24,7 +24,7 @@
 	<div class="sharing-entry">
 		<span class="icon icon-upload-to-cloud" />
 		<div class="sharing-entry__desc">
-			<span class="sharing-entry__title">{{ title }}</span>
+			<span class="sharing-entry__title">{{ title }}. <span v-if="reshare">{{ reshare }}.</span></span>
 			<p v-if="subtitle">
 				{{ subtitle }}
 			</p>
@@ -44,6 +44,10 @@ export default {
 			required: true,
 		},
 		subtitle: {
+			type: String,
+			default: '',
+		},
+		reshare: {
 			type: String,
 			default: '',
 		},
