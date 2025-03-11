@@ -480,6 +480,10 @@ export default {
 			if (this.isValidShareAttribute(this.share.expireDate)) {
 				this.hasExpirationDate = true
 			}
+			if (!this.share.shareSet) {
+				this.mutableShare.expireDate = this.formatDateToString(this.defaultExpiryDate)
+				this.hasExpirationDate = true
+			}
 		},
 
 		initializePermissions() {
