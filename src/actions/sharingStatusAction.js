@@ -20,6 +20,10 @@ export const action = new FileAction({
 			return false
 		}
 
+		if(window.OCP.Files.Router.params.view == 'trashbin') {
+			return false
+		}
+
 		const node = nodes[0]
 		const shareTypes = node.attributes?.['share-types']
 		const isMixed = Array.isArray(shareTypes) && shareTypes.length > 0

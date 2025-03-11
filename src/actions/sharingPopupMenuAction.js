@@ -8,12 +8,13 @@ export const action = new FileAction({
 	},
 
 	title(nodes) {
+		/*
 		const node = nodes[0]
 
 		if (Array.isArray(node.attributes?.['share-types'])) {
 			return t('files_sharing', 'Shared multiple times with different people')
 		}
-
+		*/
 		return t('files_sharing', 'Show sharing options')
 	},
 
@@ -23,6 +24,10 @@ export const action = new FileAction({
 
 	enabled(nodes) {
 		if (nodes.length !== 1) {
+			return false
+		}
+
+		if(window.OCP.Files.Router.params.view == 'trashbin') {
 			return false
 		}
 

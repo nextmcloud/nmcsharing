@@ -2,7 +2,7 @@
 	<div class="sharingPopupDetailsView">
 		<span class="header-permissions">
 			<ChevronLeftIcon :size="20" class="back-button" @click="$emit('close-sharing-details')" />
-			<h2 class="sharingTabDetailsView__header" style="margin-bottom: 0;">
+			<h2 class="sharingTabDetailsView__header">
 				{{ t('nmcsharing', 'Permissions') }}
 			</h2>
 		</span>
@@ -85,8 +85,9 @@
 						? t('files_sharing', 'Expiration date (enforced)')
 						: t('files_sharing', 'Set expiration date') }}
 				</NcCheckboxRadioSwitch>
-				<NcDateTimePickerNative id="share-date-picker"
-					:value="new Date(share.expireDate ?? defaultExpiryDate)"
+				<NcDateTimePickerNative v-if="hasExpirationDate" 
+					id="share-date-picker"
+					:value="new Date(mutableShare.expireDate)"
 					:min="dateTomorrow"
 					:max="dateMaxEnforced"
 					:hide-label="true"
@@ -94,7 +95,7 @@
 					:label="t('files_sharing', 'Expiration date')"
 					:placeholder="t('files_sharing', 'Expiration date')"
 					type="date"
-					@input="onExpirationChange" />
+					@input="onExpirationDateChange" />
 				<NcCheckboxRadioSwitch v-if="isEmailShare || isMixedShare" :checked.sync="writeNoteToRecipientIsChecked">
 					{{ t('files_sharing', 'Note to recipient') }}
 				</NcCheckboxRadioSwitch>
@@ -193,6 +194,7 @@ export default {
 			mutableShare: {
 				note: this.share.note,
 				password: this.share.password,
+				expireDate: this.share.expireDate,
 				label: this.share.label,
 			},
 		}
@@ -290,11 +292,17 @@ export default {
 		 */
 		hasExpirationDate: {
 			get() {
-				return true
+				return this.isValidShareAttribute(this.mutableShare.expireDate)
 			},
 			set(enabled) {
-				if (!this.share.expireDate) {
-					this.share.expireDate = this.formatDateToString(this.defaultExpiryDate)
+				if (enabled) {
+					if (this.share.expireDate) {
+						this.mutableShare.expireDate = this.share.expireDate
+					} else {
+						this.mutableShare.expireDate = this.formatDateToString(this.defaultExpiryDate)
+					}
+				} else {
+					this.mutableShare.expireDate = ''
 				}
 			},
 		},
@@ -309,10 +317,14 @@ export default {
 					|| !!this.mutableShare.password
 			},
 			async set(enabled) {
-				if (this.share.password) {
-					this.mutableShare.password = this.share.password
+				if (enabled) {
+					if (this.share.password) {
+						this.mutableShare.password = this.share.password
+					} else {
+						this.mutableShare.password = await GeneratePassword()
+					}
 				} else {
-					this.mutableShare.password = enabled ? await GeneratePassword() : ''
+					this.mutableShare.password = ''
 				}
 				this.passwordError = false
 			},
@@ -375,66 +387,8 @@ export default {
 			}
 			return false
 		},
-		hasFileDropPermissions() {
-			return this.share.permissions === this.bundledPermissions.FILE_DROP
-		},
 		shareButtonText() {
 			return t('nmcsharing', 'Accept settings')
-		},
-		/**
-		 * Can the sharer set whether the sharee can edit the file ?
-		 *
-		 * @return {boolean}
-		 */
-		canSetEdit() {
-			// If the owner revoked the permission after the resharer granted it
-			// the share still has the permission, and the resharer is still
-			// allowed to revoke it too (but not to grant it again).
-			return (this.fileInfo.sharePermissions & OC.PERMISSION_UPDATE) || this.canEdit
-		},
-		/**
-		 * Can the sharer set whether the sharee can create the file ?
-		 *
-		 * @return {boolean}
-		 */
-		canSetCreate() {
-			// If the owner revoked the permission after the resharer granted it
-			// the share still has the permission, and the resharer is still
-			// allowed to revoke it too (but not to grant it again).
-			return (this.fileInfo.sharePermissions & OC.PERMISSION_CREATE) || this.canCreate
-		},
-		/**
-		 * Can the sharer set whether the sharee can delete the file ?
-		 *
-		 * @return {boolean}
-		 */
-		canSetDelete() {
-			// If the owner revoked the permission after the resharer granted it
-			// the share still has the permission, and the resharer is still
-			// allowed to revoke it too (but not to grant it again).
-			return (this.fileInfo.sharePermissions & OC.PERMISSION_DELETE) || this.canDelete
-		},
-		/**
-		 * Can the sharer set whether the sharee can reshare the file ?
-		 *
-		 * @return {boolean}
-		 */
-		canSetReshare() {
-			// If the owner revoked the permission after the resharer granted it
-			// the share still has the permission, and the resharer is still
-			// allowed to revoke it too (but not to grant it again).
-			return (this.fileInfo.sharePermissions & OC.PERMISSION_SHARE) || this.canReshare
-		},
-		/**
-		 * Can the sharer set whether the sharee can download the file ?
-		 *
-		 * @return {boolean}
-		 */
-		canSetDownload() {
-			// If the owner revoked the permission after the resharer granted it
-			// the share still has the permission, and the resharer is still
-			// allowed to revoke it too (but not to grant it again).
-			return (this.fileInfo.canDownload() || this.canDownload)
 		},
 		// if password in mutableShare differs then it means
 		// the user deleted the original password
@@ -475,30 +429,6 @@ export default {
 		canChangeHideDownload() {
 			const hasDisabledDownload = (shareAttribute) => shareAttribute.key === 'download' && shareAttribute.scope === 'permissions' && shareAttribute.enabled === false
 			return this.fileInfo.shareAttributes.some(hasDisabledDownload)
-		},
-		customPermissionsList() {
-			const perms = []
-			if (hasPermissions(this.share.permissions, ATOMIC_PERMISSIONS.READ)) {
-				perms.push('read')
-			}
-			if (hasPermissions(this.share.permissions, ATOMIC_PERMISSIONS.CREATE)) {
-				perms.push('create')
-			}
-			if (hasPermissions(this.share.permissions, ATOMIC_PERMISSIONS.UPDATE)) {
-				perms.push('update')
-			}
-			if (hasPermissions(this.share.permissions, ATOMIC_PERMISSIONS.DELETE)) {
-				perms.push('delete')
-			}
-			if (hasPermissions(this.share.permissions, ATOMIC_PERMISSIONS.SHARE)) {
-				perms.push('share')
-			}
-			if (this.share.hasDownloadPermission) {
-				perms.push('download')
-			}
-			const capitalizeFirstAndJoin = array => array.map((item, index) => index === 0 ? item[0].toUpperCase() + item.substring(1) : item).join(', ')
-
-			return capitalizeFirstAndJoin(perms)
 		},
 		errorPasswordLabel() {
 			if (this.passwordError) {
@@ -600,6 +530,10 @@ export default {
 				this.mutableShare.note = ''
 			}
 
+			if (!this.hasExpirationDate) {
+				this.mutableShare.expireDate = ''
+			}
+
 			if (this.isPasswordProtected) {
 				if (!this.isValidShareAttribute(this.mutableShare.password) && this.isPasswordEnforced) {
 					this.passwordError = true
@@ -610,12 +544,9 @@ export default {
 				this.mutableShare.password = ''
 			}
 
-			if (!this.hasExpirationDate) {
-				this.share.expireDate = ''
-			}
-
 			this.share.label = this.mutableShare.label
 			this.share.password = this.mutableShare.password
+			this.share.expireDate = this.mutableShare.expireDate
 			this.share.note = this.mutableShare.note
 			this.share.shareSet = true
 
@@ -639,6 +570,20 @@ export default {
 			}
 			this.passwordError = !this.isValidShareAttribute(password)
 			this.mutableShare.password = password
+		},
+
+		/**
+		 * Save given value to expireDate and trigger queueUpdate
+		 *
+		 * @param {Date} date
+		 */
+		 onExpirationDateChange(date) {
+			try {
+				// Date.UTC marks years between 0 and 99 as '1900 + year' forcing error and incorrect date value
+				// thus we need to skip formatting while user is typing year in the input field
+				if (date.getFullYear() <= 99) return
+				this.mutableShare.expireDate = this.formatDateToString(new Date(date))
+			} catch (error) {}
 		},
 
 		isValidShareAttribute(value) {
