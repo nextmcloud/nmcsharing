@@ -37,9 +37,11 @@ export default {
 				this.errors = {}
 
 				const path = (this.fileInfo.path + '/' + this.fileInfo.name).replace('//', '/')
+				const expireDate = new Date(new Date().setFullYear(new Date().getFullYear() + 1))
 				const options = {
 					path,
 					shareType: ShareTypes.SHARE_TYPE_LINK,
+					expireDate,
 				}
 
 				// console.debug('Creating link share with options', options)

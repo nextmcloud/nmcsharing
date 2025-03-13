@@ -89,10 +89,10 @@
 						? t('files_sharing', 'Expiration date (enforced)')
 						: t('files_sharing', 'Set expiration date') }}
 				</NcCheckboxRadioSwitch>
-				<NcDateTimePickerNative id="share-date-picker"
+				<NcDateTimePickerNative v-if="hasExpirationDate"
+					id="share-date-picker"
 					:value="new Date(share.expireDate ?? defaultExpiryDate)"
 					:min="dateTomorrow"
-					:max="dateMaxEnforced"
 					:hide-label="true"
 					:label="t('files_sharing', 'Expiration date')"
 					:placeholder="t('files_sharing', 'Expiration date')"
@@ -300,14 +300,14 @@ export default {
 		 *
 		 * @return {boolean}
 		 */
-		hasExpirationDate: {
+		 hasExpirationDate: {
 			get() {
-				return true
+				return this.isValidShareAttribute(this.share.expireDate)
 			},
 			set(enabled) {
-				if (!this.share.expireDate) {
-					this.share.expireDate = this.formatDateToString(this.defaultExpiryDate)
-				}
+				this.share.expireDate = enabled
+					? this.formatDateToString(this.defaultExpiryDate)
+					: ''
 			},
 		},
 		/**

@@ -306,6 +306,7 @@ export default {
 		margin: 0;
 		min-height: 1.5rem;
 		padding: 0;
+		text-align: left;
 
 		&:hover {
 			text-decoration: underline;

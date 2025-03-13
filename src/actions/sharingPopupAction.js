@@ -45,6 +45,11 @@ export const action = new FileAction({
 		}
 
 		const node = nodes[0]
+
+		if (node.attributes?.['is-encrypted'] === 1) {
+			return false
+		}
+
 		const shareTypes = node.attributes?.['share-types']
 		const isMixed = Array.isArray(shareTypes) && shareTypes.length > 0
 
