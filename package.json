@@ -52,7 +52,7 @@
     "sass-loader": "^13.3.2",
     "style-loader": "^3.3.1",
     "throttle-debounce": "^5.0.0",
-    "ts-loader": "^9.4.4",
+    "ts-loader": "^9.5.1",
     "typescript": "^5.1.6",
     "vue-loader": "^15.9.8",
     "webpack": "^5.79.0",
