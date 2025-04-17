@@ -6,6 +6,8 @@
 		<NcInputField v-if="isLimitEnabled"
 			type="number"
 			min="0"
+			:error="!isValidPositiveInteger"
+			:helper-text="invalidIntegerError"
 			:title="downloadsLeftTooltip"
 			:value.sync="limit"
 			@update:value="debounceUpdateLimit" />
@@ -41,6 +43,7 @@ export default {
 			count: null,
 			token: null,
 			loading: false,
+			isValidPositiveInteger: true,
 		}
 	},
 	computed: {
@@ -50,6 +53,12 @@ export default {
 			return t('nmcsharing', 'This share was limited to {limit} downloads. There is still {downloadsLeft} left allowed.',
 				{ limit: this.limit, downloadsLeft })
 		},
+		invalidIntegerError() {
+			if (!this.isValidPositiveInteger) {
+				return t('nmcsharing', 'Limit needs to be positive number')
+			}
+			return undefined
+		}
 	},
 	beforeMount() {
 		this.getInitialData()
@@ -78,6 +87,8 @@ export default {
 			this.isLimitEnabled = !this.isLimitEnabled
 		},
 		debounceUpdateLimit: debounce(300, async function(limit) {
+			this.isValidPositiveInteger = /^[1-9]\d*$/.test(limit)
+			this.$emit('limit-changed', !this.isValidPositiveInteger)
 			this.loading = true
 
 			// If the value is not correct, let's remove the limit
