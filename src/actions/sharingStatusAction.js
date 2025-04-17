@@ -20,7 +20,7 @@ export const action = new FileAction({
 			return false
 		}
 
-		if(window.OCP.Files.Router.params.view == 'trashbin') {
+		if (window.OCP.Files.Router.params.view === 'trashbin') {
 			return false
 		}
 
@@ -29,7 +29,7 @@ export const action = new FileAction({
 		if (node.attributes?.['is-encrypted'] === 1) {
 			return false
 		}
-		
+
 		const shareTypes = node.attributes?.['share-types']
 		const isMixed = Array.isArray(shareTypes) && shareTypes.length > 0
 
@@ -41,7 +41,7 @@ export const action = new FileAction({
 
 		// enable sharing button in any case
 		return true
-		return (node.permissions & Permission.SHARE) !== 0
+		// return (node.permissions & Permission.SHARE) !== 0
 	},
 
 	async exec(node, view, dir) {

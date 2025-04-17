@@ -5,7 +5,7 @@ export const action = new FileAction({
 	id: 'sharing-popup',
 	displayName(nodes) {
 		const node = nodes[0]
-		const sharedWithMe = node?.attributes?.['mount-type'] === "shared";
+		const sharedWithMe = node?.attributes?.['mount-type'] === 'shared'
 
 		if (sharedWithMe) {
 			return t('nmcsharing', 'Shared with me')
@@ -40,7 +40,7 @@ export const action = new FileAction({
 			return false
 		}
 
-		if(window.OCP.Files.Router.params.view == 'trashbin') {
+		if (window.OCP.Files.Router.params.view === 'trashbin') {
 			return false
 		}
 

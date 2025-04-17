@@ -56,13 +56,13 @@
 						@done:share="doneSharing"
 						@open-sharing-details-all="toggleShareDetailsViewAll" />
 
-					<div v-if="canReshare" 
+					<div v-if="canReshare"
 						class="sharingPopup__divider">
 						<span class="sharingPopup__or">{{ t('nmcsharing', 'or') }}</span>
 					</div>
 
 					<!-- link shares list -->
-					<SharingPopupLinkList v-if="canReshare" 
+					<SharingPopupLinkList v-if="canReshare"
 						ref="linkShareList"
 						:can-reshare="canReshare"
 						:file-info="fileInfo"
@@ -382,7 +382,7 @@ export default {
 				}
 				this.reshare = share
 
-				if (this.reshare?.hasSharePermission === false) { 
+				if (this.reshare?.hasSharePermission === false) {
 					this.sharedWithMe.reshare = t('files_sharing', 'Resharing is not allowed')
 				}
 

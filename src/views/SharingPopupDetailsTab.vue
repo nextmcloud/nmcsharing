@@ -85,7 +85,7 @@
 						? t('files_sharing', 'Expiration date (enforced)')
 						: t('files_sharing', 'Set expiration date') }}
 				</NcCheckboxRadioSwitch>
-				<NcDateTimePickerNative v-if="hasExpirationDate" 
+				<NcDateTimePickerNative v-if="hasExpirationDate"
 					id="share-date-picker"
 					:value="new Date(mutableShare.expireDate)"
 					:min="dateTomorrow"
@@ -147,7 +147,6 @@ import { formatFileSize } from '@nextcloud/files'
 import {
 	ATOMIC_PERMISSIONS,
 	BUNDLED_PERMISSIONS,
-	hasPermissions,
 } from '../lib/SharePermissionsToolBox.js'
 
 export default {
