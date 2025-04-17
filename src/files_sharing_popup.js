@@ -25,7 +25,7 @@ import Vue from 'vue'
 import { translate as t, translatePlural as n } from '@nextcloud/l10n'
 import { getRequestToken } from '@nextcloud/auth'
 
-import SharingTab from './views/SharingTab.vue'
+import SharingPopup from './views/SharingPopup.vue'
 
 // eslint-disable-next-line camelcase
 __webpack_nonce__ = btoa(getRequestToken())
@@ -35,15 +35,24 @@ Vue.prototype.t = t
 Vue.prototype.n = n
 
 // Init Sharing tab component
-const View = Vue.extend(SharingTab)
+const View = Vue.extend(SharingPopup)
 let TabInstance = null
+
+/**
+ * Check if tab should be removed
+ *
+ * @param {string} id id of tabs to be removed
+ */
+function checkTabs(id) {
+	return id !== 'sharing' && id !== 'photos' && id !== 'comments' && id !== 'version_vue'
+}
 
 window.addEventListener('DOMContentLoaded', () => {
 	if (OCA.Files && OCA.Files.Sidebar) {
 
 		const sharingTab = new OCA.Files.Sidebar.Tab({
-			id: 'sharing-manage',
-			name: t('nmcsharing', 'Manage shares'),
+			id: 'sharing',
+			name: t('files_sharing', 'Sharing Popup'),
 			icon: 'icon-share',
 
 			async mount(el, fileInfo, context) {
@@ -67,7 +76,10 @@ window.addEventListener('DOMContentLoaded', () => {
 			},
 		})
 
-		// register new sharing tab
+		// remove all unused tabs
+		const tabsState = OCA.Files.Sidebar.state.tabs
+		OCA.Files.Sidebar.state.tabs = tabsState.filter((tab) => checkTabs(tab.id))
+		// register new sharing popup
 		OCA.Files.Sidebar.registerTab(sharingTab)
 	}
 })

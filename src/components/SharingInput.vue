@@ -21,32 +21,35 @@
   -->
 
 <template>
-	<div class="sharing-search">
-		<label v-if="canReshare" for="sharing-search-input">
-			{{ isSharedWithMe ? `${t('nmcsharing', 'Resharing is allowed')}. ` : '' }}
-			{{ t('nmcsharing', 'You can create links or send shares by mail. If you invite MagentaCLOUD users, you have more opportunities for collaboration.') }}
-		</label>
-		<label v-else>
-			{{ t('files_sharing', 'Resharing is not allowed') }}
-		</label>
-		<NcSelect v-if="canReshare"
-			ref="select"
+	<div v-if="canReshare" class="sharing-search">
+		<SharingInputDetailsLink :file-info="fileInfo"
+			:disabled="!isValidValue"
+			:share.sync="newShare"
+			@open-sharing-details-all="openDetails" />
+		<NcSelect ref="select"
 			v-model="value"
 			input-id="sharing-search-input"
 			class="sharing-search__input"
-			:disabled="!canReshare"
 			:loading="loading"
 			:filterable="false"
 			:placeholder="inputPlaceholder"
 			:clear-search-on-blur="() => false"
 			:user-select="true"
+			:multiple="true"
 			:options="options"
-			@search="asyncFind"
-			@option:selected="openSharingDetails">
+			@search="asyncFind">
 			<template #no-options="{ search }">
 				{{ search ? noResultText : t('files_sharing', 'No recommendations. Start typing.') }}
 			</template>
 		</NcSelect>
+		<div class="button-group">
+			<NcButton type="primary"
+				class="button-send"
+				:disabled="!isValidValue"
+				@click="sendSharing">
+				{{ t('nmcsharing', 'Send') }}
+			</NcButton>
+		</div>
 	</div>
 </template>
 
@@ -55,23 +58,28 @@ import { generateOcsUrl } from '@nextcloud/router'
 import { getCurrentUser } from '@nextcloud/auth'
 import axios from '@nextcloud/axios'
 import { debounce } from 'throttle-debounce'
+import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
 import NcSelect from '@nextcloud/vue/dist/Components/NcSelect.js'
 
 import Config from '../services/ConfigService.js'
-import GeneratePassword from '../utils/GeneratePassword.js'
 import Share from '../models/Share.js'
+import ShareDetails from '../mixins/ShareDetails.js'
+import SharesMixin from '../mixins/SharesMixin.js'
 import ShareRequests from '../mixins/ShareRequests.js'
 import ShareTypes from '../mixins/ShareTypes.js'
-import ShareDetails from '../mixins/ShareDetails.js'
+
+import SharingInputDetailsLink from './SharingInputDetailsLink.vue'
 
 export default {
 	name: 'SharingInput',
 
 	components: {
+		NcButton,
 		NcSelect,
+		SharingInputDetailsLink,
 	},
 
-	mixins: [ShareTypes, ShareRequests, ShareDetails],
+	mixins: [ShareTypes, ShareRequests, SharesMixin, ShareDetails],
 
 	props: {
 		shares: {
@@ -82,6 +90,11 @@ export default {
 		linkShares: {
 			type: Array,
 			default: () => [],
+			required: true,
+		},
+		newShare: {
+			type: Object,
+			default: () => {},
 			required: true,
 		},
 		fileInfo: {
@@ -101,6 +114,10 @@ export default {
 			type: Boolean,
 			required: true,
 		},
+		shareSet: {
+			type: Boolean,
+			required: true,
+		},
 	},
 
 	data() {
@@ -112,6 +129,7 @@ export default {
 			ShareSearch: OCA.Sharing.ShareSearch.state,
 			suggestions: [],
 			value: null,
+			fallbackShare: { permissions: 1 },
 		}
 	},
 
@@ -138,7 +156,14 @@ export default {
 				return t('files_sharing', 'Name or email …')
 			}
 
-			return t('files_sharing', 'Name, email, or Federated Cloud ID …')
+			return t('nmcsharing', 'Name, email')
+		},
+
+		isValidValue() {
+			if (this.value) {
+				return this.value.length > 0
+			}
+			return false
 		},
 
 		isValidQuery() {
@@ -165,6 +190,92 @@ export default {
 	},
 
 	methods: {
+		openDetails() {
+			this.openSharingDetailsAll(this.value)
+		},
+
+		async sendSharing() {
+			const promises = []
+
+			let thisShare = this.fallbackShare
+
+			if (this.shareSet) {
+				thisShare = this.newShare
+			}
+
+			for (const thisValue of this.value) {
+				const incomingShare = {
+					permissions: thisShare.permissions,
+					shareType: thisValue.shareType,
+					shareWith: thisValue.shareWith,
+					shareWithDisplayName: thisValue.displayName,
+					shareWithDisplayNameUnique: thisValue.shareWithDisplayNameUnique,
+					attributes: thisShare.attributes,
+					label: thisShare.label,
+					note: thisShare.note,
+					expireDate: thisShare.expireDate,
+					password: thisShare.password,
+					hideDownload: thisShare.hideDownload,
+				}
+
+				promises.push(
+					this.addShare(incomingShare, this.fileInfo, this.config)
+						.then(newShare => {
+							this.$emit('add:share', newShare) // Emit nach Abschluss
+						})
+						.catch(error => {
+							console.error('Error adding share:', error) // Fehlerbehandlung
+						}),
+				)
+			}
+
+			await Promise.all(promises) // Warte auf alle Promises
+
+			this.$emit('done:share') // Emit nach Abschluss
+		},
+
+		/**
+		 * Process the new share request
+		 *
+		 * @param {object} value the multiselect option
+		 * @param {object} fileInfo file data
+		 * @param {Config} config instance configs
+		 */
+		async addShare(value, fileInfo, config) {
+			// Clear the displayed selection
+			this.value = null
+
+			// handle externalResults from OCA.Sharing.ShareSearch
+			if (value.handler) {
+				const share = await value.handler(this)
+				this.$emit('add:share', new Share(share))
+				return true
+			}
+
+			// this.loading = true // Are we adding loaders the new share flow?
+			// console.debug('Adding a new share from the input for', value)
+			try {
+				const path = (fileInfo.path + '/' + fileInfo.name).replace('//', '/')
+				const share = await this.createShare({
+					path,
+					shareType: value.shareType,
+					shareWith: value.shareWith,
+					permissions: value.permissions,
+					attributes: JSON.stringify(fileInfo.shareAttributes),
+					...(value.note ? { note: value.note } : {}),
+					...(value.password ? { password: value.password } : {}),
+					...(value.expireDate ? { expireDate: value.expireDate } : {}),
+					...(value.label ? { label: value.label } : {}),
+					...(value.hideDownload ? { hideDownload: value.hideDownload ? 1 : 0 } : {}),
+				})
+				return share
+			} catch (error) {
+				console.error('Error while adding new share', error)
+			} finally {
+				// this.loading = false // No loader here yet
+			}
+		},
+
 		async asyncFind(query) {
 			// save current query to check if we display
 			// recommendations or search results
@@ -235,6 +346,7 @@ export default {
 
 			// lookup clickable entry
 			// show if enabled and not already requested
+			/*
 			const lookupEntry = []
 			if (data.lookupEnabled && !lookup) {
 				lookupEntry.push({
@@ -244,11 +356,12 @@ export default {
 					lookup: true,
 				})
 			}
+			*/
 
 			// if there is a condition specified, filter it
 			const externalResults = this.externalResults.filter(result => !result.condition || result.condition(this))
 
-			const allSuggestions = exactSuggestions.concat(suggestions).concat(externalResults).concat(lookupEntry)
+			const allSuggestions = exactSuggestions.concat(suggestions).concat(externalResults)
 
 			// Count occurrences of display names in order to provide a distinguishable description if needed
 			const nameCounts = allSuggestions.reduce((nameCounts, result) => {
@@ -271,7 +384,6 @@ export default {
 			})
 
 			this.loading = false
-			console.info('suggestions', this.suggestions)
 		},
 
 		/**
@@ -315,7 +427,6 @@ export default {
 				.concat(externalResults)
 
 			this.loading = false
-			console.info('recommendations', this.recommendations)
 		},
 
 		/**
@@ -325,7 +436,7 @@ export default {
 		 * @param {object[]} shares the array of shares object
 		 * @return {object[]}
 		 */
-		filterOutExistingShares(shares) {
+		 filterOutExistingShares(shares) {
 			return shares.reduce((arr, share) => {
 				// only check proper objects
 				if (typeof share !== 'object') {
@@ -465,81 +576,6 @@ export default {
 				...this.shareTypeToIcon(result.value.shareType),
 			}
 		},
-
-		/**
-		 * Process the new share request
-		 *
-		 * @param {object} value the multiselect option
-		 */
-		async addShare(value) {
-			// Clear the displayed selection
-			this.value = null
-
-			if (value.lookup) {
-				await this.getSuggestions(this.query, true)
-
-				this.$nextTick(() => {
-					// open the dropdown again
-					this.$refs.select.$children[0].open = true
-				})
-				return true
-			}
-
-			// handle externalResults from OCA.Sharing.ShareSearch
-			if (value.handler) {
-				const share = await value.handler(this)
-				this.$emit('add:share', new Share(share))
-				return true
-			}
-
-			this.loading = true
-			console.debug('Adding a new share from the input for', value)
-			try {
-				let password = null
-
-				if (this.config.enforcePasswordForPublicLink
-					&& value.shareType === this.SHARE_TYPES.SHARE_TYPE_EMAIL) {
-					password = await GeneratePassword()
-				}
-
-				const path = (this.fileInfo.path + '/' + this.fileInfo.name).replace('//', '/')
-				const share = await this.createShare({
-					path,
-					shareType: value.shareType,
-					shareWith: value.shareWith,
-					password,
-					permissions: this.fileInfo.sharePermissions & OC.getCapabilities().files_sharing.default_permissions,
-					attributes: JSON.stringify(this.fileInfo.shareAttributes),
-				})
-
-				// If we had a password, we need to show it to the user as it was generated
-				if (password) {
-					share.newPassword = password
-					// Wait for the newly added share
-					const component = await new Promise(resolve => {
-						this.$emit('add:share', share, resolve)
-					})
-
-					// open the menu on the
-					// freshly created share component
-					component.open = true
-				} else {
-					// Else we just add it normally
-					this.$emit('add:share', share)
-				}
-
-				await this.getRecommendations()
-			} catch (error) {
-				this.$nextTick(() => {
-					// open the dropdown again on error
-					this.$refs.select.$children[0].open = true
-				})
-				this.query = value.shareWith
-				console.error('Error while adding new share', error)
-			} finally {
-				this.loading = false
-			}
-		},
 	},
 }
 </script>
@@ -548,7 +584,7 @@ export default {
 .sharing-search {
 	display: flex;
 	flex-direction: column;
-	margin-bottom: 0px;
+	margin-bottom: 1rem;
 
 	label[for="sharing-search-input"] {
 		margin-bottom: 0;
@@ -557,7 +593,8 @@ export default {
 	&__input.v-select.select {
 		min-width: auto;
 		width: 100%;
-		margin: 16px 0 12px;
+		margin: 0.75rem 0;
+
 		input {
 			opacity: 1;
 		}
@@ -566,26 +603,40 @@ export default {
 			opacity: 1;
 		}
 	}
+
+	.button-group {
+		display: flex;
+		justify-content: end;
+
+		.button-send {
+			padding: 0 1.5rem !important;
+		}
+	}
 };
 
 ul.vs__dropdown-menu {
 	--vs-border-width: 1px;
-	--vs-dropdown-option-padding: 16px 16px 16px 8px;
+	--vs-dropdown-option-padding: 1rem 1rem 1rem 0.5rem;
 	padding: 0px !important;
+
 	.vs__dropdown-option {
 		border-radius: 0px !important;
+
 		// remove user avatar
 		.avatardiv {
 			display: none;
 		}
+
 		// set dropdown option height
 		span.option {
 			--height: 16px !important;
 		}
+
 		// add a new icon definition
 		.icon {
 			background-size: 24px;
 			background-position: right;
+
 			.icon-upload-to-cloud {
 				background-image: var(--icon-upload-to-cloud-dark);
 			}
@@ -602,11 +653,13 @@ ul.vs__dropdown-menu {
 .vs__dropdown-menu {
 	// properly style the lookup entry
 	span[lookup] {
+
 		.avatardiv {
 			background-image: var(--icon-search-white);
 			background-repeat: no-repeat;
 			background-position: center;
 			background-color: var(--color-text-maxcontrast) !important;
+
 			div {
 				display: none;
 			}

@@ -21,47 +21,25 @@
   -->
 
 <template>
-	<div>
-		<ul v-if="canLinkShare && canReshare" class="sharing-link-list">
-			<template v-if="hasMailShares">
-				<li class="sharing-link-list-caption">
-					<strong>{{ t('nmcsharing', 'Links sent via E-Mail') }}</strong>
-				</li>
-				<template v-for="(share, index) in shares">
-					<!-- using shares[index] to work with .sync -->
-					<SharingEntryLink v-if="share.type === shareTypeMail"
-						:key="share.id"
-						:index="shares.length > 1 ? index + 1 : null"
-						:can-reshare="canReshare"
-						:share.sync="shares[index]"
-						:file-info="fileInfo"
-						@add:share="addShare(...arguments)"
-						@update:share="awaitForShare(...arguments)"
-						@remove:share="removeShare"
-						@open-sharing-details="openSharingDetails(share)" />
-				</template>
+	<div v-if="canReshare">
+		<h2 class="sharing-link-list-caption">
+			<strong>{{ t('nmcsharing', 'Link to copy') }}</strong>
+		</h2>
+		<ul v-if="canLinkShare && canReshare && hasLinkShares" class="sharing-link-list">
+			<template v-for="(share, index) in shares">
+				<SharingEntryLink v-if="share.type === shareTypeLink"
+					:key="share.id"
+					:index="shares.length > 1 ? index + 1 : null"
+					:can-reshare="canReshare"
+					:share.sync="shares[index]"
+					:file-info="fileInfo"
+					@add:share="addShare(...arguments)"
+					@update:share="awaitForShare(...arguments)"
+					@remove:share="removeShare"
+					@open-sharing-details="openSharingDetails(share)" />
 			</template>
 		</ul>
-
-		<ul v-if="canLinkShare && canReshare" class="sharing-link-list">
-			<template v-if="hasLinkShares">
-				<li class="sharing-link-list-caption">
-					<strong>{{ t('nmcsharing', 'Link to copy') }}</strong>
-				</li>
-				<template v-for="(share, index) in shares">
-					<SharingEntryLink v-if="share.type === shareTypeLink"
-						:key="share.id"
-						:index="shares.length > 1 ? index + 1 : null"
-						:can-reshare="canReshare"
-						:share.sync="shares[index]"
-						:file-info="fileInfo"
-						@add:share="addShare(...arguments)"
-						@update:share="awaitForShare(...arguments)"
-						@remove:share="removeShare"
-						@open-sharing-details="openSharingDetails(share)" />
-				</template>
-			</template>
-		</ul>
+		<AddLinkButton :file-info="fileInfo" @add:share="addShare" />
 	</div>
 </template>
 
@@ -71,12 +49,14 @@ import Share from '../models/Share.js'
 import ShareDetails from '../mixins/ShareDetails.js'
 import ShareTypes from '../mixins/ShareTypes.js'
 import SharingEntryLink from '../components/SharingEntryLink.vue'
+import AddLinkButton from '../components/AddLinkButton.vue'
 
 export default {
-	name: 'SharingLinkList',
+	name: 'SharingPopupLinkList',
 
 	components: {
 		SharingEntryLink,
+		AddLinkButton,
 	},
 
 	mixins: [ShareTypes, ShareDetails],
@@ -150,6 +130,7 @@ export default {
 			// eslint-disable-next-line vue/no-mutating-props
 			this.shares.unshift(share)
 			this.awaitForShare(share, resolve)
+			this.$emit('link-share-created')
 		},
 
 		/**
@@ -192,5 +173,6 @@ export default {
 	display: flex;
 	align-items: center;
 	min-height: 2rem;
+	margin-bottom: 1rem;
 }
 </style>

@@ -1,107 +1,99 @@
-<!--
-  - @copyright Copyright (c) 2019 John Molakvoæ <skjnldsv@protonmail.com>
-  -
-  - @author John Molakvoæ <skjnldsv@protonmail.com>
-  -
-  - @license GNU AGPL version 3 or any later version
-  -
-  - This program is free software: you can redistribute it and/or modify
-  - it under the terms of the GNU Affero General Public License as
-  - published by the Free Software Foundation, either version 3 of the
-  - License, or (at your option) any later version.
-  -
-  - This program is distributed in the hope that it will be useful,
-  - but WITHOUT ANY WARRANTY; without even the implied warranty of
-  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  - GNU Affero General Public License for more details.
-  -
-  - You should have received a copy of the GNU Affero General Public License
-  - along with this program. If not, see <http://www.gnu.org/licenses/>.
-  -
-  -->
 <template>
-	<div :class="{ 'icon-loading': loading }">
+	<NcModal size="normal"
+		:show.sync="modal"
+		:has-next="false"
+		:has-previous="false"
+		@close="closeThisModal">
 		<!-- error message -->
 		<div v-if="error" class="emptycontent" :class="{ emptyContentWithSections: sections.length > 0 }">
 			<div class="icon icon-error" />
 			<h2>{{ error }}</h2>
 		</div>
 
-		<!-- shares content -->
-		<div v-if="!showSharingDetailsView" class="sharingTab__content">
-			<h2 class="sharingTab__header">
-				{{ t('nmcsharing', 'Manage shares') }}
-			</h2>
+		<div v-if="!shareSent">
+			<!-- shares content -->
+			<div v-if="!loading" class="sharingPopup__content">
+				<!-- share link details -->
+				<template v-if="showShareLinkDetailsView">
+					<SharingDetailsTab :file-info="shareLinkDetailsData.fileInfo"
+						:share="shareLinkDetailsData.share"
+						:resharing-allowed-global="config.isResharingAllowed"
+						@close-sharing-details="toggleShareLinkDetailsView"
+						@save:share="addShare"
+						@remove:share="removeShare" />
+				</template>
 
-			<!-- shared with me information -->
-			<SharingEntrySimple v-if="isSharedWithMe" v-bind="sharedWithMe" class="sharing-entry__reshare" />
+				<div v-else>
+					<h2 class="sharingPopup__header" style="margin-bottom: 0;">
+						{{ t('nmcsharing', 'Send link via E-Mail') }}
+					</h2>
 
-			<p v-if="canReshare">
-				{{ isSharedWithMe ? `${t('nmcsharing', 'Resharing is allowed')}. ` : '' }}
-				<span v-if="shares.length === 0 && linkShares.length === 0">
-					{{ t('nmcsharing', "You haven't shared your file/folder yet. Share to give others access.") }}
-				</span>
-				<span v-else>
-					{{ t('nmcsharing', 'Here you can see who has access to your file/folder.') }}
-				</span>
-			</p>
-			<p v-else>
-				{{ t('files_sharing', 'Resharing is not allowed') }}
-			</p>
+					<span class="sharingPopup__fileinfo">{{ fileInfo.name }} ⸱ {{ size }}</span>
 
-			<!-- add new share input -->
-			<SharingInput v-if="!loading && false"
-				:can-reshare="canReshare"
-				:file-info="fileInfo"
-				:link-shares="linkShares"
-				:reshare="reshare"
-				:shares="shares"
-				:is-shared-with-me="isSharedWithMe"
-				@open-sharing-details="toggleShareDetailsView"
-				@open-sharing-details-all="toggleShareDetailsViewAll" />
+					<!-- shared with me information -->
+					<SharingEntrySimple v-if="isSharedWithMe" v-bind="sharedWithMe" class="sharing-entry__reshare" />
 
-			<!-- link shares list -->
-			<SharingLinkList v-if="!loading"
-				ref="linkShareList"
-				:can-reshare="canReshare"
-				:file-info="fileInfo"
-				:shares="linkShares"
-				@open-sharing-details="toggleShareDetailsView" />
+					<!-- share details -->
+					<template v-if="showShareDetailsView">
+						<SharingPopupDetailsTab :file-info="shareDetailsData.fileInfo"
+							:share="shareDetailsData.share"
+							:share-type="shareType"
+							:resharing-allowed-global="config.isResharingAllowed"
+							@close-sharing-details="toggleShareDetailsView"
+							@save:share="saveShare" />
+					</template>
 
-			<!-- other shares list -->
-			<SharingList v-if="!loading && canReshare"
-				ref="shareList"
-				:shares="shares"
-				:file-info="fileInfo"
-				@open-sharing-details="toggleShareDetailsView" />
+					<!-- add new share input -->
+					<SharingInput :can-reshare="canReshare"
+						:file-info="fileInfo"
+						:shares="shares"
+						:link-shares="linkShares"
+						:new-share="newShare"
+						:reshare="reshare"
+						:share-set="shareSet"
+						:is-shared-with-me="isSharedWithMe"
+						@add:share="addShare"
+						@done:share="doneSharing"
+						@open-sharing-details-all="toggleShareDetailsViewAll" />
 
-			<OpenSharingButton v-if="canReshare" :file-info="fileInfo" />
+					<div v-if="canReshare"
+						class="sharingPopup__divider">
+						<span class="sharingPopup__or">{{ t('nmcsharing', 'or') }}</span>
+					</div>
+
+					<!-- link shares list -->
+					<SharingPopupLinkList v-if="canReshare"
+						ref="linkShareList"
+						:can-reshare="canReshare"
+						:file-info="fileInfo"
+						:shares="linkShares"
+						@open-sharing-details="toggleShareLinkDetailsView"
+						@link-share-created="linkShareCreated" />
+				</div>
+			</div>
 		</div>
 
-		<!-- share details -->
+		<!-- share sent -->
 		<div v-else>
-			<SharingDetailsTab :file-info="shareDetailsData.fileInfo"
-				:share="shareDetailsData.share"
-				:share-all="shareDetailsDataAll"
-				:resharing-allowed-global="config.isResharingAllowed"
-				@close-sharing-details="toggleShareDetailsView"
-				@add:share="addShare"
-				@remove:share="removeShare" />
+			<div class="sharingPopup__success">
+				<CheckCircleOutlineIcon :size="128" />
+				<div class="message">
+					{{ t('nmcsharing', 'Link to "{fileName}" was sent.', { fileName: fileInfo.name }) }}
+				</div>
+				<div class="recipients">
+					{{ t('nmcsharing', 'To') }}: {{ recipients }}
+				</div>
+			</div>
 		</div>
-
-		<!-- additional entries, use it with cautious -->
-		<div v-for="(section, index) in sections"
-			:ref="'section-' + index"
-			:key="index"
-			class="sharingTab__additionalContent">
-			<component :is="section($refs['section-'+index], fileInfo)" :file-info="fileInfo" />
-		</div>
-	</div>
+	</NcModal>
 </template>
 <!-- eslint-disable @nextcloud/no-deprecations -->
 <script>
+import { formatFileSize } from '@nextcloud/files'
 import { generateOcsUrl } from '@nextcloud/router'
 import axios from '@nextcloud/axios'
+import NcModal from '@nextcloud/vue/dist/Components/NcModal.js'
+import CheckCircleOutlineIcon from 'vue-material-design-icons/CheckCircleOutline.vue'
 
 import Config from '../services/ConfigService.js'
 import { shareWithTitle } from '../utils/SharedWithMe.js'
@@ -109,22 +101,21 @@ import Share from '../models/Share.js'
 import ShareTypes from '../mixins/ShareTypes.js'
 import SharingEntrySimple from '../components/SharingEntrySimple.vue'
 import SharingInput from '../components/SharingInput.vue'
-import OpenSharingButton from '../components/OpenSharingButton.vue'
-
-import SharingLinkList from './SharingLinkList.vue'
-import SharingList from './SharingList.vue'
 import SharingDetailsTab from './SharingDetailsTab.vue'
+import SharingPopupDetailsTab from './SharingPopupDetailsTab.vue'
+import SharingPopupLinkList from './SharingPopupLinkList.vue'
 
 export default {
-	name: 'SharingTab',
+	name: 'SharingPopup',
 
 	components: {
+		NcModal,
+		CheckCircleOutlineIcon,
 		SharingEntrySimple,
 		SharingInput,
-		SharingLinkList,
-		SharingList,
 		SharingDetailsTab,
-		OpenSharingButton,
+		SharingPopupDetailsTab,
+		SharingPopupLinkList,
 	},
 
 	mixins: [ShareTypes],
@@ -136,20 +127,25 @@ export default {
 			error: '',
 			expirationInterval: null,
 			loading: true,
-
+			modal: false,
 			fileInfo: null,
-
 			// reshare Share object
 			reshare: null,
 			sharedWithMe: {},
 			shares: [],
 			linkShares: [],
-
+			newShare: {},
+			shareSet: false,
 			sections: OCA.Sharing.ShareTabSections.getSections(),
 			// projectsEnabled: loadState('core', 'projects_enabled', false),
-			showSharingDetailsView: false,
+			showShareDetailsView: false,
+			showShareLinkDetailsView: false,
 			shareDetailsData: {},
 			shareDetailsDataAll: [],
+			shareLinkDetailsData: {},
+			shareSent: false,
+			newLinkShare: false,
+			sharedWith: [],
 		}
 	},
 
@@ -160,16 +156,86 @@ export default {
 		 * @return {boolean}
 		 */
 		isSharedWithMe() {
+			if (this.$parent.getActiveTab() === 'sharing') {
+				this.showThisModal()
+			}
 			return Object.keys(this.sharedWithMe).length > 0
 		},
 
 		canReshare() {
 			return !!(this.fileInfo.permissions & OC.PERMISSION_SHARE)
-				|| !!(this.reshare && this.reshare.hasSharePermission && this.config.isResharingAllowed)
+                || !!(this.reshare && this.reshare.hasSharePermission && this.config.isResharingAllowed)
+		},
+
+		size() {
+			const size = parseInt(this.fileInfo.size, 10)
+			if (typeof size !== 'number' || isNaN(size) || size < 0) {
+				return this.t('files', 'Pending')
+			}
+			return formatFileSize(size, true)
+		},
+		recipients() {
+			return this.sharedWith.join(', ')
+		},
+
+		shareType() {
+			let isUser = false
+			let isEmail = false
+			for (const element of this.shareDetailsDataAll) {
+				if (element.share.type === 0) {
+					isUser = true
+				} else if (element.share.type === 4) {
+					isEmail = true
+				}
+				if (isUser && isEmail) {
+					return 'MIXED'
+				}
+			}
+			if (isUser) {
+				return 'USER'
+			}
+			return 'EMAIL'
 		},
 	},
 
 	methods: {
+		linkShareCreated() {
+			this.newLinkShare = true
+		},
+
+		showThisModal() {
+			this.modal = true
+		},
+
+		closeThisModal() {
+			this.modal = false
+
+			if (this.newLinkShare || this.shareSent) {
+				this.openSharingManage()
+			} else {
+				window.OCA.Files.Sidebar.close()
+				window.OCA.Files.Sidebar.setFullScreenMode(false)
+			}
+		},
+
+		async openSharingManage() {
+			try {
+				const fileInfoPathName = this.fileInfo.path + '/' + this.fileInfo.name
+
+				window.OCA.Files.Sidebar.close()
+				window.OCA.Files.Sidebar.setActiveTab('sharing')
+				window.OCA.Files.Sidebar.setActiveTab('sharing-manage')
+				window.OCA.Files.Sidebar.setFullScreenMode(false)
+
+				// TODO: migrate Sidebar to use a Node instead
+				window.OCA.Files.Sidebar.open(fileInfoPathName)
+
+				return null
+			} catch (error) {
+				return false
+			}
+		},
+
 		/**
 		 * Update current fileInfo and fetch new data
 		 *
@@ -234,13 +300,21 @@ export default {
 		resetState() {
 			clearInterval(this.expirationInterval)
 			this.loading = true
+			this.modal = false
 			this.error = ''
 			this.sharedWithMe = {}
 			this.shares = []
 			this.linkShares = []
-			this.showSharingDetailsView = false
+			this.newShare = {}
+			this.shareSet = false
+			this.showShareDetailsView = false
+			this.showShareLinkDetailsView = false
 			this.shareDetailsData = {}
 			this.shareDetailsDataAll = []
+			this.shareLinkDetailsData = {}
+			this.shareSent = false
+			this.newLinkShare = false
+			this.sharedWith = []
 		},
 
 		/**
@@ -308,6 +382,10 @@ export default {
 				}
 				this.reshare = share
 
+				if (this.reshare?.hasSharePermission === false) {
+					this.sharedWithMe.reshare = t('files_sharing', 'Resharing is not allowed')
+				}
+
 				// If we have an expiration date, use it as subtitle
 				// Refresh the status every 10s and clear if expired
 				// eslint-disable-next-line no-undef
@@ -335,17 +413,32 @@ export default {
 
 		/**
 		 * Add a new share into the shares list
+		 * and the share details data
+		 *
+		 * @param {Share} share the share to add to the array
+		 */
+		saveShare(share) {
+			this.shareDetailsData.share = share
+			this.newShare = share
+			this.shareSet = true
+			this.showShareDetailsView = false
+		},
+
+		/**
+		 * Add a new share into the shares list
 		 * and return the newly created share component
 		 *
 		 * @param {Share} share the share to add to the array
 		 * @param {Function} [resolve] a function to run after the share is added and its component initialized
 		 */
-		addShare(share, resolve = () => { }) {
+		 addShare(share, resolve = () => { }) {
 			// only catching share type MAIL as link shares are added differently
 			// meaning: not from the ShareInput
 			if (share.type === this.SHARE_TYPES.SHARE_TYPE_EMAIL) {
+				this.sharedWith.push(share.shareWith)
 				this.linkShares.unshift(share)
 			} else {
+				this.sharedWith.push(share.shareWithDisplayName)
 				this.shares.unshift(share)
 			}
 			this.awaitForShare(share, resolve)
@@ -387,44 +480,76 @@ export default {
 			})
 		},
 
-		toggleShareDetailsView(eventData) {
+		doneSharing() {
+			this.shareSent = true
+		},
+
+		toggleShareDetailsView() {
+			this.showShareDetailsView = !this.showShareDetailsView
+		},
+
+		toggleShareLinkDetailsView(eventData) {
 			if (eventData) {
-				this.shareDetailsData = eventData
+				this.shareLinkDetailsData = eventData
 			}
-			this.showSharingDetailsView = !this.showSharingDetailsView
+			this.showShareLinkDetailsView = !this.showShareLinkDetailsView
 		},
 
 		toggleShareDetailsViewAll(eventData) {
 			if (eventData) {
-				this.shareDetailsData = eventData[0]
+				if (!this.shareSet) {
+					this.shareDetailsData = eventData[0]
+				}
 				this.shareDetailsDataAll = eventData
 			}
-			this.showSharingDetailsView = !this.showSharingDetailsView
+			this.showShareDetailsView = !this.showShareDetailsView
 		},
+
+		formatFileSize,
 	},
 }
 </script>
 
 <style scoped lang="scss">
 .emptyContentWithSections {
-	margin: 1rem auto;
+    margin: 1rem auto;
 }
 
-.sharingTab__header {
-	line-height: initial;
+.sharingPopup__header {
+    line-height: initial;
 }
 
-.sharingTab {
-	&__content {
-		padding: 0px;
+.sharingPopup {
+    &__content {
+        padding: 1.5rem;
+    }
 
-		p, .sharing-entry__noshare {
-			margin-bottom: 1rem
-		}
-	}
+    &__info {
+        display: block;
+        margin-bottom: 1rem
+    }
 
-	&__additionalContent {
-		margin: 3rem 0;
-	}
+    &__additionalContent {
+        margin: 3rem 0;
+    }
+
+    &__fileinfo {
+        font-size: 14px;
+        margin: 1rem 0;
+    }
+
+    &__divider {
+        border-bottom: 1px solid var(--color-border);
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+
+    &__or {
+        background-color: var(--telekom-color-background-surface);
+        bottom: -0.75rem;
+        font-size: 14px;
+        padding: 0.75rem;
+        position: relative;
+    }
 }
 </style>

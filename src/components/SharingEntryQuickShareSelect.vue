@@ -1,15 +1,21 @@
 <template>
 	<div ref="quickShareDropdownContainer"
-		:class="{ 'active': showDropdown, 'share-select': true, 'disabled': !isPermissionEditAllowed }">
-		<span :id="dropdownId"
+		:class="{ 'active': showDropdown, 'share-select': true }">
+		<button :id="dropdownId"
 			class="trigger-text"
+			tabindex="0"
 			:aria-expanded="showDropdown"
 			:aria-haspopup="true"
 			aria-label="Quick share options dropdown"
-			@click="toggleDropdown">
+			@click="openSharingDetails">
+			<EyeIcon v-if="canView" :size="16" />
+			<PencilIcon v-if="canEdit" :size="16" />
+			<UploadIcon v-if="fileDrop" :size="16" />
 			{{ selectedOption }}
-			<DropdownIcon :size="15" />
-		</span>
+			<LockOutlineIcon v-if="hasPassword" :size="16" />
+			<CalendarMonthIcon v-if="hasExpireDate" :size="16" />
+			<ChevronRightIcon :size="18" />
+		</button>
 		<div v-if="showDropdown"
 			ref="quickShareDropdown"
 			class="share-select-dropdown"
@@ -30,7 +36,12 @@
 </template>
 
 <script>
-import DropdownIcon from 'vue-material-design-icons/TriangleSmallDown.vue'
+import EyeIcon from 'vue-material-design-icons/EyeCircleOutline.vue'
+import PencilIcon from 'vue-material-design-icons/Pencil.vue'
+import UploadIcon from 'vue-material-design-icons/Upload.vue'
+import LockOutlineIcon from 'vue-material-design-icons/LockOutline.vue'
+import CalendarMonthIcon from 'vue-material-design-icons/CalendarMonth.vue'
+import ChevronRightIcon from 'vue-material-design-icons/ChevronRight.vue'
 import SharesMixin from '../mixins/SharesMixin.js'
 import ShareDetails from '../mixins/ShareDetails.js'
 import ShareTypes from '../mixins/ShareTypes.js'
@@ -45,7 +56,12 @@ import { createFocusTrap } from 'focus-trap'
 
 export default {
 	components: {
-		DropdownIcon,
+		EyeIcon,
+		PencilIcon,
+		UploadIcon,
+		LockOutlineIcon,
+		CalendarMonthIcon,
+		ChevronRightIcon,
 	},
 	mixins: [SharesMixin, ShareDetails, ShareTypes],
 	props: {
@@ -68,17 +84,32 @@ export default {
 			selectedOption: '',
 			showDropdown: this.toggle,
 			focusTrap: null,
+			fileDrop: false,
+			canEdit: false,
+			canView: false,
 		}
 	},
 	computed: {
+		hasExpireDate() {
+			if (this.share.expireDate) {
+				return true
+			}
+			return false
+		},
+		hasPassword() {
+			if (this.share.password) {
+				return true
+			}
+			return false
+		},
 		canViewText() {
-			return t('nmcsharing', 'Read only')
+			return t('nmcsharing', 'Anyone with the link can only view')
 		},
 		canEditText() {
-			return t('nmcsharing', 'Can edit')
+			return t('nmcsharing', 'Anyone with the link can edit')
 		},
 		fileDropText() {
-			return t('nmcsharing', 'File drop')
+			return t('nmcsharing', 'Anyone with the link can file drop')
 		},
 		customPermissionsText() {
 			return t('files_sharing', 'Custom permissions')
@@ -90,10 +121,13 @@ export default {
 				permissions = this.share.permissions & ~ATOMIC_PERMISSIONS.SHARE
 			}
 			if (permissions === BUNDLED_PERMISSIONS.READ_ONLY) {
+				this.setCanView(true)
 				return this.canViewText
 			} else if (permissions === BUNDLED_PERMISSIONS.ALL || permissions === BUNDLED_PERMISSIONS.ALL_FILE) {
+				this.setCanEdit(true)
 				return this.canEditText
 			} else if (permissions === BUNDLED_PERMISSIONS.FILE_DROP) {
+				this.setFileDrop(true)
 				return this.fileDropText
 			}
 
@@ -119,13 +153,22 @@ export default {
 		dropDownPermissionValue() {
 			switch (this.selectedOption) {
 			case this.canEditText:
+				this.setCanView(true)
+				this.setCanEdit(true)
+				this.setFileDrop(false)
 				return this.isFolder ? BUNDLED_PERMISSIONS.ALL : BUNDLED_PERMISSIONS.ALL_FILE
 			case this.fileDropText:
+				this.setCanView(false)
+				this.setCanEdit(false)
+				this.setFileDrop(true)
 				return BUNDLED_PERMISSIONS.FILE_DROP
 			// case this.customPermissionsText:
 			// return 'custom'
 			case this.canViewText:
 			default:
+				this.setCanView(true)
+				this.setCanEdit(false)
+				this.setFileDrop(false)
 				return BUNDLED_PERMISSIONS.READ_ONLY
 			}
 		},
@@ -148,6 +191,18 @@ export default {
 		window.removeEventListener('click', this.handleClickOutside)
 	},
 	methods: {
+		setCanView(value) {
+			this.canView = value
+		},
+
+		setCanEdit(value) {
+			this.canEdit = value
+		},
+
+		setFileDrop(value) {
+			this.fileDrop = value
+		},
+
 		toggleDropdown() {
 			if (!this.isPermissionEditAllowed) {
 				return
@@ -174,6 +229,9 @@ export default {
 			this.share.permissions = this.dropDownPermissionValue
 			this.queueUpdate('permissions')
 			this.showDropdown = false
+		},
+		openSharingDetails() {
+			this.$emit('open-sharing-details')
 		},
 		initializeComponent() {
 			this.selectedOption = this.preSelectedOption
@@ -240,6 +298,19 @@ export default {
 		font-size: 14px;
 		gap: 2px;
 		color: var(--color-primary-element);
+		cursor: pointer;
+
+		background: none;
+		border: none;
+		border-radius: 0;
+		margin: 0;
+		min-height: 1.5rem;
+		padding: 0;
+		text-align: left;
+
+		&:hover {
+			text-decoration: underline;
+		}
 	}
 
 	.share-select-dropdown {

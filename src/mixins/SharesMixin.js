@@ -40,6 +40,7 @@ import {
 	BUNDLED_PERMISSIONS,
 } from '../lib/SharePermissionsToolBox.js'
 import { COLLABORA_MIME_TYPES } from '../utils/CollaboraMimeTypes.js'
+import { MEDIA_MIME_TYPES } from '../utils/MediaMimeTypes.js'
 
 export default {
 	mixins: [SharesRequests, ShareTypes],
@@ -147,7 +148,7 @@ export default {
 		},
 		isPermissionEditAllowed() {
 			if (this.fileInfo.type === 'dir') return true
-			return !this.isPublicShare || COLLABORA_MIME_TYPES.includes(this.fileInfo.mimetype)
+			return !this.isPublicShare || COLLABORA_MIME_TYPES.includes(this.fileInfo.mimetype) || MEDIA_MIME_TYPES.includes(this.fileInfo.mimetype)
 		},
 	},
 
@@ -250,7 +251,7 @@ export default {
 				this.loading = true
 				this.open = false
 				await this.deleteShare(this.share.id)
-				console.debug('Share deleted', this.share.id)
+				// console.debug('Share deleted', this.share.id)
 				const message = this.share.itemType === 'file'
 					? t('files_sharing', 'File "{path}" has been unshared', { path: this.share.path })
 					: t('files_sharing', 'Folder "{path}" has been unshared', { path: this.share.path })
@@ -318,11 +319,11 @@ export default {
 						this.saving = false
 					}
 				})
-				return
+
 			}
 
 			// This share does not exists on the server yet
-			console.debug('Updated local share', this.share)
+			// console.debug('Updated local share', this.share)
 		},
 
 		/**

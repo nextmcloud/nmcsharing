@@ -21,15 +21,15 @@
   -->
 
 <template>
-	<li class="sharing-entry">
+	<div class="sharing-entry">
 		<span class="icon icon-upload-to-cloud" />
 		<div class="sharing-entry__desc">
-			<span class="sharing-entry__title">{{ title }}</span>
+			<span class="sharing-entry__title">{{ title }}. <span v-if="reshare">{{ reshare }}.</span></span>
 			<p v-if="subtitle">
 				{{ subtitle }}
 			</p>
 		</div>
-	</li>
+	</div>
 </template>
 
 <script>
@@ -47,6 +47,10 @@ export default {
 			type: String,
 			default: '',
 		},
+		reshare: {
+			type: String,
+			default: '',
+		},
 	},
 }
 </script>
@@ -55,21 +59,26 @@ export default {
 .sharing-entry {
 	display: flex;
 	align-items: start;
+
 	.icon {
-		min-width: 30px;
+		min-width: 2rem;
 		min-height: 1.2rem;
 		filter: invert(61%) sepia(98%) saturate(4546%) hue-rotate(181deg) brightness(99%) contrast(109%);
+		margin-top: 1rem;
 	}
+
 	&__desc {
-		padding: 0 8px 16px;
+		padding: 1rem 0.5rem;
 		line-height: 1.2em;
 		position: relative;
 		flex: 1 1;
 		min-width: 0;
+
 		p {
 			color: var(--color-text-maxcontrast);
 		}
 	}
+
 	&__title {
 		white-space: nowrap;
 		text-overflow: ellipsis;

@@ -41,7 +41,8 @@ class BeforeTemplateRenderedListener implements IEventListener {
 
 		// you can add additional styles, links and scripts before rendering
 		// keep src for future use:   \OCP\Util::addScript("nmctheme", "../dist/l10nappender");
-		\OCP\Util::addScript("nmcsharing", "nmcsharing-sharing");
+		\OCP\Util::addScript("nmcsharing", "nmcsharing-tab");
+		\OCP\Util::addScript("nmcsharing", "nmcsharing-popup");
 		\OCP\Util::addScript("nmcsharing", "nmcsharing-action");
 	}
 }

@@ -37,16 +37,16 @@ export default {
 		 *
 		 * @param {object} data destructuring object
 		 * @param {string} data.path  path to the file/folder which should be shared
+		 * @param {number} [data.permissions]  1 = read; 2 = update; 4 = create; 8 = delete; 16 = share; 31 = all (default: 31, for public shares: 1)
 		 * @param {number} data.shareType  0 = user; 1 = group; 3 = public link; 6 = federated cloud share
 		 * @param {string} data.shareWith  user/group id with which the file should be shared (optional for shareType > 1)
 		 * @param {boolean} [data.publicUpload]  allow public upload to a public shared folder
 		 * @param {string} [data.password]  password to protect public link Share with
-		 * @param {number} [data.permissions]  1 = read; 2 = update; 4 = create; 8 = delete; 16 = share; 31 = all (default: 31, for public shares: 1)
 		 * @param {boolean} [data.sendPasswordByTalk] send the password via a talk conversation
 		 * @param {string} [data.expireDate] expire the shareautomatically after
 		 * @param {string} [data.label] custom label
+		 * @param {string} [data.note] note to sharee
 		 * @param {string} [data.attributes] Share attributes encoded as json
-		 * @param data.note
 		 * @return {Share} the new share
 		 * @throws {Error}
 		 */

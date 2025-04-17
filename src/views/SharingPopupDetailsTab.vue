@@ -1,8 +1,8 @@
 <template>
-	<div class="sharingTabDetailsView">
+	<div class="sharingPopupDetailsView">
 		<span class="header-permissions">
-			<ChevronLeftIcon :size="24" class="back-button" @click="$emit('close-sharing-details')" />
-			<h2 class="sharingTabDetailsView__header" style="margin-bottom: 0;">
+			<ChevronLeftIcon :size="20" class="back-button" @click="$emit('close-sharing-details')" />
+			<h2 class="sharingTabDetailsView__header">
 				{{ t('nmcsharing', 'Permissions') }}
 			</h2>
 		</span>
@@ -43,6 +43,7 @@
 				</span>
 				<NcCheckboxRadioSwitch v-if="allowsFileDrop"
 					:checked.sync="sharingPermission"
+					:disabled="isMixedShare"
 					:value="bundledPermissions.FILE_DROP.toString()"
 					name="sharing_permission_radio"
 					type="radio">
@@ -51,6 +52,9 @@
 				<p v-if="allowsFileDrop" class="sharing_permission-desc">
 					{{ t('nmcsharing', 'With File drop, only uploading is allowed. Only you can see files and folders that have been uploaded.') }}
 				</p>
+				<p v-if="isMixedShare" class="sharing_permission-desc">
+					{{ t('nmcsharing', 'Please note that file drop is not available for internal sharing, i.e. sharing with other MagentaCLOUD users.') }}
+				</p>
 			</div>
 		</div>
 		<div class="sharingTabDetailsView__advanced-control">
@@ -58,31 +62,23 @@
 		</div>
 		<div class="sharingTabDetailsView__advanced">
 			<section>
-				<NcCheckboxRadioSwitch v-if="isPublicShare"
+				<NcCheckboxRadioSwitch v-if="(isPublicShare || isMixedShare) && false"
 					:disabled="canChangeHideDownload"
-					:checked.sync="share.hideDownload"
+					:checked.sync="mutableShare.hideDownload"
 					@update:checked="queueUpdate('hideDownload')">
 					{{ t('files_sharing', 'Hide download') }}
 				</NcCheckboxRadioSwitch>
-				<template v-if="isPublicShare">
+				<template v-if="isPublicShare || isMixedShare">
 					<NcCheckboxRadioSwitch :checked.sync="isPasswordProtected" :disabled="isPasswordEnforced">
-						{{ passwordHint }}
+						{{ t('nmcsharing', 'Set password') }}
 					</NcCheckboxRadioSwitch>
 					<NcPasswordField v-if="isPasswordProtected"
 						id="share-password-input"
-						:value="hasUnsavedPassword ? mutableShare.password : ''"
+						:value="mutableShare.password"
 						:error="passwordError"
 						:helper-text="errorPasswordLabel"
 						:required="isPasswordEnforced"
 						@update:value="onPasswordChange" />
-
-					<!-- Migrate icons and remote -> icon="icon-info"-->
-					<span v-if="isEmailShareType && passwordExpirationTime" icon="icon-info">
-						{{ t('files_sharing', 'Password expires {passwordExpirationTime}', { passwordExpirationTime }) }}
-					</span>
-					<span v-else-if="isEmailShareType && passwordExpirationTime !== null" icon="icon-error">
-						{{ t('files_sharing', 'Password expired') }}
-					</span>
 				</template>
 				<NcCheckboxRadioSwitch :checked.sync="hasExpirationDate" :disabled="isExpiryDateEnforced">
 					{{ isExpiryDateEnforced
@@ -91,24 +87,25 @@
 				</NcCheckboxRadioSwitch>
 				<NcDateTimePickerNative v-if="hasExpirationDate"
 					id="share-date-picker"
-					:value="new Date(share.expireDate ?? defaultExpiryDate)"
+					:value="new Date(mutableShare.expireDate)"
 					:min="dateTomorrow"
+					:max="dateMaxEnforced"
 					:hide-label="true"
+					:disabled="isExpiryDateEnforced"
 					:label="t('files_sharing', 'Expiration date')"
 					:placeholder="t('files_sharing', 'Expiration date')"
 					type="date"
-					@input="onExpirationChange" />
-				<NcCheckboxRadioSwitch v-if="isEmailShare" :checked.sync="writeNoteToRecipientIsChecked">
+					@input="onExpirationDateChange" />
+				<NcCheckboxRadioSwitch v-if="isEmailShare || isMixedShare" :checked.sync="writeNoteToRecipientIsChecked">
 					{{ t('files_sharing', 'Note to recipient') }}
 				</NcCheckboxRadioSwitch>
-				<template v-if="writeNoteToRecipientIsChecked && isEmailShare">
+				<template v-if="writeNoteToRecipientIsChecked && (isEmailShare || isMixedShare)">
 					<textarea :value="mutableShare.note" @input="mutableShare.note = $event.target.value" />
 				</template>
-				<DownloadLimit v-if="(isLinkShare || isEmailShare) && !isFolder"
-					:share="share"
-					:file-info="fileInfo" />
-				<NcCheckboxRadioSwitch v-if="!isPublicShare && resharingAllowedGlobal"
-					:checked.sync="allowResharingIsChecked">
+				<NcCheckboxRadioSwitch v-if="(!isPublicShare || isMixedShare) && resharingAllowedGlobal"
+					:disabled="isMixedShare"
+					:checked.sync="allowResharingIsChecked"
+					:title="t('nmcsharing', 'Please note that resharing is only available for internal sharing, i.e. sharing with other MagentaCLOUD users.')">
 					{{ t('nmcsharing', 'Allow resharing') }}
 				</NcCheckboxRadioSwitch>
 			</section>
@@ -116,13 +113,13 @@
 
 		<div class="sharingTabDetailsView__footer">
 			<div class="button-group">
-				<NcButton @click="$emit('close-sharing-details')">
+				<NcButton class="button-details" @click="$emit('close-sharing-details')">
 					{{ t('files_sharing', 'Cancel') }}
 				</NcButton>
 				<NcButton class="button-details"
 					type="primary"
 					:disabled="passwordError"
-					@click="saveShare">
+					@click="saveShareSettings">
 					{{ shareButtonText }}
 				</NcButton>
 			</div>
@@ -139,12 +136,8 @@ import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
 import NcDateTimePickerNative from '@nextcloud/vue/dist/Components/NcDateTimePickerNative.js'
 import NcCheckboxRadioSwitch from '@nextcloud/vue/dist/Components/NcCheckboxRadioSwitch.js'
 import NcPasswordField from '@nextcloud/vue/dist/Components/NcPasswordField.js'
-import EmailIcon from 'vue-material-design-icons/Email.vue'
-import LinkIcon from 'vue-material-design-icons/Link.vue'
 
 import GeneratePassword from '../utils/GeneratePassword.js'
-import Config from '../services/ConfigService.js'
-import Share from '../models/Share.js'
 import ShareRequests from '../mixins/ShareRequests.js'
 import ShareTypes from '../mixins/ShareTypes.js'
 import SharesMixin from '../mixins/SharesMixin.js'
@@ -154,12 +147,10 @@ import { formatFileSize } from '@nextcloud/files'
 import {
 	ATOMIC_PERMISSIONS,
 	BUNDLED_PERMISSIONS,
-	hasPermissions,
 } from '../lib/SharePermissionsToolBox.js'
-import DownloadLimit from '../components/DownloadLimit.vue'
 
 export default {
-	name: 'SharingDetailsTab',
+	name: 'SharingPopupDetailsTab',
 	components: {
 		EyeIcon,
 		PencilIcon,
@@ -168,7 +159,6 @@ export default {
 		NcDateTimePickerNative,
 		NcCheckboxRadioSwitch,
 		NcPasswordField,
-		DownloadLimit,
 	},
 	mixins: [ShareTypes, ShareRequests, SharesMixin],
 	props: {
@@ -184,9 +174,9 @@ export default {
 			type: Object,
 			required: true,
 		},
-		shareAll: {
-			type: Array,
-			required: false,
+		shareType: {
+			type: String,
+			required: true,
 		},
 		resharingAllowedGlobal: {
 			type: Boolean,
@@ -195,16 +185,15 @@ export default {
 	},
 	data() {
 		return {
-			config: new Config(),
-			writeNoteToRecipientIsChecked: false,
 			allowResharingIsChecked: this.share.hasSharePermission,
-			sharingPermission: BUNDLED_PERMISSIONS.ALL.toString(),
-			bundledPermissions: BUNDLED_PERMISSIONS,
 			passwordError: false,
-			passwordIsChecked: false,
+			writeNoteToRecipientIsChecked: false,
+			bundledPermissions: BUNDLED_PERMISSIONS,
+			sharingPermission: BUNDLED_PERMISSIONS.ALL.toString(),
 			mutableShare: {
 				note: this.share.note,
 				password: this.share.password,
+				expireDate: this.share.expireDate,
 				label: this.share.label,
 			},
 		}
@@ -273,7 +262,7 @@ export default {
 			},
 		},
 		/**
-		 * Can the share download files or only view them ?
+		 * Can the sharee download files or only view them ?
 		 */
 		canDownload: {
 			get() {
@@ -300,14 +289,20 @@ export default {
 		 *
 		 * @return {boolean}
 		 */
-		 hasExpirationDate: {
+		hasExpirationDate: {
 			get() {
-				return this.isValidShareAttribute(this.share.expireDate)
+				return this.isValidShareAttribute(this.mutableShare.expireDate)
 			},
 			set(enabled) {
-				this.share.expireDate = enabled
-					? this.formatDateToString(this.defaultExpiryDate)
-					: ''
+				if (enabled) {
+					if (this.share.expireDate) {
+						this.mutableShare.expireDate = this.share.expireDate
+					} else {
+						this.mutableShare.expireDate = this.formatDateToString(this.defaultExpiryDate)
+					}
+				} else {
+					this.mutableShare.expireDate = ''
+				}
 			},
 		},
 		/**
@@ -317,10 +312,19 @@ export default {
 		 */
 		isPasswordProtected: {
 			get() {
-				return this.config.enforcePasswordForPublicLink || !!this.mutableShare.password
+				return this.config.enforcePasswordForPublicLink
+					|| !!this.mutableShare.password
 			},
 			async set(enabled) {
-				this.mutableShare.password = enabled ? await GeneratePassword() : ''
+				if (enabled) {
+					if (this.share.password) {
+						this.mutableShare.password = this.share.password
+					} else {
+						this.mutableShare.password = await GeneratePassword()
+					}
+				} else {
+					this.mutableShare.password = ''
+				}
 				this.passwordError = false
 			},
 		},
@@ -339,25 +343,6 @@ export default {
 				return new Date(new Date().setDate(new Date().getDate() + 1 + this.config.defaultRemoteExpireDate))
 			}
 			return null
-		},
-		/**
-		 * @return {boolean}
-		 */
-		isSetDownloadButtonVisible() {
-			const allowedMimetypes = [
-				// Office documents
-				'application/msword',
-				'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-				'application/vnd.ms-powerpoint',
-				'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-				'application/vnd.ms-excel',
-				'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-				'application/vnd.oasis.opendocument.text',
-				'application/vnd.oasis.opendocument.spreadsheet',
-				'application/vnd.oasis.opendocument.presentation',
-			]
-
-			return this.isFolder || allowedMimetypes.includes(this.fileInfo.mimetype)
 		},
 		isPasswordEnforced() {
 			return this.isPublicShare && this.config.enforcePasswordForPublicLink
@@ -390,76 +375,19 @@ export default {
 		isRemoteShare() {
 			return this.share.type === this.SHARE_TYPES.SHARE_TYPE_REMOTE_GROUP || this.share.type === this.SHARE_TYPES.SHARE_TYPE_REMOTE
 		},
+		isNewShare() {
+			return this.share.shareSet === null || this.share.shareSet === undefined || this.share.shareSet === false
+		},
 		allowsFileDrop() {
 			if (this.isFolder) {
-				if (this.share.type === this.SHARE_TYPES.SHARE_TYPE_LINK || this.share.type === this.SHARE_TYPES.SHARE_TYPE_EMAIL) {
+				if (this.share.type === this.SHARE_TYPES.SHARE_TYPE_LINK || this.share.type === this.SHARE_TYPES.SHARE_TYPE_EMAIL || this.shareType === 'MIXED') {
 					return true
 				}
 			}
 			return false
 		},
-		hasFileDropPermissions() {
-			return this.share.permissions === this.bundledPermissions.FILE_DROP
-		},
 		shareButtonText() {
-			return t('files_sharing', 'Update share')
-		},
-		/**
-		 * Can the sharer set whether the sharee can edit the file ?
-		 *
-		 * @return {boolean}
-		 */
-		canSetEdit() {
-			// If the owner revoked the permission after the resharer granted it
-			// the share still has the permission, and the resharer is still
-			// allowed to revoke it too (but not to grant it again).
-			return (this.fileInfo.sharePermissions & OC.PERMISSION_UPDATE) || this.canEdit
-		},
-
-		/**
-		 * Can the sharer set whether the sharee can create the file ?
-		 *
-		 * @return {boolean}
-		 */
-		canSetCreate() {
-			// If the owner revoked the permission after the resharer granted it
-			// the share still has the permission, and the resharer is still
-			// allowed to revoke it too (but not to grant it again).
-			return (this.fileInfo.sharePermissions & OC.PERMISSION_CREATE) || this.canCreate
-		},
-
-		/**
-		 * Can the sharer set whether the sharee can delete the file ?
-		 *
-		 * @return {boolean}
-		 */
-		canSetDelete() {
-			// If the owner revoked the permission after the resharer granted it
-			// the share still has the permission, and the resharer is still
-			// allowed to revoke it too (but not to grant it again).
-			return (this.fileInfo.sharePermissions & OC.PERMISSION_DELETE) || this.canDelete
-		},
-		/**
-		 * Can the sharer set whether the sharee can reshare the file ?
-		 *
-		 * @return {boolean}
-		 */
-		canSetReshare() {
-			// If the owner revoked the permission after the resharer granted it
-			// the share still has the permission, and the resharer is still
-			// allowed to revoke it too (but not to grant it again).
-			return (this.fileInfo.sharePermissions & OC.PERMISSION_SHARE) || this.canReshare
-		},
-		/**
-		 * Can the sharer set whether the sharee can download the file ?
-		 *
-		 * @return {boolean}
-		 */
-		canSetDownload() {
-			// If the owner revoked the permission after the resharer granted it
-			// the share still has the permission, and the resharer is still
-			// allowed to revoke it too (but not to grant it again).
-			return (this.fileInfo.canDownload() || this.canDownload)
+			return t('nmcsharing', 'Accept settings')
 		},
 		// if password in mutableShare differs then it means
 		// the user deleted the original password
@@ -489,34 +417,17 @@ export default {
 				? this.share.type === this.SHARE_TYPES.SHARE_TYPE_EMAIL
 				: false
 		},
+		/**
+		 * Is the current share a mixed share ?
+		 *
+		 * @return {boolean}
+		 */
+		isMixedShare() {
+			return this.shareType === 'MIXED'
+		},
 		canChangeHideDownload() {
 			const hasDisabledDownload = (shareAttribute) => shareAttribute.key === 'download' && shareAttribute.scope === 'permissions' && shareAttribute.enabled === false
 			return this.fileInfo.shareAttributes.some(hasDisabledDownload)
-		},
-		customPermissionsList() {
-			const perms = []
-			if (hasPermissions(this.share.permissions, ATOMIC_PERMISSIONS.READ)) {
-				perms.push('read')
-			}
-			if (hasPermissions(this.share.permissions, ATOMIC_PERMISSIONS.CREATE)) {
-				perms.push('create')
-			}
-			if (hasPermissions(this.share.permissions, ATOMIC_PERMISSIONS.UPDATE)) {
-				perms.push('update')
-			}
-			if (hasPermissions(this.share.permissions, ATOMIC_PERMISSIONS.DELETE)) {
-				perms.push('delete')
-			}
-			if (hasPermissions(this.share.permissions, ATOMIC_PERMISSIONS.SHARE)) {
-				perms.push('share')
-			}
-			if (this.share.hasDownloadPermission) {
-				perms.push('download')
-			}
-			const capitalizeFirstAndJoin = array => array.map((item, index) => index === 0 ? item[0].toUpperCase() + item.substring(1) : item).join(', ')
-
-			return capitalizeFirstAndJoin(perms)
-
 		},
 		errorPasswordLabel() {
 			if (this.passwordError) {
@@ -524,14 +435,8 @@ export default {
 			}
 			return undefined
 		},
-		passwordHint() {
-			if (this.passwordIsChecked) {
-				return t('files_sharing', 'Replace current password')
-			} else {
-				return t('nmcsharing', 'Set password')
-			}
-		},
 	},
+
 	beforeMount() {
 		this.initializePermissions()
 		this.initializeAttributes()
@@ -560,14 +465,26 @@ export default {
 				this.$set(this.share, 'hasDownloadPermission', isDownloadChecked)
 			}
 		},
+
 		initializeAttributes() {
+			this.writeNoteToRecipientIsChecked = false
+			this.isPasswordProtected = false
+			this.hasExpirationDate = false
 			if (this.isValidShareAttribute(this.share.note)) {
 				this.writeNoteToRecipientIsChecked = true
 			}
 			if (this.isValidShareAttribute(this.share.password)) {
-				this.passwordIsChecked = true
+				this.isPasswordProtected = true
+			}
+			if (this.isValidShareAttribute(this.share.expireDate)) {
+				this.hasExpirationDate = true
+			}
+			if (!this.share.shareSet) {
+				this.mutableShare.expireDate = this.formatDateToString(this.defaultExpiryDate)
+				this.hasExpirationDate = true
 			}
 		},
+
 		initializePermissions() {
 			if (this.share.share_type) {
 				this.share.type = this.share.share_type
@@ -578,39 +495,46 @@ export default {
 				this.share.type = this.share.shareType
 			}
 
-			if (this.canReshare) {
-				this.sharingPermission = (this.share.permissions & ~ATOMIC_PERMISSIONS.SHARE).toString()
+			if (this.isNewShare) {
+				this.sharingPermission = BUNDLED_PERMISSIONS.READ_ONLY.toString()
 			} else {
-				this.sharingPermission = this.share.permissions.toString()
+				if (this.canReshare) {
+					this.sharingPermission = (this.share.permissions & ~ATOMIC_PERMISSIONS.SHARE).toString()
+				} else {
+					this.sharingPermission = this.share.permissions.toString()
+				}
 			}
 		},
-		async saveShare() {
+
+		async saveShareSettings() {
 			const permissionsAndAttributes = ['permissions', 'attributes', 'note', 'expireDate']
-			let publicShareAttributes = ['label', 'password', 'hideDownload']
-
-			if (!this.hasUnsavedPassword) {
-				publicShareAttributes = ['label', 'hideDownload']
-			}
-
-			if (this.isPublicShare) {
+			const publicShareAttributes = ['label', 'password', 'hideDownload']
+			if (this.isPublicShare || this.isMixedShare) {
 				permissionsAndAttributes.push(...publicShareAttributes)
 			}
 			const sharePermissionsSet = parseInt(this.sharingPermission)
+
 			this.share.permissions = sharePermissionsSet
 
 			if (!this.isFolder && this.share.permissions === BUNDLED_PERMISSIONS.ALL) {
 				// It's not possible to create an existing file.
 				this.share.permissions = BUNDLED_PERMISSIONS.ALL_FILE
 			}
+
 			// add SHARE permission if share doesn't have it, 'Allow resharing' is checked and Resharing is enabled globally
 			if (this.allowResharingIsChecked && !this.canReshare && this.resharingAllowedGlobal) {
 				this.share.permissions |= ATOMIC_PERMISSIONS.SHARE
 			// remove SHARE permission if internal share, 'Allow resharing' is unchecked and it initially had SHARE permission
-			} else if (!this.isPublicShare && this.canReshare && !this.allowResharingIsChecked) {
+			} else if ((!this.isPublicShare || this.isMixedShare) && this.canReshare && !this.allowResharingIsChecked) {
 				this.share.permissions = this.share.permissions & ~ATOMIC_PERMISSIONS.SHARE
 			}
+
 			if (!this.writeNoteToRecipientIsChecked) {
 				this.mutableShare.note = ''
+			}
+
+			if (!this.hasExpirationDate) {
+				this.mutableShare.expireDate = ''
 			}
 
 			if (this.isPasswordProtected) {
@@ -623,58 +547,15 @@ export default {
 				this.mutableShare.password = ''
 			}
 
-			if (!this.hasExpirationDate) {
-				this.share.expireDate = ''
-			}
+			this.share.label = this.mutableShare.label
+			this.share.password = this.mutableShare.password
+			this.share.expireDate = this.mutableShare.expireDate
+			this.share.note = this.mutableShare.note
+			this.share.shareSet = true
 
-			this.queueUpdate(...permissionsAndAttributes)
-
-			this.$emit('close-sharing-details')
+			this.$emit('save:share', this.share)
 		},
-		/**
-		 * Process the new share request
-		 *
-		 * @param {object} value the multiselect option
-		 * @param {object} fileInfo file data
-		 * @param {Config} config instance configs
-		 */
-		async addShare(value, fileInfo, config) {
-			// Clear the displayed selection
-			this.value = null
 
-			// handle externalResults from OCA.Sharing.ShareSearch
-			if (value.handler) {
-				const share = await value.handler(this)
-				this.$emit('add:share', new Share(share))
-				return true
-			}
-
-			// this.loading = true // Are we adding loaders the new share flow?
-			// console.debug('Adding a new share from the input for', value)
-			try {
-				const path = (fileInfo.path + '/' + fileInfo.name).replace('//', '/')
-				const share = await this.createShare({
-					path,
-					shareType: value.shareType,
-					shareWith: value.shareWith,
-					permissions: value.permissions,
-					attributes: JSON.stringify(fileInfo.shareAttributes),
-					...(value.note ? { note: value.note } : {}),
-					...(value.password ? { password: value.password } : {}),
-					...(value.expireDate ? { expireDate: value.expireDate } : {}),
-					...(value.label ? { label: value.label } : {}),
-				})
-				return share
-			} catch (error) {
-				console.error('Error while adding new share', error)
-			} finally {
-				// this.loading = false // No loader here yet
-			}
-		},
-		async removeShare() {
-			await this.onDelete()
-			this.$emit('close-sharing-details')
-		},
 		/**
 		 * Update newPassword values
 		 * of share. If password is set but not newPassword
@@ -692,8 +573,22 @@ export default {
 			}
 			this.passwordError = !this.isValidShareAttribute(password)
 			this.mutableShare.password = password
-			this.passwordModified = true
 		},
+
+		/**
+		 * Save given value to expireDate and trigger queueUpdate
+		 *
+		 * @param {Date} date
+		 */
+		 onExpirationDateChange(date) {
+			try {
+				// Date.UTC marks years between 0 and 99 as '1900 + year' forcing error and incorrect date value
+				// thus we need to skip formatting while user is typing year in the input field
+				if (date.getFullYear() <= 99) return
+				this.mutableShare.expireDate = this.formatDateToString(new Date(date))
+			} catch (error) {}
+		},
+
 		isValidShareAttribute(value) {
 			if ([null, undefined].includes(value)) {
 				return false
@@ -705,17 +600,6 @@ export default {
 
 			return true
 		},
-		getShareTypeIcon(type) {
-			switch (type) {
-			case this.SHARE_TYPES.SHARE_TYPE_LINK:
-				return LinkIcon
-			case this.SHARE_TYPES.SHARE_TYPE_EMAIL:
-				return EmailIcon
-			default:
-				return null // Or a default icon component if needed
-			}
-		},
-
 		formatFileSize,
 	},
 }
@@ -732,12 +616,11 @@ export default {
 		padding: 4px;
 
 		&:hover {
-			color: var(--telekom-color-primary-hovered);
-			background-color: initial;
-			cursor: pointer;
-		}
+				color: var(--telekom-color-primary-hovered);
+				background-color: initial;
+				cursor: pointer;
+			}
 	}
-
 }
 
 .checkbox-text {
@@ -750,12 +633,16 @@ export default {
 	}
 }
 
-.sharingTabDetailsView {
-	display: flex;
-	flex-direction: column;
-	align-items: flex-start;
-	padding: 1rem;
-	padding-top: 0;
+.sharingPopupDetailsView {
+    padding: 1.5rem;
+    position: absolute;
+    z-index: 10;
+    background: var(--telekom-color-background-surface);
+    top: 0;
+    left: 0;
+    min-width: calc(100% - 3rem);
+    min-height: calc(100% - 3rem);
+	border-radius: var(--border-radius-large);
 
 	.sharingPopup__fileinfo {
 		color: var(--telekom-color-ui-regular);
@@ -841,6 +728,10 @@ export default {
 			gap: 1rem;
 			justify-content: end;
 			margin-top: 1rem;
+
+			.button-details {
+				padding: 0 1.5rem !important;
+			}
 		}
 	}
 

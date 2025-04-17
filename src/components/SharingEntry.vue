@@ -22,19 +22,12 @@
 
 <template>
 	<li class="sharing-entry">
-		<NcAvatar :is-no-user="true"
-			class="sharing-entry__avatar">
-			<template #icon>
-				<span class="icon icon-upload-to-cloud" />
-			</template>
-		</NcAvatar>
-
-		<div class="sharing-entry__summary" @click.prevent="toggleQuickShareSelect">
+		<div class="sharing-entry__desc" @click.prevent="toggleQuickShareSelect">
 			<component :is="share.shareWithLink ? 'a' : 'div'"
 				:title="tooltip"
 				:aria-label="tooltip"
 				:href="share.shareWithLink"
-				class="sharing-entry__desc">
+				class="sharing-entry__title">
 				<span>{{ title }}<span v-if="!isUnique" class="sharing-entry__desc-unique"> ({{
 					share.shareWithDisplayNameUnique }})</span></span>
 				<p v-if="hasStatus">
@@ -47,39 +40,25 @@
 				:toggle="showDropdown"
 				@open-sharing-details="openShareDetailsForCustomSettings(share)" />
 		</div>
-		<NcActions class="sharing-entry__actions"
-			menu-align="right"
-			:force-menu="true"
-			:open.sync="open"
-			@close="onMenuClose">
-			<template v-if="share">
-				<template v-if="share.canEdit && canReshare">
-					<NcActionButton icon="icon-edit"
-						:disabled="saving"
-						@click.prevent="openSharingDetails(share)">
-						{{ t('nmcsharing', 'Advanced permissions') }}
-					</NcActionButton>
-				</template>
-				<NcActionButton v-if="share.canDelete"
-					icon="icon-delete"
-					:disabled="saving"
-					@click.prevent="onDelete">
-					{{ t('files_sharing', 'Unshare') }}
-				</NcActionButton>
+
+		<NcButton v-if="share.canDelete"
+			:disabled="saving"
+			:title="t('files_sharing', 'Delete')"
+			@click.prevent="onDelete">
+			<template #icon>
+				<span class="icon icon-delete" />
 			</template>
-		</NcActions>
+			<template #default>
+				{{ t('files_sharing', 'Delete') }}
+			</template>
+		</NcButton>
 	</li>
 </template>
 
 <script>
-import NcSelect from '@nextcloud/vue/dist/Components/NcSelect.js'
-import NcAvatar from '@nextcloud/vue/dist/Components/NcAvatar.js'
-import NcActions from '@nextcloud/vue/dist/Components/NcActions.js'
-import NcActionButton from '@nextcloud/vue/dist/Components/NcActionButton.js'
-import DotsHorizontalIcon from 'vue-material-design-icons/DotsHorizontal.vue'
 
+import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
 import QuickShareSelect from './SharingEntryQuickShareSelect.vue'
-
 import SharesMixin from '../mixins/SharesMixin.js'
 import ShareDetails from '../mixins/ShareDetails.js'
 
@@ -87,11 +66,7 @@ export default {
 	name: 'SharingEntry',
 
 	components: {
-		NcAvatar,
-		NcActions,
-		NcActionButton,
-		DotsHorizontalIcon,
-		NcSelect,
+		NcButton,
 		QuickShareSelect,
 	},
 
@@ -175,14 +150,16 @@ export default {
 .sharing-entry {
 	display: flex;
 	align-items: center;
-	height: 44px;
+	min-height: 2rem;
+	justify-content: flex-end;
 
 	&__desc {
 		display: flex;
 		flex-direction: column;
 		justify-content: space-between;
-		padding-bottom: 0;
-		line-height: 1.2em;
+		padding: 0.5rem;
+		line-height: 1rem;
+		margin-right: auto;
 
 		p {
 			color: var(--color-text-maxcontrast);
@@ -193,13 +170,50 @@ export default {
 		}
 	}
 
-	&__summary {
-		padding: 8px;
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		width: 100%;
+	&__title {
+		text-overflow: ellipsis;
+		overflow: hidden;
+		white-space: nowrap;
 	}
 
+	&:not(.sharing-entry--share) &__actions {
+		.new-share-link {
+			border-top: 1px solid var(--color-border);
+		}
+	}
+
+	::v-deep .avatar-link-share {
+		background-color: var(--color-main-background);
+	}
+
+	.sharing-entry__action--public-upload {
+		border-bottom: 1px solid var(--color-border);
+	}
+
+	&__loading {
+		width: 44px;
+		height: 44px;
+		margin: 0;
+		padding: 14px;
+		margin-left: auto;
+	}
+
+	// put menus to the left
+	// but only the first one
+	.action-item {
+		margin-left: auto;
+		~ .action-item,
+		~ .sharing-entry__loading {
+			margin-left: 0;
+		}
+	}
+
+	.icon-checkmark-color {
+		opacity: 1;
+	}
+
+	.button-vue:hover:not(:disabled) {
+		background-color: initial;
+	}
 }
 </style>

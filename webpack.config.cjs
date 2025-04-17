@@ -3,7 +3,8 @@ const webpackConfig = require('@nextcloud/webpack-vue-config')
 
 webpackConfig.entry = {
 	...webpackConfig.entry,
-	sharing: path.join(__dirname, 'src', 'files_sharing_tab.js'),
+	tab: path.join(__dirname, 'src', 'files_sharing_tab.js'),
+	popup: path.join(__dirname, 'src', 'files_sharing_popup.js'),
 	action: path.join(__dirname, 'src', 'action.ts'),
 }
 
