@@ -105,6 +105,7 @@
 					<textarea :value="mutableShare.note" @input="mutableShare.note = $event.target.value" />
 				</template>
 				<DownloadLimit v-if="(isLinkShare || isEmailShare) && !isFolder"
+					@limit-changed="handleLimitChangeEvent"
 					:share="share"
 					:file-info="fileInfo" />
 				<NcCheckboxRadioSwitch v-if="!isPublicShare && resharingAllowedGlobal"
@@ -121,7 +122,7 @@
 				</NcButton>
 				<NcButton class="button-details"
 					type="primary"
-					:disabled="passwordError"
+					:disabled="passwordError || limitError"
 					@click="saveShare">
 					{{ shareButtonText }}
 				</NcButton>
@@ -207,6 +208,7 @@ export default {
 				password: this.share.password,
 				label: this.share.label,
 			},
+			limitError: false
 		}
 	},
 
@@ -704,6 +706,9 @@ export default {
 			}
 
 			return true
+		},
+		handleLimitChangeEvent(payload) {
+			this.limitError = payload
 		},
 		getShareTypeIcon(type) {
 			switch (type) {
