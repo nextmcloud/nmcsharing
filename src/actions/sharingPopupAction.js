@@ -68,10 +68,10 @@ export const action = new FileAction({
 		// You need read permissions to see the sidebar
 		if ((node.permissions & Permission.READ) !== 0) {
 			setTimeout(() => {
-				const currentUrl = window.location.search;
+				const currentUrl = window.location.search
 
-				if(currentUrl.includes('popup')) {
-					document.querySelector('#app-sidebar-vue').style.width = '0%';
+				if (currentUrl.includes('popup')) {
+					document.querySelector('#app-sidebar-vue').style.width = '0%'
 				}
 			})
 			window.OCA.Files.Sidebar.close()

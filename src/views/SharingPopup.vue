@@ -215,8 +215,7 @@ export default {
 				this.openSharingManage()
 			} else {
 				window.OCA.Files.Sidebar.close()
-				currentUrl.includes('openfile') ? 
-					window.OCA.Files.Sidebar.setFullScreenMode(true) : window.OCA.Files.Sidebar.setFullScreenMode(false)
+				currentUrl.includes('openfile') ? window.OCA.Files.Sidebar.setFullScreenMode(true) : window.OCA.Files.Sidebar.setFullScreenMode(false)
 			}
 		},
 
@@ -227,12 +226,12 @@ export default {
 				window.OCA.Files.Sidebar.close()
 				window.OCA.Files.Sidebar.setActiveTab('sharing')
 				window.OCA.Files.Sidebar.setActiveTab('sharing-manage')
-				document.querySelector('#app-sidebar-vue').style.width = 'var(--app-sidebar-width)';
-				
+				document.querySelector('#app-sidebar-vue').style.width = 'var(--app-sidebar-width)'
+
 				// set setfullscreen sidebar if opened in viewer else not
-				const currentSearch = window.location.search;
-				const isTargetSearch = (currentSearch === '?dir=/' || currentSearch === '?dir=/&popup=true');
-				isTargetSearch ? window.OCA.Files.Sidebar.setFullScreenMode(false) : window.OCA.Files.Sidebar.setFullScreenMode(true);
+				const currentSearch = window.location.search
+				const isTargetSearch = (currentSearch === '?dir=/' || currentSearch === '?dir=/&popup=true')
+				isTargetSearch ? window.OCA.Files.Sidebar.setFullScreenMode(false) : window.OCA.Files.Sidebar.setFullScreenMode(true)
 
 				// TODO: migrate Sidebar to use a Node instead
 				window.OCA.Files.Sidebar.open(fileInfoPathName)

@@ -37,9 +37,9 @@ export default {
 				window.OCA.Files.Sidebar.setActiveTab('sharing')
 				window.OCA.Files.Sidebar.setFullScreenMode(true)
 
-				const currentUrl = window.location.search;
-				if(!currentUrl.includes('openfile')) {
-					document.querySelector('#app-sidebar-vue').style.width = '0%';
+				const currentUrl = window.location.search
+				if (!currentUrl.includes('openfile')) {
+					document.querySelector('#app-sidebar-vue').style.width = '0%'
 				}
 
 				// TODO: migrate Sidebar to use a Node instead
