@@ -67,7 +67,13 @@ export const action = new FileAction({
 	async exec(node, view, dir) {
 		// You need read permissions to see the sidebar
 		if ((node.permissions & Permission.READ) !== 0) {
+			setTimeout(() => {
+				const currentUrl = window.location.search;
 
+				if(currentUrl.includes('popup')) {
+					document.querySelector('#app-sidebar-vue').style.width = '0%';
+				}
+			})
 			window.OCA.Files.Sidebar.close()
 
 			window.OCA.Files.Sidebar.setActiveTab('sharing-manage')
