@@ -94,7 +94,7 @@ export default {
 				)
 				throw error
 			} finally {
-				emit('files:config:updated', {id})
+				emit('files:config:updated', { id })
 			}
 		},
 
