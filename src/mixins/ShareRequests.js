@@ -58,6 +58,7 @@ export default {
 				}
 				const share = new Share(request.data.ocs.data)
 				emit('files_sharing:share:created', { share })
+				emit('files:config:updated', { share })
 				return share
 			} catch (error) {
 				console.error('Error while creating share', error)
@@ -92,6 +93,8 @@ export default {
 					{ type: 'error' },
 				)
 				throw error
+			} finally {
+				emit('files:config:updated', { id })
 			}
 		},
 
@@ -121,6 +124,8 @@ export default {
 				}
 				const message = error.response.data.ocs.meta.message
 				throw new Error(message)
+			} finally {
+				emit('files:config:updated', { id })
 			}
 		},
 	},
