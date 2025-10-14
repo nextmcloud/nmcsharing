@@ -51,7 +51,8 @@
 		"Deny download": "Deny download",
 		"Name, email": "Name, email",
 		"Password must be at least 6 characters long": "Password must be at least 6 characters long",
-		"Limit needs to be positive number": "Limit needs to be positive number"
+		"Limit needs to be positive number": "Limit needs to be positive number",
+		"Share label": "Your custom link label"
 	},
 	"pluralForm": "nplurals=2; plural=(n != 1);"
 }

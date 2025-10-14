@@ -58,6 +58,16 @@
 		</div>
 		<div class="sharingTabDetailsView__advanced">
 			<section>
+				<NcInputField v-if="isPublicShare"
+						id="share-label-input"
+						autocomplete="off"
+						showTrailingButton
+						:label="t('nmcsharing', 'Share label')"
+						:value.sync="mutableShare.label">
+						<template #trailing-button-icon>
+							<PencilIcon :size="16" />
+						</template>
+				</NcInputField>
 				<NcCheckboxRadioSwitch v-if="isPublicShare"
 					:disabled="canChangeHideDownload"
 					:checked.sync="share.hideDownload"
@@ -140,6 +150,7 @@ import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
 import NcDateTimePickerNative from '@nextcloud/vue/dist/Components/NcDateTimePickerNative.js'
 import NcCheckboxRadioSwitch from '@nextcloud/vue/dist/Components/NcCheckboxRadioSwitch.js'
 import NcPasswordField from '@nextcloud/vue/dist/Components/NcPasswordField.js'
+import NcInputField from '@nextcloud/vue/dist/Components/NcInputField.js'
 import EmailIcon from 'vue-material-design-icons/Email.vue'
 import LinkIcon from 'vue-material-design-icons/Link.vue'
 
@@ -169,6 +180,7 @@ export default {
 		NcDateTimePickerNative,
 		NcCheckboxRadioSwitch,
 		NcPasswordField,
+		NcInputField,
 		DownloadLimit,
 	},
 	mixins: [ShareTypes, ShareRequests, SharesMixin],

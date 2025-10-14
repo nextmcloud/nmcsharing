@@ -51,7 +51,8 @@
 		"Deny download": "Download verhindern",
 		"Name, email": "Name, E-Mail-Adresse",
 		"Password must be at least 6 characters long": "Passwort muss mindestens 6 Zeichen lang sein",
-		"Limit needs to be positive number": "Das Limit muss eine positive Zahl sein"
+		"Limit needs to be positive number": "Das Limit muss eine positive Zahl sein",
+		"Share label": "Ihre Linkbezeichnung"
 	},
 	"pluralForm": "nplurals=2; plural=(n != 1);"
 }
