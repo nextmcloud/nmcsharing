@@ -59,14 +59,14 @@
 		<div class="sharingTabDetailsView__advanced">
 			<section>
 				<NcInputField v-if="isPublicShare"
-						id="share-label-input"
-						autocomplete="off"
-						showTrailingButton
-						:label="t('nmcsharing', 'Share label')"
-						:value.sync="mutableShare.label">
-						<template #trailing-button-icon>
-							<PencilIcon :size="16" />
-						</template>
+					id="share-label-input"
+					autocomplete="off"
+					showTrailingButton
+					:label="t('nmcsharing', 'Share label')"
+					:value.sync="mutableShare.label">
+					<template #trailing-button-icon>
+						<PencilIcon :size="16" />
+					</template>
 				</NcInputField>
 				<NcCheckboxRadioSwitch v-if="isPublicShare"
 					:disabled="canChangeHideDownload"
