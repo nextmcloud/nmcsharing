@@ -1,11 +1,11 @@
 <template>
 	<div class="sharingTabDetailsView">
-		<span class="header-permissions">
+		<h2 class="header-permissions">
 			<ChevronLeftIcon :size="24" class="back-button" @click="$emit('close-sharing-details')" />
 			<h2 class="sharingTabDetailsView__header" style="margin-bottom: 0;">
 				{{ t('nmcsharing', 'Permissions') }}
 			</h2>
-		</span>
+		</h2>
 
 		<span class="sharingPopup__fileinfo">{{ fileInfo.name }} ⸱ {{ size }}</span>
 
