@@ -23,8 +23,7 @@
 <template>
 	<li :class="{'sharing-entry--share': share}" class="sharing-entry sharing-entry__link">
 		<div class="sharing-entry__desc" @click.prevent="toggleQuickShareSelect">
-			<span class="sharing-entry__title" :title="title">
-				{{ title }}
+			<span class="sharing-entry__title" :title="plainTitle" v-html="title">
 			</span>
 			<p v-if="subtitle && false">
 				{{ subtitle }}
@@ -191,6 +190,12 @@ export default {
 	},
 
 	computed: {
+
+		plainTitle() {
+			const txt = document.createElement('textarea')
+			txt.innerHTML = this.title || ''
+			return txt.value
+		},
 
 		copyText() {
 			if (this.copied && this.copySuccess) {
