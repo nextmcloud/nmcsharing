@@ -44,7 +44,8 @@ let TabInstance = null
  * @param {string} id id of tabs to be removed
  */
 function checkTabs(id) {
-	return id !== 'sharing' && id !== 'photos' && id !== 'comments' && id !== 'version_vue'
+	// return id !== 'sharing' && id !== 'photos' && id !== 'comments' && id !== 'version_vue'
+	return id !== 'sharing' && id !== 'photos' && id !== 'comments'
 }
 
 window.addEventListener('DOMContentLoaded', () => {
