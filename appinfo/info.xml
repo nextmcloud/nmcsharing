@@ -5,13 +5,13 @@
     <name>MagentaCLOUD sharing</name>
     <summary>Customisation of sharing.</summary>
     <description><![CDATA[MagentaCLOUD sharing handling with changed sidebars and views.]]></description>
-    <version>3.0.1</version>
+    <version>3.1.0</version>
     <licence>agpl</licence>
     <author mail="aleksei.efremov@t-systems.com">Aleksei Efremov</author>
     <namespace>Nmcsharing</namespace>
     <category>customization</category>
     <bugs>https://github.com/nextmcloud/nmcsharing/issues</bugs>
     <dependencies>
-        <nextcloud min-version="27" max-version="31"/>
+        <nextcloud min-version="27" max-version="32"/>
     </dependencies>
 </info>
