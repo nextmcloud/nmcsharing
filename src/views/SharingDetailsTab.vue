@@ -860,51 +860,5 @@ export default {
 			margin-top: 1rem;
 		}
 	}
-
-	#share-date-picker, #share-password-input {
-		border: var(--telekom-spacing-composition-space-01) solid var(--telekom-color-ui-border-standard);
-		height: 44px;
-		position: relative;
-
-		&::-webkit-calendar-picker-indicator {
-			//display: none;
-			position: absolute;
-			right: 6px;
-			top: 50%;
-			transform: translateY(-50%);
-			cursor: pointer;
-			width: 1.5rem;
-		}
-	}
-
-	#btn-advanced {
-		all: unset;
-		position: relative;
-		font: var(--telekom-text-style-ui-bold);
-
-		&:hover {
-			color: var(--telekom-color-primary-hovered);
-			background-color: initial;
-			cursor: pointer;
-			&::after {
-				border-bottom-color: var(--color-primary);
-			}
-		}
-
-		&::after {
-			content: '';
-			border-left: 5px solid transparent;
-			border-right: 5px solid transparent;
-			border-bottom: 5px solid var(--color-main-text);
-			position: absolute;
-			top: calc(50% - 2px);
-			margin-left: 4px;
-		}
-
-		// rotate arrow when opened
-		&.open::after {
-			transform: rotate(0.5turn);
-		}
-	}
 }
 </style>
