@@ -526,10 +526,7 @@ export default {
 }
 
 .sharingPopup {
-    &__content {
-        padding: 1.5rem;
-    }
-
+	
     &__info {
         display: block;
         margin-bottom: 1rem
