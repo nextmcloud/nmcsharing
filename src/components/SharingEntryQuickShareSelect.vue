@@ -319,7 +319,6 @@ export default {
 		flex-direction: column;
 		top: 100%;
 		left: 0;
-		background-color: var(--telekom-color-background-surface);
 		border-radius: 8px;
 		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 		padding: 4px 0;
@@ -338,10 +337,6 @@ export default {
 			width: 100%;
 			white-space: nowrap;
 			text-align: left;
-
-			&:hover {
-				color: var(--telekom-color-primary-standard)
-			}
 		}
 	}
 
@@ -354,11 +349,6 @@ export default {
 
 	&.active .share-select-dropdown {
 		max-height: 200px;
-		/* Adjust the value to your desired height */
-	}
-
-	&.disabled .trigger-text {
-		color: var(--telekom-color-text-and-icon-disabled);
 	}
 }
 </style>

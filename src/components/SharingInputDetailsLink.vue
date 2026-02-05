@@ -157,7 +157,6 @@ export default {
 	}
 
 	&.disabled .trigger-text {
-		color: var(--telekom-color-text-and-icon-disabled);
 
 		&:hover {
 			text-decoration: none;

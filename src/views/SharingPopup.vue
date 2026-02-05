@@ -548,7 +548,7 @@ export default {
     }
 
     &__or {
-        background-color: var(--telekom-color-background-surface);
+        background-color: var(--color-main-background);
         bottom: -0.75rem;
         font-size: 14px;
         padding: 0.75rem;

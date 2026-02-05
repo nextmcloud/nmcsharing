@@ -740,7 +740,6 @@ export default {
 
 <style lang="scss">
 .header-permissions {
-	margin-top: -14px;
 	display: flex;
 	flex-direction: row;
 	align-items: center;
@@ -749,7 +748,6 @@ export default {
 		padding: 4px;
 
 		&:hover {
-			color: var(--telekom-color-primary-hovered);
 			background-color: initial;
 			cursor: pointer;
 		}
@@ -774,10 +772,6 @@ export default {
 	padding: 1rem;
 	padding-top: 0;
 
-	.sharingPopup__fileinfo {
-		color: var(--telekom-color-ui-regular);
-	}
-
 	&__header {
 		font-weight: bold;
 	}
@@ -786,10 +780,6 @@ export default {
 		display: flex;
 		width: 100%;
 		margin-top: 1rem;
-
-		.sharing_permission-desc {
-			color: var(--telekom-color-ui-regular);
-		}
 	}
 
 	&__advanced-control {
@@ -812,8 +802,6 @@ export default {
 
 			textarea {
 				height: 80px;
-				border: var(--telekom-spacing-composition-space-01) solid var(--telekom-color-ui-border-standard);
-				border-radius: var(--telekom-radius-small);
 				&:hover {
 					cursor: text;
 				}

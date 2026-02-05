@@ -607,7 +607,6 @@ export default {
 
 <style lang="scss">
 .header-permissions {
-	margin-top: -14px;
 	display: flex;
 	flex-direction: row;
 	align-items: center;
@@ -616,10 +615,9 @@ export default {
 		padding: 4px;
 
 		&:hover {
-				color: var(--telekom-color-primary-hovered);
-				background-color: initial;
-				cursor: pointer;
-			}
+			background-color: initial;
+			cursor: pointer;
+		}
 	}
 }
 
@@ -637,16 +635,12 @@ export default {
     padding: 1.5rem;
     position: absolute;
     z-index: 10;
-    background: var(--telekom-color-background-surface);
+    background-color: var(--color-main-background);
     top: 0;
     left: 0;
     min-width: calc(100% - 3rem);
     min-height: calc(100% - 3rem);
 	border-radius: var(--border-radius-large);
-
-	.sharingPopup__fileinfo {
-		color: var(--telekom-color-ui-regular);
-	}
 
 	&__header {
 		font-weight: bold;
@@ -656,10 +650,6 @@ export default {
 		display: flex;
 		width: 100%;
 		margin-top: 1rem;
-
-		.sharing_permission-desc {
-			color: var(--telekom-color-ui-regular);
-		}
 	}
 
 	&__advanced-control {
@@ -682,8 +672,6 @@ export default {
 
 			textarea {
 				height: 80px;
-				border: var(--telekom-spacing-composition-space-01) solid var(--telekom-color-ui-border-standard);
-				border-radius: var(--telekom-radius-small);
 				&:hover {
 					cursor: text;
 				}
@@ -735,8 +723,11 @@ export default {
 		}
 	}
 
+	.sharingPopup__fileinfo {
+		font-size: var(--font-size-small);
+	}
+
 	#share-date-picker, #share-password-input {
-		border: var(--telekom-spacing-composition-space-01) solid var(--telekom-color-ui-border-standard);
 		height: 44px;
 		position: relative;
 
@@ -748,36 +739,6 @@ export default {
 			transform: translateY(-50%);
 			cursor: pointer;
 			width: 1.5rem;
-		}
-	}
-
-	#btn-advanced {
-		all: unset;
-		position: relative;
-		font: var(--telekom-text-style-ui-bold);
-
-		&:hover {
-			color: var(--telekom-color-primary-hovered);
-			background-color: initial;
-			cursor: pointer;
-			&::after {
-				border-bottom-color: var(--color-primary);
-			}
-		}
-
-		&::after {
-			content: '';
-			border-left: 5px solid transparent;
-			border-right: 5px solid transparent;
-			border-bottom: 5px solid var(--color-main-text);
-			position: absolute;
-			top: calc(50% - 2px);
-			margin-left: 4px;
-		}
-
-		// rotate arrow when opened
-		&.open::after {
-			transform: rotate(0.5turn);
 		}
 	}
 }
