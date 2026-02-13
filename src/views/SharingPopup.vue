@@ -212,7 +212,7 @@ export default {
 			const currentUrl = window.location.search
 
 			if (this.newLinkShare || this.shareSent) {
-				this.openSharingManage()
+				// this.openSharingManage()
 			} else {
 				window.OCA.Files.Sidebar.close()
 				currentUrl.includes('openfile') ? window.OCA.Files.Sidebar.setFullScreenMode(true) : window.OCA.Files.Sidebar.setFullScreenMode(false)
