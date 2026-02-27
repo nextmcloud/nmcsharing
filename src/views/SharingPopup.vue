@@ -208,6 +208,7 @@ export default {
 		},
 
 		closeThisModal() {
+			const currentUrl = window.location.search
 			window.OCA.Files.Sidebar.setActiveTab('sharing-manage')
 			window.OCA.Files.Sidebar.close()
 			currentUrl.includes('openfile') ? window.OCA.Files.Sidebar.setFullScreenMode(true) : window.OCA.Files.Sidebar.setFullScreenMode(false)
