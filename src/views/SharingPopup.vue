@@ -208,15 +208,10 @@ export default {
 		},
 
 		closeThisModal() {
-			this.modal = false
 			const currentUrl = window.location.search
-
-			if (this.newLinkShare || this.shareSent) {
-				// this.openSharingManage()
-			} else {
-				window.OCA.Files.Sidebar.close()
-				currentUrl.includes('openfile') ? window.OCA.Files.Sidebar.setFullScreenMode(true) : window.OCA.Files.Sidebar.setFullScreenMode(false)
-			}
+			window.OCA.Files.Sidebar.setActiveTab('sharing-manage')
+			window.OCA.Files.Sidebar.close()
+			currentUrl.includes('openfile') ? window.OCA.Files.Sidebar.setFullScreenMode(true) : window.OCA.Files.Sidebar.setFullScreenMode(false)
 		},
 
 		async openSharingManage() {
