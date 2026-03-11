@@ -522,7 +522,7 @@ export default {
 }
 
 .sharingPopup {
-	
+
     &__info {
         display: block;
         margin-bottom: 1rem
