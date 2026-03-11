@@ -208,6 +208,7 @@ export default {
 		},
 
 		closeThisModal() {
+			this.modal = false
 			const currentUrl = window.location.search
 			window.OCA.Files.Sidebar.setActiveTab('sharing-manage')
 			window.OCA.Files.Sidebar.close()
@@ -521,7 +522,7 @@ export default {
 }
 
 .sharingPopup {
-	
+
     &__info {
         display: block;
         margin-bottom: 1rem
