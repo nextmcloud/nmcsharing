@@ -118,7 +118,6 @@ import SharingDetailsTab from './SharingDetailsTab.vue'
 
 import LinkIcon from 'vue-material-design-icons/Link.vue'
 import AccountPlusIcon from 'vue-material-design-icons/AccountPlus.vue'
-import FileIcon from 'vue-material-design-icons/File.vue'
 
 export default {
 	name: 'SharingTab',
@@ -183,7 +182,7 @@ export default {
 
 			const raw = file.attributes['share-types'] || {}
 			const shareTypes = Object.values(raw).flat()
-			if (!shareTypes.some(type => type === 3 || type === 4)) {
+			if (!shareTypes.some(type => type === 3 || type === 4 || type === 0)) {
 				return
 			}
 
@@ -193,9 +192,13 @@ export default {
 			}
 
 			const rawFolderImage = figureDiv.style.backgroundImage || getComputedStyle(figureDiv).backgroundImage
-			const folderUrl = (rawFolderImage && rawFolderImage !== 'none')
+			let folderUrl = (rawFolderImage && rawFolderImage !== 'none')
 				? (rawFolderImage.trim().startsWith('url(') ? rawFolderImage.trim() : `url("${rawFolderImage.trim()}")`)
 				: null
+
+			if (folderUrl && folderUrl.includes('folder-shared.svg')) {
+				folderUrl = folderUrl.replace('folder-shared.svg', 'folder.svg')
+			}
 
 			const overlayLinkIcon = getComputedStyle(document.documentElement)
 				.getPropertyValue('--original-icon-folder-overlay-share-white')
