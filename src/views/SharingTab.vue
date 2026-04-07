@@ -94,7 +94,8 @@
 			:ref="'section-' + index"
 			:key="index"
 			class="sharingTab__additionalContent">
-			<component :is="section($refs['section-'+index], fileInfo)" :file-info="fileInfo" />
+			<component :is="section($refs['section-' + index], fileInfo)"
+				:file-info="fileInfo" />
 		</div>
 	</div>
 </template>
@@ -115,8 +116,13 @@ import SharingLinkList from './SharingLinkList.vue'
 import SharingList from './SharingList.vue'
 import SharingDetailsTab from './SharingDetailsTab.vue'
 
+import LinkIcon from 'vue-material-design-icons/Link.vue'
+import AccountPlusIcon from 'vue-material-design-icons/AccountPlus.vue'
+
 export default {
 	name: 'SharingTab',
+
+	mixins: [ShareTypes],
 
 	components: {
 		SharingEntrySimple,
@@ -125,9 +131,9 @@ export default {
 		SharingList,
 		SharingDetailsTab,
 		OpenSharingButton,
+		LinkIcon,
+		AccountPlusIcon,
 	},
-
-	mixins: [ShareTypes],
 
 	data() {
 		return {
@@ -136,8 +142,6 @@ export default {
 			error: '',
 			expirationInterval: null,
 			loading: true,
-
-			fileInfo: null,
 
 			// reshare Share object
 			reshare: null,
@@ -170,6 +174,53 @@ export default {
 	},
 
 	methods: {
+		applyShareIconOverlay() {
+			const file = this.fileInfo
+			if (!file || !file.attributes) {
+				return
+			}
+
+			const raw = file.attributes['share-types'] || {}
+			const shareTypes = Object.values(raw).flat()
+			if (!shareTypes.some(type => type === 3 || type === 4 || type === 0)) {
+				return
+			}
+
+			const figureDiv = document.querySelector('.app-sidebar-header__figure')
+			if (!figureDiv) {
+				return
+			}
+
+			const rawFolderImage = figureDiv.style.backgroundImage || getComputedStyle(figureDiv).backgroundImage
+			let folderUrl = (rawFolderImage && rawFolderImage !== 'none')
+				? (rawFolderImage.trim().startsWith('url(') ? rawFolderImage.trim() : `url("${rawFolderImage.trim()}")`)
+				: null
+
+			if (folderUrl && folderUrl.includes('folder-shared.svg')) {
+				folderUrl = folderUrl.replace('folder-shared.svg', 'folder.svg')
+			}
+
+			const overlayLinkIcon = getComputedStyle(document.documentElement)
+				.getPropertyValue('--original-icon-folder-overlay-share-white')
+				.trim()
+
+			const applyOverlay = () => {
+				const composed = folderUrl ? `${overlayLinkIcon}, ${folderUrl}` : overlayLinkIcon
+				figureDiv.style.setProperty('background-image', composed, 'important')
+				figureDiv.style.setProperty('background-repeat', 'no-repeat, no-repeat', 'important')
+				figureDiv.style.setProperty('background-position', 'center, center', 'important')
+				figureDiv.style.setProperty('background-size', '2.1rem 2.5rem, contain', 'important')
+			}
+
+			// applyOverlay()
+			// window.requestAnimationFrame(applyOverlay)
+			setTimeout(() => {
+				if (file.mimetype === 'httpd/unix-directory') {
+					applyOverlay()
+				}
+			}, 50)
+		},
+
 		/**
 		 * Update current fileInfo and fetch new data
 		 *
@@ -179,6 +230,7 @@ export default {
 			this.fileInfo = fileInfo
 			this.resetState()
 			this.getShares()
+			this.applyShareIconOverlay()
 		},
 
 		/**
@@ -401,6 +453,10 @@ export default {
 			}
 			this.showSharingDetailsView = !this.showSharingDetailsView
 		},
+	},
+
+	mounted() {
+		this.applyShareIconOverlay()
 	},
 }
 </script>
