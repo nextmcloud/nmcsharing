@@ -1,6 +1,7 @@
 OC.L10N.register(
 	'nmcsharing',
 	{
+		'Show sharing options': 'Freigabeoptionen anzeigen',
 		'Sharing': 'Teilen',
 		'Add link': 'Link erstellen',
 		'Add new link': 'Neuen Link erstellen',
