@@ -8,7 +8,7 @@ export const action = new FileAction({
 	},
 
 	title(nodes) {
-		return t('files_sharing', 'Show sharing options')
+		return t('nmcsharing', 'Show sharing options')
 	},
 
 	iconSvgInline() {
