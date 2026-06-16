@@ -15,6 +15,8 @@ OC.L10N.register(
 		'With File drop, only uploading is allowed. Only you can see files and folders that have been uploaded.': 'With File drop, only uploading is allowed. Only you can see files and folders that have been uploaded.',
 		'Advanced': 'Advanced',
 		'Set password': 'Set password',
+		'Password set': 'Password set',
+		'Change password': 'Change password',
 		'Your shares': 'Your shares',
 		'Manage access': 'Manage Access',
 		'Send': 'Send',

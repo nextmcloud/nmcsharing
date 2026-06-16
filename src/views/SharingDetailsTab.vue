@@ -75,10 +75,20 @@
 					{{ t('files_sharing', 'Hide download') }}
 				</NcCheckboxRadioSwitch>
 				<template v-if="isPublicShare">
-					<NcCheckboxRadioSwitch :checked.sync="isPasswordProtected" :disabled="isPasswordEnforced">
-						{{ passwordHint }}
-					</NcCheckboxRadioSwitch>
-					<NcPasswordField v-if="isPasswordProtected"
+					<div class="password-row">
+						<NcCheckboxRadioSwitch :checked.sync="isPasswordProtected" :disabled="isPasswordEnforced">
+							{{ passwordHint }}
+						</NcCheckboxRadioSwitch>
+						<NcButton v-if="passwordIsChecked && !showPasswordField"
+							type="tertiary"
+							@click="showPasswordField = true">
+							{{ t('nmcsharing', 'Change password') }}
+							<template #icon>
+								<PencilIcon :size="16" />
+							</template>
+						</NcButton>
+					</div>
+					<NcPasswordField v-if="isPasswordProtected && (!passwordIsChecked || showPasswordField)"
 						id="share-password-input"
 						:value="hasUnsavedPassword ? mutableShare.password : ''"
 						:error="passwordError"
@@ -215,6 +225,7 @@ export default {
 			bundledPermissions: BUNDLED_PERMISSIONS,
 			passwordError: false,
 			passwordIsChecked: false,
+			showPasswordField: false,
 			mutableShare: {
 				note: this.share.note,
 				password: this.share.password,
@@ -540,7 +551,7 @@ export default {
 		},
 		passwordHint() {
 			if (this.passwordIsChecked) {
-				return t('files_sharing', 'Replace current password')
+				return t('nmcsharing', 'Password set')
 			} else {
 				return t('nmcsharing', 'Set password')
 			}
@@ -753,6 +764,33 @@ export default {
 		}
 	}
 
+}
+
+.password-row {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+
+	.button-vue--vue-tertiary {
+		min-height: unset;
+		height: 24px;
+		padding: 0 4px;
+		font-size: 0.8rem;
+		color: var(--color-main-text);
+
+		.button-vue__wrapper {
+			flex-direction: row-reverse;
+		}
+
+		.button-vue__text {
+			font-weight: bold;
+		}
+
+		&:hover {
+			color: var(--color-primary-element);
+			background-color: transparent;
+		}
+	}
 }
 
 .checkbox-text {
