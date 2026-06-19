@@ -50,29 +50,16 @@
 			</p>
 
 			<!-- add new share input -->
-			<SharingInput v-if="!loading && false"
-				:can-reshare="canReshare"
-				:file-info="fileInfo"
-				:link-shares="linkShares"
-				:reshare="reshare"
-				:shares="shares"
-				:is-shared-with-me="isSharedWithMe"
-				@open-sharing-details="toggleShareDetailsView"
-				@open-sharing-details-all="toggleShareDetailsViewAll" />
+			<SharingInput v-if="!loading && false" :can-reshare="canReshare" :file-info="fileInfo"
+				:link-shares="linkShares" :reshare="reshare" :shares="shares" :is-shared-with-me="isSharedWithMe"
+				@open-sharing-details="toggleShareDetailsView" @open-sharing-details-all="toggleShareDetailsViewAll" />
 
 			<!-- link shares list -->
-			<SharingLinkList v-if="!loading"
-				ref="linkShareList"
-				:can-reshare="canReshare"
-				:file-info="fileInfo"
-				:shares="linkShares"
-				@open-sharing-details="toggleShareDetailsView" />
+			<SharingLinkList v-if="!loading" ref="linkShareList" :can-reshare="canReshare" :file-info="fileInfo"
+				:shares="linkShares" @open-sharing-details="toggleShareDetailsView" />
 
 			<!-- other shares list -->
-			<SharingList v-if="!loading && canReshare"
-				ref="shareList"
-				:shares="shares"
-				:file-info="fileInfo"
+			<SharingList v-if="!loading && canReshare" ref="shareList" :shares="shares" :file-info="fileInfo"
 				@open-sharing-details="toggleShareDetailsView" />
 
 			<OpenSharingButton v-if="canReshare" :file-info="fileInfo" />
@@ -80,22 +67,15 @@
 
 		<!-- share details -->
 		<div v-else>
-			<SharingDetailsTab :file-info="shareDetailsData.fileInfo"
-				:share="shareDetailsData.share"
-				:share-all="shareDetailsDataAll"
-				:resharing-allowed-global="config.isResharingAllowed"
-				@close-sharing-details="toggleShareDetailsView"
-				@add:share="addShare"
-				@remove:share="removeShare" />
+			<SharingDetailsTab :file-info="shareDetailsData.fileInfo" :share="shareDetailsData.share"
+				:share-all="shareDetailsDataAll" :resharing-allowed-global="config.isResharingAllowed"
+				@close-sharing-details="toggleShareDetailsView" @add:share="addShare" @remove:share="removeShare" />
 		</div>
 
 		<!-- additional entries, use it with cautious -->
-		<div v-for="(section, index) in sections"
-			:ref="'section-' + index"
-			:key="index"
+		<div v-for="(section, index) in sections" :ref="'section-' + index" :key="index"
 			class="sharingTab__additionalContent">
-			<component :is="section($refs['section-' + index], fileInfo)"
-				:file-info="fileInfo" />
+			<component :is="section($refs['section-' + index], fileInfo)" :file-info="fileInfo" />
 		</div>
 	</div>
 </template>
@@ -186,40 +166,56 @@ export default {
 				return
 			}
 
-			const figureDiv = document.querySelector('.app-sidebar-header__figure')
+			const figureDiv = document.getElementsByClassName('app-sidebar-header__figure')[0]
 			if (!figureDiv) {
 				return
-			}
-
-			const rawFolderImage = figureDiv.style.backgroundImage || getComputedStyle(figureDiv).backgroundImage
-			let folderUrl = (rawFolderImage && rawFolderImage !== 'none')
-				? (rawFolderImage.trim().startsWith('url(') ? rawFolderImage.trim() : `url("${rawFolderImage.trim()}")`)
-				: null
-
-			if (folderUrl && folderUrl.includes('folder-shared.svg')) {
-				folderUrl = folderUrl.replace('folder-shared.svg', 'folder.svg')
 			}
 
 			const overlayLinkIcon = getComputedStyle(document.documentElement)
 				.getPropertyValue('--original-icon-folder-overlay-share-white')
 				.trim()
 
-			const applyOverlay = () => {
-				const composed = folderUrl ? `${overlayLinkIcon}, ${folderUrl}` : overlayLinkIcon
-				figureDiv.style.setProperty('background-image', composed, 'important')
-				figureDiv.style.setProperty('background-repeat', 'no-repeat, no-repeat', 'important')
-				figureDiv.style.setProperty('background-position', 'center, center', 'important')
-				figureDiv.style.setProperty('background-size', '2.1rem 2.5rem, contain', 'important')
+			const overlayClass = 'nmcsharing-share-overlay'
+			let overlayElement = figureDiv.querySelector(`.${overlayClass}`)
+
+			const ensureOverlayElement = () => {
+				if (!overlayElement) {
+					overlayElement = document.createElement('span')
+					overlayElement.className = overlayClass
+					overlayElement.style.position = 'absolute'
+					overlayElement.style.inset = '0'
+					overlayElement.style.pointerEvents = 'none'
+					overlayElement.style.display = 'block'
+					overlayElement.style.zIndex = '1'
+					figureDiv.appendChild(overlayElement)
+				}
+
+				const figurePosition = getComputedStyle(figureDiv).position
+				if (figurePosition === 'static') {
+					figureDiv.style.setProperty('position', 'relative', 'important')
+				}
+
+				overlayElement.style.setProperty('background-image', overlayLinkIcon, 'important')
+				overlayElement.style.setProperty('background-repeat', 'no-repeat', 'important')
+				overlayElement.style.setProperty('background-position', 'center', 'important')
+				overlayElement.style.setProperty('background-size', '2.1rem 2.5rem', 'important')
+				return overlayElement
 			}
 
-			// applyOverlay()
-			// window.requestAnimationFrame(applyOverlay)
+			const folderUrl = 'url("/customapps/nmctheme/img/filetypes/folder.svg")'
+
+			const restoreOriginalBackground = () => {
+				figureDiv.style.setProperty('background-image', folderUrl, 'important')
+			}
+
 			setTimeout(() => {
 				if (file.mimetype === 'httpd/unix-directory') {
-					applyOverlay()
+					restoreOriginalBackground()
+					ensureOverlayElement()
 				}
 			}, 50)
 		},
+
 
 		/**
 		 * Update current fileInfo and fetch new data
@@ -474,7 +470,8 @@ export default {
 	&__content {
 		padding: 0px;
 
-		p, .sharing-entry__noshare {
+		p,
+		.sharing-entry__noshare {
 			margin-bottom: 1rem
 		}
 	}
