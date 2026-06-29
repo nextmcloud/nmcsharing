@@ -16,6 +16,8 @@ OC.L10N.register(
 		'With File drop, only uploading is allowed. Only you can see files and folders that have been uploaded.': 'Bei der Sammelbox ist nur das Hochladen erlaubt. Nur Sie sehen Dateien und Ordner die hochgeladen worden sind.',
 		'Advanced': 'Erweiterte',
 		'Set password': 'Passwortschutz',
+		'Password set': 'Passwort gesetzt',
+		'Change password': 'Passwort ändern',
 		'Your shares': 'Ihre Freigaben',
 		'Manage access': 'Zugriff verwalten',
 		'Send': 'Send',
