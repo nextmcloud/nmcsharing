@@ -1,7 +1,7 @@
-import { FileAction, Permission } from '@nextcloud/files'
+import { Permission, getSidebar } from '@nextcloud/files'
 import { translate as t } from '@nextcloud/l10n'
 
-export const action = new FileAction({
+export const action = {
 	id: 'sharing-manage',
 	displayName() {
 		return t('nmcsharing', 'Manage shares')
@@ -15,7 +15,7 @@ export const action = new FileAction({
 		return ''
 	},
 
-	enabled(nodes) {
+	enabled({ nodes }) {
 		if (nodes.length !== 1) {
 			return false
 		}
@@ -44,33 +44,26 @@ export const action = new FileAction({
 		// return (node.permissions & Permission.SHARE) !== 0
 	},
 
-	async exec(node, view, dir) {
+	async exec({ nodes }) {
+		const node = nodes[0]
+
 		// You need read permissions to see the sidebar
-		if ((node.permissions & Permission.READ) !== 0) {
-
-			window.OCA.Files.Sidebar.close()
-
-			window.OCA.Files.Sidebar.setActiveTab('sharing')
-			window.OCA.Files.Sidebar.setActiveTab('sharing-manage')
-
-			try {
-				// Silently update current fileid
-				window.OCP.Files.Router.goToRoute(
-					null,
-					{ view: view.id, fileid: node.fileid },
-					{ dir },
-					true,
-				)
-
-				// TODO: migrate Sidebar to use a Node instead
-				await window.OCA.Files.Sidebar.open(node.path)
-
-				return null
-			} catch (error) {
-				return false
-			}
+		if ((node.permissions & Permission.READ) === 0) {
+			return false
 		}
+
+		const sidebar = getSidebar()
+		if (!sidebar?.available) {
+			return false
+		}
+
+		// "Manage shares" opens the files sidebar on the sharing tab.
+		// Nextcloud 33 replaced the legacy OCA.Files.Sidebar API with
+		// getSidebar(), which takes the Node itself and the tab id.
+		sidebar.open(node, 'sharing')
+
+		return null
 	},
 
 	order: -60,
-})
+}

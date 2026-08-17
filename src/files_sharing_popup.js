@@ -34,52 +34,46 @@ __webpack_public_path__ = '/customapps/nmcsharing/js/'
 Vue.prototype.t = t
 Vue.prototype.n = n
 
-// Init Sharing tab component
+// Sharing popup modal component
 const View = Vue.extend(SharingPopup)
-let TabInstance = null
+let instance = null
 
 /**
- * Check if tab should be removed
- *
- * @param {string} id id of tabs to be removed
+ * Tear down the currently mounted popup instance, if any.
  */
-function checkTabs(id) {
-	return id !== 'sharing' && id !== 'photos' && id !== 'comments' && id !== 'version_vue'
+function destroyInstance() {
+	if (instance) {
+		const el = instance.$el
+		instance.$destroy()
+		el?.remove()
+		instance = null
+	}
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-	if (OCA.Files && OCA.Files.Sidebar) {
+/**
+ * Open the MagentaCLOUD sharing popup as a standalone modal.
+ *
+ * Nextcloud 33 removed the OCA.Files.Sidebar API that this popup used to be
+ * embedded in as a sidebar tab. The modal is now mounted directly on the page
+ * and opened from the file action.
+ *
+ * @param {object} fileInfo the file to share ({ path, name, size, permissions, id, mime })
+ */
+async function openSharingPopup(fileInfo) {
+	destroyInstance()
 
-		const sharingTab = new OCA.Files.Sidebar.Tab({
-			id: 'sharing',
-			name: t('files_sharing', 'Sharing Popup'),
-			icon: 'icon-share',
+	const mountPoint = document.createElement('div')
+	document.body.appendChild(mountPoint)
 
-			async mount(el, fileInfo, context) {
-				if (TabInstance) {
-					TabInstance.$destroy()
-				}
-				TabInstance = new View({
-					// Better integration with vue parent component
-					parent: context,
-				})
-				// Only mount after we have all the info we need
-				await TabInstance.update(fileInfo)
-				TabInstance.$mount(el)
-			},
-			update(fileInfo) {
-				TabInstance.update(fileInfo)
-			},
-			destroy() {
-				TabInstance.$destroy()
-				TabInstance = null
-			},
-		})
+	instance = new View()
+	instance.$on('close-popup', destroyInstance)
+	instance.$mount(mountPoint)
 
-		// remove all unused tabs
-		const tabsState = OCA.Files.Sidebar.state.tabs
-		OCA.Files.Sidebar.state.tabs = tabsState.filter((tab) => checkTabs(tab.id))
-		// register new sharing popup
-		OCA.Files.Sidebar.registerTab(sharingTab)
-	}
-})
+	// Only show the modal once the share data is loaded
+	await instance.update(fileInfo)
+	instance.showThisModal()
+}
+
+window.OCA = window.OCA || {}
+window.OCA.Nmcsharing = window.OCA.Nmcsharing || {}
+window.OCA.Nmcsharing.openSharingPopup = openSharingPopup
