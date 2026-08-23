@@ -184,7 +184,6 @@ export default {
 			// Are we waiting for password/expiration date
 			pending: false,
 
-			ExternalLegacyLinkActions: OCA.Sharing.ExternalLinkActions.state,
 			ExternalShareActions: OCA.Sharing.ExternalShareActions.state,
 		}
 	},
@@ -431,16 +430,6 @@ export default {
 				return t('files_sharing', 'Cannot copy, please copy the link manually')
 			}
 			return t('files_sharing', 'Copy public link of "{title}" to clipboard', { title: this.title })
-		},
-
-		/**
-		 * External additionnai actions for the menu
-		 *
-		 * @deprecated use OCA.Sharing.ExternalShareActions
-		 * @return {Array}
-		 */
-		externalLegacyLinkActions() {
-			return this.ExternalLegacyLinkActions.actions
 		},
 
 		/**

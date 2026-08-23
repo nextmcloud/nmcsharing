@@ -1,4 +1,4 @@
-import { Permission, getSidebar } from '@nextcloud/files'
+import { Permission } from '@nextcloud/files'
 import { translate as t } from '@nextcloud/l10n'
 
 export const action = {
@@ -52,14 +52,16 @@ export const action = {
 			return false
 		}
 
-		const sidebar = getSidebar()
-		if (!sidebar?.available) {
+		// "Manage shares" opens the files sidebar on the sharing tab.
+		// Nextcloud 33's sidebar is exposed via the window.OCA.Files._sidebar()
+		// store proxy, which takes the Node itself and the tab id. This is the
+		// same global that @nextcloud/files v4's getSidebar() wraps, so we call
+		// it directly and stay compatible with the app's @nextcloud/files v3.
+		const sidebar = window.OCA?.Files?._sidebar?.()
+		if (!sidebar) {
 			return false
 		}
 
-		// "Manage shares" opens the files sidebar on the sharing tab.
-		// Nextcloud 33 replaced the legacy OCA.Files.Sidebar API with
-		// getSidebar(), which takes the Node itself and the tab id.
 		sidebar.open(node, 'sharing')
 
 		return null
