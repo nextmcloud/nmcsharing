@@ -52,11 +52,8 @@ export const action = {
 			return false
 		}
 
-		// "Manage shares" opens the files sidebar on the sharing tab.
-		// Nextcloud 33's sidebar is exposed via the window.OCA.Files._sidebar()
-		// store proxy, which takes the Node itself and the tab id. This is the
-		// same global that @nextcloud/files v4's getSidebar() wraps, so we call
-		// it directly and stay compatible with the app's @nextcloud/files v3.
+		// NC33 exposes the sidebar via window.OCA.Files._sidebar() (what files v4's
+		// getSidebar wraps); call it directly since the app is on @nextcloud/files v3.
 		const sidebar = window.OCA?.Files?._sidebar?.()
 		if (!sidebar) {
 			return false
