@@ -156,7 +156,10 @@ export default {
 		 * @return {boolean}
 		 */
 		isSharedWithMe() {
-			if (this.$parent.getActiveTab() === 'sharing') {
+			// When embedded in the legacy sidebar tab the popup opened itself
+			// once the "sharing" tab became active. As a standalone modal there
+			// is no parent tab, so guard the call — the opener shows the modal.
+			if (typeof this.$parent?.getActiveTab === 'function' && this.$parent.getActiveTab() === 'sharing') {
 				this.showThisModal()
 			}
 			return Object.keys(this.sharedWithMe).length > 0
@@ -208,30 +211,25 @@ export default {
 		},
 
 		closeThisModal() {
+			// Nextcloud 33 removed the OCA.Files.Sidebar API this popup used
+			// to be embedded in. The popup is now a standalone modal, so we
+			// simply hide it and let the mounting code tear the instance down.
 			this.modal = false
-			const currentUrl = window.location.search
-			window.OCA.Files.Sidebar.setActiveTab('sharing-manage')
-			window.OCA.Files.Sidebar.close()
-			currentUrl.includes('openfile') ? window.OCA.Files.Sidebar.setFullScreenMode(true) : window.OCA.Files.Sidebar.setFullScreenMode(false)
+			this.$emit('close-popup')
 		},
 
 		async openSharingManage() {
+			// The legacy "manage shares" flow relied on the removed
+			// OCA.Files.Sidebar API. Fall back to the standard files sidebar
+			// sharing tab when available; otherwise this is a no-op.
 			try {
+				const sidebar = window.OCP?.Files?.Sidebar || window.OCA?.Files?.Sidebar
+				if (!sidebar) {
+					return null
+				}
 				const fileInfoPathName = this.fileInfo.path + '/' + this.fileInfo.name
-
-				window.OCA.Files.Sidebar.close()
-				window.OCA.Files.Sidebar.setActiveTab('sharing')
-				window.OCA.Files.Sidebar.setActiveTab('sharing-manage')
-				document.querySelector('#app-sidebar-vue').style.width = 'var(--app-sidebar-width)'
-
-				// set setfullscreen sidebar if opened in viewer else not
-				const currentSearch = window.location.search
-				const isTargetSearch = (currentSearch === '?dir=/' || currentSearch === '?dir=/&popup=true')
-				isTargetSearch ? window.OCA.Files.Sidebar.setFullScreenMode(false) : window.OCA.Files.Sidebar.setFullScreenMode(true)
-
-				// TODO: migrate Sidebar to use a Node instead
-				window.OCA.Files.Sidebar.open(fileInfoPathName)
-
+				sidebar.open?.(fileInfoPathName)
+				sidebar.setActiveTab?.('sharing')
 				return null
 			} catch (error) {
 				return false

@@ -1,9 +1,9 @@
-import { FileAction, Permission } from '@nextcloud/files'
+import { Permission } from '@nextcloud/files'
 import { translate as t } from '@nextcloud/l10n'
 
-export const action = new FileAction({
+export const action = {
 	id: 'sharing-popup',
-	displayName(nodes) {
+	displayName({ nodes }) {
 		const node = nodes[0]
 		const sharedWithMe = node?.attributes?.['mount-type'] === 'shared'
 
@@ -20,7 +20,7 @@ export const action = new FileAction({
 		return ''
 	},
 
-	title(nodes) {
+	title() {
 		return t('nmcsharing', 'Show sharing options')
 	},
 
@@ -28,7 +28,7 @@ export const action = new FileAction({
 		return ''
 	},
 
-	enabled(nodes) {
+	enabled({ nodes }) {
 		if (nodes.length !== 1) {
 			return false
 		}
@@ -57,41 +57,34 @@ export const action = new FileAction({
 		// return (node.permissions & Permission.SHARE) !== 0
 	},
 
-	async exec(node, view, dir) {
-		// You need read permissions to see the sidebar
-		if ((node.permissions & Permission.READ) !== 0) {
-			setTimeout(() => {
-				const currentUrl = window.location.search
+	async exec({ nodes }) {
+		const node = nodes[0]
 
-				if (currentUrl.includes('popup')) {
-					document.querySelector('#app-sidebar-vue').style.width = '0%'
-				}
-			})
-			window.OCA.Files.Sidebar.close()
-
-			window.OCA.Files.Sidebar.setActiveTab('sharing-manage')
-			window.OCA.Files.Sidebar.setActiveTab('sharing')
-			window.OCA.Files.Sidebar.setFullScreenMode(true)
-
-			// TODO: migrate Sidebar to use a Node instead
-			window.OCA.Files.Sidebar.open(node.path)
-
-			try {
-				// Silently update current fileid
-				window.OCP.Files.Router.goToRoute(
-					null,
-					{ view: view.id, fileid: node.fileid },
-					{ ...window.OCP.Files.Router.query, dir, popup: 'true' },
-					true,
-				)
-
-				return null
-			} catch (error) {
-				return false
-			}
+		// You need read permissions to share
+		if ((node.permissions & Permission.READ) === 0) {
+			return false
 		}
+
+		const openSharingPopup = window.OCA?.Nmcsharing?.openSharingPopup
+		if (typeof openSharingPopup !== 'function') {
+			return false
+		}
+
+		// Open the MagentaCLOUD sharing popup modal for this node.
+		// The popup is mounted by files_sharing_popup.js, which exposes the
+		// opener globally; it expects a legacy FileInfo shape, so map the Node.
+		openSharingPopup({
+			id: node.fileid,
+			name: node.basename,
+			path: node.dirname,
+			size: node.size,
+			permissions: node.permissions,
+			mime: node.mime,
+		})
+
+		return null
 	},
 
 	inline: () => true,
 
-})
+}
