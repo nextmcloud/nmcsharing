@@ -78,6 +78,8 @@ export const action = {
 			name: node.basename,
 			path: node.dirname,
 			size: node.size,
+			type: node.mime === 'httpd/unix-directory' ? 'dir' : 'file',
+			mimetype: node.mime,
 			permissions: node.permissions,
 			mime: node.mime,
 		})
