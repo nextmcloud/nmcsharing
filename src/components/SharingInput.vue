@@ -403,15 +403,18 @@ export default {
 
 			let request = null
 			try {
+				const itemType = this.fileInfo.type === 'dir' ? 'dir' : 'file'
 				request = await axios.get(generateOcsUrl('apps/files_sharing/api/v1/sharees_recommended'), {
 					params: {
 						format: 'json',
-						itemType: this.fileInfo.type,
+						itemType,
 					},
 				})
 			} catch (error) {
 				console.error('Error fetching recommendations', error)
 				return
+			} finally {
+				this.loading = false
 			}
 
 			// Add external results from the OCA.Sharing.ShareSearch api
@@ -425,8 +428,6 @@ export default {
 			this.recommendations = this.filterOutExistingShares(rawRecommendations)
 				.map(share => this.formatForMultiselect(share))
 				.concat(externalResults)
-
-			this.loading = false
 		},
 
 		/**
