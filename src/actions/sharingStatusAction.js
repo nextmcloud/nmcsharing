@@ -59,7 +59,7 @@ export const action = {
 			return false
 		}
 
-		sidebar.open(node, 'sharing')
+		sidebar.open(node, 'sharing-manage')
 
 		return null
 	},

@@ -28,27 +28,14 @@ export default {
 	},
 	methods: {
 		async openSharing() {
-			try {
-				const fileInfoPathName = this.fileInfo.path + '/' + this.fileInfo.name
-
-				window.OCA.Files.Sidebar.close()
-
-				window.OCA.Files.Sidebar.setActiveTab('sharing-manage')
-				window.OCA.Files.Sidebar.setActiveTab('sharing')
-				window.OCA.Files.Sidebar.setFullScreenMode(true)
-
-				const currentUrl = window.location.search
-				if (!currentUrl.includes('openfile')) {
-					document.querySelector('#app-sidebar-vue').style.width = '0%'
-				}
-
-				// TODO: migrate Sidebar to use a Node instead
-				window.OCA.Files.Sidebar.open(fileInfoPathName)
-
-				return null
-			} catch (error) {
+			const openSharingPopup = window.OCA?.Nmcsharing?.openSharingPopup
+			if (typeof openSharingPopup !== 'function') {
 				return false
 			}
+
+			window.OCA?.Files?._sidebar?.()?.close()
+			await openSharingPopup(this.fileInfo)
+			return null
 		},
 	},
 }

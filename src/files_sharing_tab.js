@@ -24,8 +24,10 @@
 import Vue from 'vue'
 import { translate as t, translatePlural as n } from '@nextcloud/l10n'
 import { getRequestToken } from '@nextcloud/auth'
+import { Permission } from '@nextcloud/files'
 
 import SharingTab from './views/SharingTab.vue'
+import { getShareAttributes } from './utils/shareAttributes.js'
 
 // eslint-disable-next-line camelcase
 __webpack_nonce__ = btoa(getRequestToken())
@@ -36,38 +38,102 @@ Vue.prototype.n = n
 
 // Init Sharing tab component
 const View = Vue.extend(SharingTab)
-let TabInstance = null
 
-window.addEventListener('DOMContentLoaded', () => {
-	if (OCA.Files && OCA.Files.Sidebar) {
+const tabId = 'sharing-manage'
+const tagName = 'nmcsharing-sidebar-tab'
 
-		const sharingTab = new OCA.Files.Sidebar.Tab({
-			id: 'sharing-manage',
-			name: t('nmcsharing', 'Manage shares'),
-			icon: 'icon-share',
+function toFileInfo(node) {
+	const attributes = node.attributes ?? {}
+	const sharePermissions = Number(attributes['share-permissions'] ?? node.permissions)
 
-			async mount(el, fileInfo, context) {
-				if (TabInstance) {
-					TabInstance.$destroy()
-				}
-				TabInstance = new View({
-					// Better integration with vue parent component
-					parent: context,
-				})
-				// Only mount after we have all the info we need
-				await TabInstance.update(fileInfo)
-				TabInstance.$mount(el)
-			},
-			update(fileInfo) {
-				TabInstance.update(fileInfo)
-			},
-			destroy() {
-				TabInstance.$destroy()
-				TabInstance = null
-			},
-		})
-
-		// register new sharing tab
-		OCA.Files.Sidebar.registerTab(sharingTab)
+	return {
+		id: node.fileid,
+		fileid: node.fileid,
+		name: node.basename,
+		path: node.dirname,
+		size: node.size,
+		type: node.mime === 'httpd/unix-directory' ? 'dir' : 'file',
+		mime: node.mime,
+		mimetype: node.mime,
+		permissions: node.permissions,
+		sharePermissions,
+		shareAttributes: getShareAttributes(node),
+		shareOwner: attributes['owner-display-name'],
+		shareOwnerId: attributes['owner-id'],
+		attributes,
+		canDownload: () => Boolean(node.permissions & Permission.READ),
 	}
-})
+}
+
+class SharingSidebarTab extends HTMLElement {
+	constructor() {
+		super()
+		this.currentNode = null
+		this.sharingView = null
+		this.refreshing = false
+	}
+
+	set node(node) {
+		this.currentNode = node
+		this.refresh()
+	}
+
+	get node() {
+		return this.currentNode
+	}
+
+	connectedCallback() {
+		this.refresh()
+	}
+
+	disconnectedCallback() {
+		this.sharingView?.$destroy()
+		this.sharingView = null
+	}
+
+	async refresh() {
+		if (!this.isConnected || !this.currentNode || this.refreshing) {
+			return
+		}
+
+		this.refreshing = true
+		try {
+			const node = this.currentNode
+			if (this.sharingView) {
+				await this.sharingView.update(toFileInfo(node))
+				return
+			}
+
+			const view = new View()
+			await view.update(toFileInfo(node))
+			if (!this.isConnected || node !== this.currentNode) {
+				view.$destroy()
+				return
+			}
+
+			view.$mount()
+			this.appendChild(view.$el)
+			this.sharingView = view
+		} finally {
+			this.refreshing = false
+		}
+	}
+}
+
+const sharingTab = {
+	id: tabId,
+	displayName: t('nmcsharing', 'Manage shares'),
+	iconSvgInline: '',
+	order: -60,
+	tagName,
+	async onInit() {
+		if (!window.customElements.get(tagName)) {
+			window.customElements.define(tagName, SharingSidebarTab)
+		}
+	},
+}
+
+const filesScope = (window._nc_files_scope ??= {})
+const v4 = (filesScope.v4_0 ??= {})
+const sidebarTabs = (v4.filesSidebarTabs ??= new Map())
+sidebarTabs.set(tabId, sharingTab)
