@@ -60,6 +60,11 @@ function destroyInstance() {
  * @param {object} fileInfo the file to share ({ path, name, size, permissions, id, mime })
  */
 async function openSharingPopup(fileInfo) {
+	const sidebar = window.OCA?.Files?._sidebar?.()
+	if (sidebar?.isOpen) {
+		sidebar.close()
+	}
+
 	destroyInstance()
 
 	const mountPoint = document.createElement('div')

@@ -1,5 +1,6 @@
 import { Permission } from '@nextcloud/files'
 import { translate as t } from '@nextcloud/l10n'
+import { getShareAttributes } from '../utils/shareAttributes.js'
 
 export const action = {
 	id: 'sharing-popup-menu',
@@ -65,6 +66,7 @@ export const action = {
 			type: node.mime === 'httpd/unix-directory' ? 'dir' : 'file',
 			mimetype: node.mime,
 			mime: node.mime,
+			shareAttributes: getShareAttributes(node),
 		})
 
 		return null
