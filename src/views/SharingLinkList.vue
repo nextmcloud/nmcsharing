@@ -1,25 +1,3 @@
-<!--
-  - @copyright Copyright (c) 2019 John Molakvoæ <skjnldsv@protonmail.com>
-  -
-  - @author John Molakvoæ <skjnldsv@protonmail.com>
-  -
-  - @license GNU AGPL version 3 or any later version
-  -
-  - This program is free software: you can redistribute it and/or modify
-  - it under the terms of the GNU Affero General Public License as
-  - published by the Free Software Foundation, either version 3 of the
-  - License, or (at your option) any later version.
-  -
-  - This program is distributed in the hope that it will be useful,
-  - but WITHOUT ANY WARRANTY; without even the implied warranty of
-  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  - GNU Affero General Public License for more details.
-  -
-  - You should have received a copy of the GNU Affero General Public License
-  - along with this program. If not, see <http://www.gnu.org/licenses/>.
-  -
-  -->
-
 <template>
 	<div>
 		<ul v-if="canLinkShare && canReshare" class="sharing-link-list">
@@ -27,9 +5,10 @@
 				<li class="sharing-link-list-caption">
 					<strong>{{ t('nmcsharing', 'Links sent via E-Mail') }}</strong>
 				</li>
+
 				<template v-for="(share, index) in shares">
-					<!-- using shares[index] to work with .sync -->
-					<SharingEntryLink v-if="share.type === shareTypeMail"
+					<SharingEntryLink
+						v-if="share.type === shareTypeMail"
 						:key="share.id"
 						:index="shares.length > 1 ? index + 1 : null"
 						:can-reshare="canReshare"
@@ -48,8 +27,10 @@
 				<li class="sharing-link-list-caption">
 					<strong>{{ t('nmcsharing', 'Link to copy') }}</strong>
 				</li>
+
 				<template v-for="(share, index) in shares">
-					<SharingEntryLink v-if="share.type === shareTypeLink"
+					<SharingEntryLink
+						v-if="share.type === shareTypeLink"
 						:key="share.id"
 						:index="shares.length > 1 ? index + 1 : null"
 						:can-reshare="canReshare"
@@ -66,10 +47,9 @@
 </template>
 
 <script>
-// eslint-disable-next-line no-unused-vars
-import Share from '../models/Share.js'
+import { ShareType } from '@nextcloud/sharing'
+
 import ShareDetails from '../mixins/ShareDetails.js'
-import ShareTypes from '../mixins/ShareTypes.js'
 import SharingEntryLink from '../components/SharingEntryLink.vue'
 
 export default {
@@ -79,19 +59,19 @@ export default {
 		SharingEntryLink,
 	},
 
-	mixins: [ShareTypes, ShareDetails],
+	mixins: [ShareDetails],
 
 	props: {
 		fileInfo: {
 			type: Object,
-			default: () => {},
 			required: true,
 		},
+
 		shares: {
 			type: Array,
-			default: () => [],
 			required: true,
 		},
+
 		canReshare: {
 			type: Boolean,
 			required: true,
@@ -100,69 +80,58 @@ export default {
 
 	data() {
 		return {
-			canLinkShare: OC.getCapabilities().files_sharing.public.enabled,
+			canLinkShare: OC.getCapabilities()?.files_sharing?.public?.enabled === true,
 		}
 	},
 
 	computed: {
-		/**
-		 * Do we have link shares?
-		 *
-		 * @return {boolean}
-		 */
 		hasLinkShares() {
-			return this.shares.filter(share => share.type === this.shareTypeLink).length > 0
+			return this.shares.some(
+				share => share.type === ShareType.Link,
+			)
 		},
 
-		/**
-		 * Do we have email shares?
-		 *
-		 * @return {boolean}
-		 */
 		hasMailShares() {
-			return this.shares.filter(share => share.type === this.shareTypeMail).length > 0
+			return this.shares.some(
+				share => share.type === ShareType.Email,
+			)
 		},
 
-		/**
-		 * @return {number}
-		 */
 		shareTypeLink() {
-			return this.SHARE_TYPES.SHARE_TYPE_LINK
+			return ShareType.Link
 		},
 
-		/**
-		 * @return {number}
-		 */
 		shareTypeMail() {
-			return this.SHARE_TYPES.SHARE_TYPE_EMAIL
+			return ShareType.Email
 		},
 	},
 
 	methods: {
 		/**
-		 * Add a new share into the link shares list
-		 * and return the newly created share component
+		 * Add a new share into the link shares list.
 		 *
-		 * @param {Share} share the share to add to the array
-		 * @param {Function} resolve a function to run after the share is added and its component initialized
+		 * @param {object} share share to add
+		 * @param {Function} resolve callback
 		 */
-		addShare(share, resolve) {
+		addShare(share, resolve = () => {}) {
 			// eslint-disable-next-line vue/no-mutating-props
 			this.shares.unshift(share)
+
 			this.awaitForShare(share, resolve)
 		},
 
 		/**
-		 * Await for next tick and render after the list updated
-		 * Then resolve with the matched vue component of the
-		 * provided share object
+		 * Wait until the new share component has been rendered.
 		 *
-		 * @param {Share} share newly created share
-		 * @param {Function} resolve a function to execute after
+		 * @param {object} share newly created share
+		 * @param {Function} resolve callback
 		 */
-		awaitForShare(share, resolve) {
+		awaitForShare(share, resolve = () => {}) {
 			this.$nextTick(() => {
-				const newShare = this.$children.find(component => component.share === share)
+				const newShare = this.$children.find(
+					component => component.share === share,
+				)
+
 				if (newShare) {
 					resolve(newShare)
 				}
@@ -170,12 +139,17 @@ export default {
 		},
 
 		/**
-		 * Remove a share from the shares list
+		 * Remove a share from the shares list.
 		 *
-		 * @param {Share} share the share to remove
+		 * @param {object} share share to remove
 		 */
 		removeShare(share) {
 			const index = this.shares.findIndex(item => item === share)
+
+			if (index === -1) {
+				return
+			}
+
 			// eslint-disable-next-line vue/no-mutating-props
 			this.shares.splice(index, 1)
 		},

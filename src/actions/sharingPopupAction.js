@@ -1,8 +1,11 @@
 import { Permission } from '@nextcloud/files'
 import { translate as t } from '@nextcloud/l10n'
 
+import FileInfo from '../services/FileInfoService.js'
+
 export const action = {
 	id: 'sharing-popup',
+
 	displayName({ nodes }) {
 		const node = nodes[0]
 		const sharedWithMe = node?.attributes?.['mount-type'] === 'shared'
@@ -33,7 +36,7 @@ export const action = {
 			return false
 		}
 
-		if (window.OCP.Files.Router.params.view === 'trashbin') {
+		if (window.OCP?.Files?.Router?.params?.view === 'trashbin') {
 			return false
 		}
 
@@ -43,50 +46,29 @@ export const action = {
 			return false
 		}
 
-		const shareTypes = node.attributes?.['share-types']
-		const isMixed = Array.isArray(shareTypes) && shareTypes.length > 0
-
-		// If the node is shared multiple times with
-		// different share types to the current user
-		if (isMixed) {
-			return true
-		}
-
-		// enable popup button in any case
 		return true
-		// return (node.permissions & Permission.SHARE) !== 0
 	},
 
 	async exec({ nodes }) {
 		const node = nodes[0]
 
-		// You need read permissions to share
 		if ((node.permissions & Permission.READ) === 0) {
 			return false
 		}
 
 		const openSharingPopup = window.OCA?.Nmcsharing?.openSharingPopup
+
 		if (typeof openSharingPopup !== 'function') {
+			console.error('[nmcsharing] Sharing popup opener is not available')
 			return false
 		}
 
-		// Open the MagentaCLOUD sharing popup modal for this node.
-		// The popup is mounted by files_sharing_popup.js, which exposes the
-		// opener globally; it expects a legacy FileInfo shape, so map the Node.
-		openSharingPopup({
-			id: node.fileid,
-			name: node.basename,
-			path: node.dirname,
-			size: node.size,
-			type: node.mime === 'httpd/unix-directory' ? 'dir' : 'file',
-			mimetype: node.mime,
-			permissions: node.permissions,
-			mime: node.mime,
-		})
+		const fileInfo = FileInfo(node)
+
+		await openSharingPopup(fileInfo)
 
 		return null
 	},
 
 	inline: () => true,
-
 }

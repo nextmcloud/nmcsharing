@@ -1,6 +1,6 @@
-import { action as statusAtion } from './actions/sharingStatusAction'
 import { action as popupAction } from './actions/sharingPopupAction'
 import { action as popupMenuAction } from './actions/sharingPopupMenuAction'
+import { action as statusAtion } from './actions/sharingStatusAction'
 
 /**
  * The app is built against @nextcloud/files v3, but on NC33 core reads file
@@ -22,6 +22,6 @@ function registerFileAction(action) {
 	actions.set(action.id, action)
 }
 
-registerFileAction(statusAtion)
 registerFileAction(popupAction)
 registerFileAction(popupMenuAction)
+registerFileAction(statusAtion)

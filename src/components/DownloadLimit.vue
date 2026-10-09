@@ -1,41 +1,61 @@
 <template>
 	<div>
-		<NcCheckboxRadioSwitch :checked="isLimitEnabled" :disabled="loading" @update:checked="toggleDownloadLimit">
+		<NcCheckboxRadioSwitch
+			:checked="isLimitEnabled"
+			:disabled="loading || !share.token"
+			@update:checked="toggleDownloadLimit">
 			{{ t('nmcsharing', 'Set download limit') }}
 		</NcCheckboxRadioSwitch>
-		<NcInputField v-if="isLimitEnabled"
+
+		<NcInputField
+			v-if="isLimitEnabled"
 			type="number"
-			min="0"
+			min="1"
+			step="1"
+			:disabled="loading"
 			:error="!isValidPositiveInteger"
 			:helper-text="invalidIntegerError"
+			:label="t('nmcsharing', 'Maximum number of downloads')"
 			:title="downloadsLeftTooltip"
-			:value.sync="limit"
-			@update:value="debounceUpdateLimit" />
+			:value="limit"
+			@update:value="onLimitInput" />
 	</div>
 </template>
-<script>
-import NcInputField from '@nextcloud/vue/dist/Components/NcInputField.js'
-import NcCheckboxRadioSwitch from '@nextcloud/vue/dist/Components/NcCheckboxRadioSwitch.js'
 
+<script>
+import { showError } from '@nextcloud/dialogs'
+import NcCheckboxRadioSwitch from '@nextcloud/vue/dist/Components/NcCheckboxRadioSwitch.js'
+import NcInputField from '@nextcloud/vue/dist/Components/NcInputField.js'
 import { debounce } from 'throttle-debounce'
-import { deleteDownloadLimit, getDownloadLimit, setDownloadLimit } from '../services/DownloadLimitService.js'
+
+import {
+	deleteDownloadLimit,
+	getDownloadLimit,
+	setDownloadLimit,
+} from '../services/DownloadLimitService.js'
+
+const DEFAULT_DOWNLOAD_LIMIT = '1'
 
 export default {
 	name: 'DownloadLimit',
+
 	components: {
-		NcInputField,
 		NcCheckboxRadioSwitch,
+		NcInputField,
 	},
+
 	props: {
 		fileInfo: {
 			type: Object,
 			required: true,
 		},
+
 		share: {
 			type: Object,
 			required: true,
 		},
 	},
+
 	data() {
 		return {
 			isLimitEnabled: false,
@@ -43,64 +63,294 @@ export default {
 			count: null,
 			token: null,
 			loading: false,
-			isValidPositiveInteger: true,
+			debouncedUpdateLimit: null,
 		}
 	},
+
 	computed: {
-		downloadsLeftTooltip() {
-			if (!parseInt(this.limit) || parseInt(this.limit) < 1) return ''
-			const downloadsLeft = Number(this.limit) - Number(this.count)
-			return t('nmcsharing', 'This share was limited to {limit} downloads. There is still {downloadsLeft} left allowed.',
-				{ limit: this.limit, downloadsLeft })
+		isValidPositiveInteger() {
+			return /^[1-9]\d*$/.test(String(this.limit))
 		},
+
+		downloadsLeftTooltip() {
+			if (!this.isValidPositiveInteger) {
+				return ''
+			}
+
+			const limit = Number.parseInt(this.limit, 10)
+			const count = Number(this.count ?? 0)
+			const downloadsLeft = Math.max(0, limit - count)
+
+			return t(
+				'nmcsharing',
+				'This share was limited to {limit} downloads. There is still {downloadsLeft} left allowed.',
+				{
+					limit,
+					downloadsLeft,
+				},
+			)
+		},
+
 		invalidIntegerError() {
 			if (!this.isValidPositiveInteger) {
-				return t('nmcsharing', 'Limit needs to be positive number')
+				return t(
+					'nmcsharing',
+					'Limit needs to be a positive number',
+				)
 			}
+
 			return undefined
-		}
+		},
 	},
-	beforeMount() {
-		this.getInitialData()
+
+	watch: {
+		'share.token': {
+			immediate: true,
+			handler(token) {
+				this.debouncedUpdateLimit?.cancel?.()
+				this.getInitialData(token)
+			},
+		},
 	},
+
+	created() {
+		this.debouncedUpdateLimit = debounce(
+			300,
+			(limit, token) => this.updateLimit(limit, token),
+		)
+	},
+
+	beforeDestroy() {
+		this.debouncedUpdateLimit?.cancel?.()
+	},
+
 	methods: {
-		getInitialData() {
+		async getInitialData(token = this.share.token) {
+			if (!token) {
+				this.token = null
+				this.limit = ''
+				this.count = null
+				this.isLimitEnabled = false
+				this.loading = false
+				return
+			}
+
 			this.loading = true
-			getDownloadLimit(this.share.token).then(data => {
-				// If token changed, let's update the checkbox state.
-				if (this.token !== this.share.token) {
-					this.isLimitEnabled = data.limit !== null
+			this.token = token
+
+			try {
+				const data = await getDownloadLimit(token)
+
+				// Ignore stale responses if the component switched to another share.
+				if (this.share.token !== token) {
+					return
 				}
 
-				this.limit = data.limit === null ? '' : data.limit.toString()
-				this.count = data.count
-				this.token = this.share.token
-			}).finally(() => {
-				this.loading = false
-			})
-		},
-		toggleDownloadLimit() {
-			if (this.isLimitEnabled && this.limit !== '') {
-				deleteDownloadLimit(this.token)
-				this.limit = ''
+				this.isLimitEnabled = data.limit !== null
+				&& data.limit !== undefined
+
+				this.limit = this.isLimitEnabled
+					? String(data.limit)
+					: ''
+
+				this.count = data.count ?? 0
+
+				this.$emit(
+					'limit-changed',
+					this.isLimitEnabled && !this.isValidPositiveInteger,
+				)
+			} catch (error) {
+				if (this.share.token === token) {
+					console.error(
+						'[nmcsharing] Failed to load download limit',
+						error,
+					)
+
+					showError(
+						t(
+							'nmcsharing',
+							'Unable to load download limit',
+						),
+					)
+				}
+			} finally {
+				if (this.share.token === token) {
+					this.loading = false
+				}
 			}
-			this.isLimitEnabled = !this.isLimitEnabled
 		},
-		debounceUpdateLimit: debounce(300, async function(limit) {
-			this.isValidPositiveInteger = /^[1-9]\d*$/.test(limit)
-			this.$emit('limit-changed', !this.isValidPositiveInteger)
+
+		async toggleDownloadLimit(enabled) {
+			const token = this.share.token
+
+			if (!token || this.loading) {
+				return
+			}
+
+			this.debouncedUpdateLimit?.cancel?.()
 			this.loading = true
 
-			// If the value is not correct, let's remove the limit
-			if (!parseInt(limit) || parseInt(limit) < 1) {
-				await deleteDownloadLimit(this.token)
-			} else {
-				await setDownloadLimit(this.token, limit)
+			try {
+				if (!enabled) {
+					await deleteDownloadLimit(token)
+
+					if (this.share.token !== token) {
+						return
+					}
+
+					this.isLimitEnabled = false
+					this.limit = ''
+					this.count = null
+					this.$emit('limit-changed', false)
+
+					return
+				}
+
+				const initialLimit = this.isValidPositiveInteger
+					? this.limit
+					: DEFAULT_DOWNLOAD_LIMIT
+
+				await setDownloadLimit(
+					token,
+					Number.parseInt(initialLimit, 10),
+				)
+
+				if (this.share.token !== token) {
+					return
+				}
+
+				const data = await getDownloadLimit(token)
+
+				if (this.share.token !== token) {
+					return
+				}
+
+				this.isLimitEnabled = true
+				this.limit = String(data.limit ?? initialLimit)
+				this.count = data.count ?? 0
+				this.$emit('limit-changed', false)
+			} catch (error) {
+				console.error(
+					'[nmcsharing] Failed to change download limit',
+					error,
+				)
+
+				showError(
+					t(
+						'nmcsharing',
+						'Unable to update download limit',
+					),
+				)
+
+				// Restore the actual state from the server.
+				await this.reloadAfterError(token)
+			} finally {
+				if (this.share.token === token) {
+					this.loading = false
+				}
 			}
-			this.count = '0'
-			this.loading = false
-		}),
+		},
+
+		onLimitInput(value) {
+			this.limit = value === null || value === undefined
+				? ''
+				: String(value)
+
+			const invalid = !this.isValidPositiveInteger
+
+			this.$emit('limit-changed', invalid)
+
+			if (invalid) {
+				this.debouncedUpdateLimit?.cancel?.()
+				return
+			}
+
+			this.debouncedUpdateLimit(
+				this.limit,
+				this.share.token,
+			)
+		},
+
+		async updateLimit(limit, token) {
+			if (
+				!token
+				|| token !== this.share.token
+				|| !this.isLimitEnabled
+				|| !/^[1-9]\d*$/.test(String(limit))
+			) {
+				return
+			}
+
+			this.loading = true
+
+			try {
+				await setDownloadLimit(
+					token,
+					Number.parseInt(limit, 10),
+				)
+
+				if (this.share.token !== token) {
+					return
+				}
+
+				// Reload so count and server-normalized values stay correct.
+				const data = await getDownloadLimit(token)
+
+				if (this.share.token !== token) {
+					return
+				}
+
+				this.limit = String(data.limit ?? limit)
+				this.count = data.count ?? 0
+				this.$emit('limit-changed', false)
+			} catch (error) {
+				console.error(
+					'[nmcsharing] Failed to update download limit',
+					error,
+				)
+
+				showError(
+					t(
+						'nmcsharing',
+						'Unable to update download limit',
+					),
+				)
+
+				await this.reloadAfterError(token)
+			} finally {
+				if (this.share.token === token) {
+					this.loading = false
+				}
+			}
+		},
+
+		async reloadAfterError(token) {
+			if (!token || this.share.token !== token) {
+				return
+			}
+
+			try {
+				const data = await getDownloadLimit(token)
+
+				if (this.share.token !== token) {
+					return
+				}
+
+				this.isLimitEnabled = data.limit !== null
+					&& data.limit !== undefined
+
+				this.limit = this.isLimitEnabled
+					? String(data.limit)
+					: ''
+
+				this.count = data.count ?? 0
+			} catch (error) {
+				console.error(
+					'[nmcsharing] Failed to restore download limit state',
+					error,
+				)
+			}
+		},
 	},
 }
-
 </script>

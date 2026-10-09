@@ -1,53 +1,66 @@
-<!--
-  - @copyright Copyright (c) 2019 John Molakvoæ <skjnldsv@protonmail.com>
-  -
-  - @author John Molakvoæ <skjnldsv@protonmail.com>
-  -
-  - @license GNU AGPL version 3 or any later version
-  -
-  - This program is free software: you can redistribute it and/or modify
-  - it under the terms of the GNU Affero General Public License as
-  - published by the Free Software Foundation, either version 3 of the
-  - License, or (at your option) any later version.
-  -
-  - This program is distributed in the hope that it will be useful,
-  - but WITHOUT ANY WARRANTY; without even the implied warranty of
-  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  - GNU Affero General Public License for more details.
-  -
-  - You should have received a copy of the GNU Affero General Public License
-  - along with this program. If not, see <http://www.gnu.org/licenses/>.
-  -
-  -->
-
 <template>
 	<li class="sharing-entry">
-		<div class="sharing-entry__desc" @click.prevent="toggleQuickShareSelect">
-			<component :is="share.shareWithLink ? 'a' : 'div'"
-				:title="tooltip"
-				:aria-label="tooltip"
-				:href="share.shareWithLink"
-				class="sharing-entry__title">
-				<span>{{ title }}<span v-if="!isUnique" class="sharing-entry__desc-unique"> ({{
-					share.shareWithDisplayNameUnique }})</span></span>
+		<div class="sharing-entry__desc">
+			<component
+				:is="share.shareWithLink ? 'a' : 'div'"
+				:title="tooltip || undefined"
+				:aria-label="tooltip || title"
+				:href="share.shareWithLink || undefined"
+				:role="!share.shareWithLink && isPermissionEditAllowed
+					? 'button'
+					: undefined"
+				:tabindex="!share.shareWithLink && isPermissionEditAllowed
+					? 0
+					: undefined"
+				class="sharing-entry__title"
+				@click="onTitleClick"
+				@keydown="onTitleKeydown">
+
+				<span>
+					{{ title }}
+
+					<span
+						v-if="!isUnique && share.shareWithDisplayNameUnique"
+						class="sharing-entry__desc-unique">
+						({{ share.shareWithDisplayNameUnique }})
+					</span>
+				</span>
+
 				<p v-if="hasStatus">
-					<span>{{ share.status.icon || '' }}</span>
-					<span>{{ share.status.message || '' }}</span>
+					<span
+						v-if="share.status.icon"
+						aria-hidden="true">
+						{{ share.status.icon }}
+					</span>
+
+					<span v-if="share.status.message">
+						{{ share.status.message }}
+					</span>
 				</p>
 			</component>
-			<QuickShareSelect :share="share"
+
+			<QuickShareSelect
+				v-if="share && share.permissions !== undefined"
+				:share="share"
 				:file-info="fileInfo"
 				:toggle="showDropdown"
 				@open-sharing-details="openShareDetailsForCustomSettings(share)" />
 		</div>
 
-		<NcButton v-if="share.canDelete"
+		<NcButton
+			v-if="share && share.canDelete"
 			:disabled="saving"
 			:title="t('files_sharing', 'Delete')"
+			:aria-label="t('files_sharing', 'Delete')"
+			variant="secondary"
 			@click.prevent="onDelete">
+
 			<template #icon>
-				<span class="icon icon-delete" />
+				<span
+					aria-hidden="true"
+					class="icon icon-delete" />
 			</template>
+
 			<template #default>
 				{{ t('files_sharing', 'Delete') }}
 			</template>
@@ -56,11 +69,15 @@
 </template>
 
 <script>
+import { translate as t } from '@nextcloud/l10n'
+import { ShareType } from '@nextcloud/sharing'
 
 import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
+
 import QuickShareSelect from './SharingEntryQuickShareSelect.vue'
-import SharesMixin from '../mixins/SharesMixin.js'
+
 import ShareDetails from '../mixins/ShareDetails.js'
+import SharesMixin from '../mixins/SharesMixin.js'
 
 export default {
 	name: 'SharingEntry',
@@ -70,10 +87,16 @@ export default {
 		QuickShareSelect,
 	},
 
-	mixins: [SharesMixin, ShareDetails],
+	mixins: [
+		SharesMixin,
+		ShareDetails,
+	],
 
 	props: {
-		// TODO add reshare property
+		/*
+		 * Kept for compatibility with existing parents.
+		 * Currently not used directly by this component.
+		 */
 		canReshare: {
 			type: Boolean,
 			default: true,
@@ -85,61 +108,181 @@ export default {
 			showDropdown: false,
 		}
 	},
-	computed: {
-		title() {
-			let title = this.share.shareWithDisplayName
-			if (this.share.type === this.SHARE_TYPES.SHARE_TYPE_GROUP) {
-				title += ` (${t('files_sharing', 'group')})`
-			} else if (this.share.type === this.SHARE_TYPES.SHARE_TYPE_ROOM) {
-				title += ` (${t('files_sharing', 'conversation')})`
-			} else if (this.share.type === this.SHARE_TYPES.SHARE_TYPE_REMOTE) {
-				title += ` (${t('files_sharing', 'remote')})`
-			} else if (this.share.type === this.SHARE_TYPES.SHARE_TYPE_REMOTE_GROUP) {
-				title += ` (${t('files_sharing', 'remote group')})`
-			} else if (this.share.type === this.SHARE_TYPES.SHARE_TYPE_GUEST) {
-				title += ` (${t('files_sharing', 'guest')})`
-			}
-			return title
-		},
-		tooltip() {
-			if (this.share.owner !== this.share.uidFileOwner) {
-				const data = {
-					// todo: strong or italic?
-					// but the t function escape any html from the data :/
-					user: this.share.shareWithDisplayName,
-					owner: this.share.ownerDisplayName,
-				}
-				if (this.share.type === this.SHARE_TYPES.SHARE_TYPE_GROUP) {
-					return t('files_sharing', 'Shared with the group {user} by {owner}', data)
-				} else if (this.share.type === this.SHARE_TYPES.SHARE_TYPE_ROOM) {
-					return t('files_sharing', 'Shared with the conversation {user} by {owner}', data)
-				}
 
-				return t('files_sharing', 'Shared with {user} by {owner}', data)
+	computed: {
+		/**
+		 * Normalized share type.
+		 *
+		 * @return {number|undefined}
+		 */
+		currentShareType() {
+			const type = this.share?.type
+
+			if (type === null || type === undefined) {
+				return undefined
 			}
-			return null
+
+			const normalized = Number(type)
+
+			return Number.isNaN(normalized)
+				? undefined
+				: normalized
 		},
 
 		/**
+		 * Display name including the share type where appropriate.
+		 *
+		 * @return {string}
+		 */
+		title() {
+			let title = this.share?.shareWithDisplayName
+				|| this.share?.shareWith
+				|| ''
+
+			switch (this.currentShareType) {
+			case ShareType.Group:
+				title += ` (${t('files_sharing', 'group')})`
+				break
+
+			case ShareType.Room:
+				title += ` (${t('files_sharing', 'conversation')})`
+				break
+
+			case ShareType.Remote:
+				title += ` (${t('files_sharing', 'remote')})`
+				break
+
+			case ShareType.RemoteGroup:
+				title += ` (${t('files_sharing', 'remote group')})`
+				break
+
+			case ShareType.Guest:
+				title += ` (${t('files_sharing', 'guest')})`
+				break
+			}
+
+			return title
+		},
+
+		/**
+		 * Description of who created the share.
+		 *
+		 * @return {string|undefined}
+		 */
+		tooltip() {
+			if (
+				!this.share
+				|| this.share.owner === this.share.uidFileOwner
+			) {
+				return undefined
+			}
+
+			const data = {
+				user: this.share.shareWithDisplayName
+					|| this.share.shareWith
+					|| '',
+				owner: this.share.ownerDisplayName || '',
+			}
+
+			if (this.currentShareType === ShareType.Group) {
+				return t(
+					'files_sharing',
+					'Shared with the group {user} by {owner}',
+					data,
+				)
+			}
+
+			if (this.currentShareType === ShareType.Room) {
+				return t(
+					'files_sharing',
+					'Shared with the conversation {user} by {owner}',
+					data,
+				)
+			}
+
+			return t(
+				'files_sharing',
+				'Shared with {user} by {owner}',
+				data,
+			)
+		},
+
+		/**
+		 * Does the user share have a status?
+		 *
 		 * @return {boolean}
 		 */
 		hasStatus() {
-			if (this.share.type !== this.SHARE_TYPES.SHARE_TYPE_USER) {
+			if (this.currentShareType !== ShareType.User) {
 				return false
 			}
 
-			return (typeof this.share.status === 'object' && !Array.isArray(this.share.status))
+			const status = this.share?.status
+
+			if (
+				status === null
+				|| typeof status !== 'object'
+				|| Array.isArray(status)
+			) {
+				return false
+			}
+
+			return Boolean(
+				status.icon
+				|| status.message,
+			)
 		},
 	},
 
 	methods: {
 		/**
-		 * Save potential changed data on menu close
+		 * Either allow the native link navigation or toggle the
+		 * permission selector for non-link entries.
+		 *
+		 * @param {MouseEvent} event Click event
 		 */
-		onMenuClose() {
-			this.onNoteSubmit()
+		onTitleClick(event) {
+			if (this.share?.shareWithLink) {
+				return
+			}
+
+			if (!this.isPermissionEditAllowed) {
+				return
+			}
+
+			event.preventDefault()
+			this.toggleQuickShareSelect()
 		},
+
+		/**
+		 * Keyboard support for the clickable non-link title.
+		 *
+		 * @param {KeyboardEvent} event Keyboard event
+		 */
+		onTitleKeydown(event) {
+			if (
+				this.share?.shareWithLink
+				|| !this.isPermissionEditAllowed
+			) {
+				return
+			}
+
+			if (
+				event.key !== 'Enter'
+				&& event.key !== ' '
+			) {
+				return
+			}
+
+			event.preventDefault()
+			this.toggleQuickShareSelect()
+		},
+
 		toggleQuickShareSelect() {
+			if (!this.isPermissionEditAllowed) {
+				return
+			}
+
 			this.showDropdown = !this.showDropdown
 		},
 	},
@@ -150,16 +293,16 @@ export default {
 .sharing-entry {
 	display: flex;
 	align-items: center;
-	min-height: 2rem;
 	justify-content: flex-end;
+	min-height: 2rem;
 
 	&__desc {
 		display: flex;
 		flex-direction: column;
 		justify-content: space-between;
+		margin-right: auto;
 		padding: 0.5rem;
 		line-height: 1rem;
-		margin-right: auto;
 
 		p {
 			color: var(--color-text-maxcontrast);
@@ -171,49 +314,17 @@ export default {
 	}
 
 	&__title {
-		text-overflow: ellipsis;
 		overflow: hidden;
+		text-overflow: ellipsis;
 		white-space: nowrap;
-	}
 
-	&:not(.sharing-entry--share) &__actions {
-		.new-share-link {
-			border-top: 1px solid var(--color-border);
+		&[role='button'] {
+			cursor: pointer;
 		}
 	}
 
 	::v-deep .avatar-link-share {
 		background-color: var(--color-main-background);
-	}
-
-	.sharing-entry__action--public-upload {
-		border-bottom: 1px solid var(--color-border);
-	}
-
-	&__loading {
-		width: 44px;
-		height: 44px;
-		margin: 0;
-		padding: 14px;
-		margin-left: auto;
-	}
-
-	// put menus to the left
-	// but only the first one
-	.action-item {
-		margin-left: auto;
-		~ .action-item,
-		~ .sharing-entry__loading {
-			margin-left: 0;
-		}
-	}
-
-	.icon-checkmark-color {
-		opacity: 1;
-	}
-
-	.button-vue:hover:not(:disabled) {
-		background-color: initial;
 	}
 }
 </style>

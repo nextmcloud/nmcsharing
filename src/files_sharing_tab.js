@@ -1,73 +1,151 @@
 /**
- * @copyright Copyright (c) 2019 John Molakvoæ <skjnldsv@protonmail.com>
- *
- * @author John Molakvoæ <skjnldsv@protonmail.com>
- * @author Julius Härtl <jus@bitgrid.net>
- *
- * @license AGPL-3.0-or-later
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- *
+ * SPDX-FileCopyrightText: 2019 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-import Vue from 'vue'
+import { getCSPNonce } from '@nextcloud/auth'
+import { getSidebar } from '@nextcloud/files'
 import { translate as t, translatePlural as n } from '@nextcloud/l10n'
-import { getRequestToken } from '@nextcloud/auth'
-
-import SharingTab from './views/SharingTab.vue'
+import { generateFilePath } from '@nextcloud/router'
+import Vue from 'vue'
 
 // eslint-disable-next-line camelcase
-__webpack_nonce__ = btoa(getRequestToken())
-__webpack_public_path__ = '/customapps/nmcsharing/js/'
+__webpack_public_path__ = generateFilePath('nmcsharing', '', 'js/')
+
+// eslint-disable-next-line camelcase
+__webpack_nonce__ = getCSPNonce()
 
 Vue.prototype.t = t
 Vue.prototype.n = n
 
-// Init Sharing tab component
-const View = Vue.extend(SharingTab)
-let TabInstance = null
+const tagName = 'sharing-sidebar-tab'
 
-window.addEventListener('DOMContentLoaded', () => {
-	if (OCA.Files && OCA.Files.Sidebar) {
+const shareIcon = `
+	<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+		<path fill="currentColor" d="M18 16c-.79 0-1.5.31-2.03.81L8.91 12.7c.05-.23.09-.46.09-.7s-.03-.47-.09-.7l6.98-4.11C16.43 7.69 17.14 8 18 8c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.11 9.81C7.57 9.31 6.86 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.86 0 1.57-.31 2.11-.81l6.98 4.11c-.05.21-.09.44-.09.7 0 1.66 1.34 3 3 3s3-1.34 3-3-1.34-3-3-3z" />
+	</svg>
+`.trim()
 
-		const sharingTab = new OCA.Files.Sidebar.Tab({
-			id: 'sharing-manage',
-			name: t('nmcsharing', 'Manage shares'),
-			icon: 'icon-share',
+getSidebar().registerTab({
+	id: 'sharing',
+	displayName: t('files_sharing', 'Sharing'),
+	iconSvgInline: shareIcon,
+	order: 10,
+	tagName,
 
-			async mount(el, fileInfo, context) {
-				if (TabInstance) {
-					TabInstance.$destroy()
+	enabled() {
+		return true
+	},
+
+	async onInit() {
+		if (window.customElements.get(tagName)) {
+			return
+		}
+
+		const { default: SharingSidebarTab } = await import('./views/SharingSidebarTab.vue')
+
+		class SharingSidebarElement extends HTMLElement {
+			constructor() {
+				super()
+
+				this._node = undefined
+				this._folder = undefined
+				this._view = undefined
+				this._active = false
+				this._state = undefined
+				this._vm = undefined
+			}
+
+			connectedCallback() {
+				if (this._vm) {
+					return
 				}
-				TabInstance = new View({
-					// Better integration with vue parent component
-					parent: context,
-				})
-				// Only mount after we have all the info we need
-				await TabInstance.update(fileInfo)
-				TabInstance.$mount(el)
-			},
-			update(fileInfo) {
-				TabInstance.update(fileInfo)
-			},
-			destroy() {
-				TabInstance.$destroy()
-				TabInstance = null
-			},
-		})
 
-		// register new sharing tab
-		OCA.Files.Sidebar.registerTab(sharingTab)
-	}
+				this._state = Vue.observable({
+					node: this._node,
+					folder: this._folder,
+					view: this._view,
+					active: this._active,
+				})
+
+				this._vm = new Vue({
+					render: h => h(SharingSidebarTab, {
+						props: {
+							node: this._state.node,
+							folder: this._state.folder,
+							view: this._state.view,
+							active: this._state.active,
+						},
+					}),
+				}).$mount()
+
+				this.appendChild(this._vm.$el)
+			}
+
+			disconnectedCallback() {
+				if (!this._vm) {
+					return
+				}
+
+				this._vm.$destroy()
+
+				if (this._vm.$el?.parentNode === this) {
+					this.removeChild(this._vm.$el)
+				}
+
+				this._vm = undefined
+				this._state = undefined
+			}
+
+			get node() {
+				return this._node
+			}
+
+			set node(value) {
+				this._node = value
+
+				if (this._state) {
+					this._state.node = value
+				}
+			}
+
+			get folder() {
+				return this._folder
+			}
+
+			set folder(value) {
+				this._folder = value
+
+				if (this._state) {
+					this._state.folder = value
+				}
+			}
+
+			get view() {
+				return this._view
+			}
+
+			set view(value) {
+				this._view = value
+
+				if (this._state) {
+					this._state.view = value
+				}
+			}
+
+			get active() {
+				return this._active
+			}
+
+			set active(value) {
+				this._active = Boolean(value)
+
+				if (this._state) {
+					this._state.active = Boolean(value)
+				}
+			}
+		}
+
+		window.customElements.define(tagName, SharingSidebarElement)
+	},
 })

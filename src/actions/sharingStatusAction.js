@@ -1,8 +1,32 @@
-import { Permission } from '@nextcloud/files'
+import {
+	getSidebar,
+	Permission,
+} from '@nextcloud/files'
+
 import { translate as t } from '@nextcloud/l10n'
+
+/**
+ * Remove focus from a button inside an NcActions/FloatingVue popover
+ * before the file action closes the menu.
+ */
+function releaseActionMenuFocus() {
+	const activeElement = document.activeElement
+
+	if (!(activeElement instanceof HTMLElement)) {
+		return
+	}
+
+	if (
+		activeElement.closest('.action-item__popper')
+		|| activeElement.closest('.v-popper__popper')
+	) {
+		activeElement.blur()
+	}
+}
 
 export const action = {
 	id: 'sharing-manage',
+
 	displayName() {
 		return t('nmcsharing', 'Manage shares')
 	},
@@ -16,53 +40,102 @@ export const action = {
 	},
 
 	enabled({ nodes }) {
-		if (nodes.length !== 1) {
+		if (!Array.isArray(nodes) || nodes.length !== 1) {
 			return false
 		}
 
-		if (window.OCP.Files.Router.params.view === 'trashbin') {
+		if (window.OCP?.Files?.Router?.params?.view === 'trashbin') {
 			return false
 		}
 
 		const node = nodes[0]
 
-		if (node.attributes?.['is-encrypted'] === 1) {
+		if (!node) {
 			return false
 		}
 
-		const shareTypes = node.attributes?.['share-types']
-		const isMixed = Array.isArray(shareTypes) && shareTypes.length > 0
-
-		// If the node is shared multiple times with
-		// different share types to the current user
-		if (isMixed) {
-			return true
-		}
-
-		// enable sharing button in any case
-		return true
-		// return (node.permissions & Permission.SHARE) !== 0
-	},
-
-	async exec({ nodes }) {
-		const node = nodes[0]
-
-		// You need read permissions to see the sidebar
 		if ((node.permissions & Permission.READ) === 0) {
 			return false
 		}
 
-		// NC33 exposes the sidebar via window.OCA.Files._sidebar() (what files v4's
-		// getSidebar wraps); call it directly since the app is on @nextcloud/files v3.
-		const sidebar = window.OCA?.Files?._sidebar?.()
-		if (!sidebar) {
+		const isEncrypted =
+			node.attributes?.['is-encrypted'] === 1
+			|| node.attributes?.['is-encrypted'] === true
+			|| node.attributes?.isEncrypted === 1
+			|| node.attributes?.isEncrypted === true
+
+		if (isEncrypted) {
 			return false
 		}
 
-		sidebar.open(node, 'sharing')
+		const sidebar = getSidebar()
 
-		return null
+		return sidebar?.available === true
+	},
+
+	async exec({ nodes }) {
+		if (!Array.isArray(nodes) || nodes.length !== 1) {
+			return false
+		}
+
+		const node = nodes[0]
+
+		if (!node) {
+			return false
+		}
+
+		if ((node.permissions & Permission.READ) === 0) {
+			return false
+		}
+
+		const sidebar = getSidebar()
+
+		if (!sidebar?.available) {
+			console.error(
+				'[nmcsharing] Files sidebar is not available',
+			)
+
+			return false
+		}
+
+		try {
+			/*
+			 * The file action is executed from an NcActions popover.
+			 * The clicked menu button still owns focus at this point.
+			 *
+			 * Release it before Nextcloud hides the popover, otherwise
+			 * Chromium reports:
+			 *
+			 * "Blocked aria-hidden on an element because its descendant
+			 * retained focus."
+			 */
+			releaseActionMenuFocus()
+
+			/*
+			 * Give the browser one frame to apply the focus change
+			 * before opening the sidebar and allowing the action menu
+			 * to close.
+			 */
+			await new Promise(resolve => {
+				requestAnimationFrame(resolve)
+			})
+
+			sidebar.open(node, 'sharing')
+
+			return null
+		} catch (error) {
+			console.error(
+				'[nmcsharing] Failed to open sharing sidebar',
+				error,
+			)
+
+			return false
+		}
 	},
 
 	order: -60,
+
+	inline() {
+		return false
+	},
 }

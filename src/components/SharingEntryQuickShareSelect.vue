@@ -1,288 +1,566 @@
 <template>
-	<div ref="quickShareDropdownContainer"
-		:class="{ 'active': showDropdown, 'share-select': true }">
-		<button :id="dropdownId"
+	<div
+		ref="quickShareDropdownContainer"
+		:class="{
+			active: showDropdown,
+			'share-select': true,
+		}">
+
+		<button
+			type="button"
 			class="trigger-text"
-			tabindex="0"
-			:aria-expanded="showDropdown"
-			:aria-haspopup="true"
-			aria-label="Quick share options dropdown"
-			@click="openSharingDetails">
-			<EyeIcon v-if="canView" :size="16" />
-			<PencilIcon v-if="canEdit" :size="16" />
-			<UploadIcon v-if="fileDrop" :size="16" />
+			:disabled="disabled"
+			:aria-label="t('nmcsharing', 'Open sharing details')"
+			@click.stop="openSharingDetails">
+
+			<EyeIcon
+				v-if="canView"
+				:size="16"
+				aria-hidden="true" />
+
+			<PencilIcon
+				v-if="canEdit"
+				:size="16"
+				aria-hidden="true" />
+
+			<UploadIcon
+				v-if="fileDrop"
+				:size="16"
+				aria-hidden="true" />
+
 			{{ selectedOption }}
-			<LockOutlineIcon v-if="hasPassword" :size="16" />
-			<CalendarMonthIcon v-if="hasExpireDate" :size="16" />
-			<ChevronRightIcon :size="18" />
+
+			<LockOutlineIcon
+				v-if="hasPassword"
+				:size="16"
+				aria-hidden="true" />
+
+			<CalendarMonthIcon
+				v-if="hasExpireDate"
+				:size="16"
+				aria-hidden="true" />
+
+			<ChevronRightIcon
+				:size="18"
+				aria-hidden="true" />
 		</button>
-		<div v-if="showDropdown"
+
+		<div
+			v-if="showDropdown"
 			ref="quickShareDropdown"
 			class="share-select-dropdown"
-			:aria-labelledby="dropdownId"
-			tabindex="0"
-			@keydown.down="handleArrowDown"
-			@keydown.up="handleArrowUp"
-			@keydown.esc="closeDropdown">
-			<button v-for="option in options"
-				:key="option"
-				:class="{ 'dropdown-item': true, 'selected': option === selectedOption }"
-				:aria-selected="option === selectedOption"
-				@click="selectOption(option)">
-				{{ option }}
+			role="menu"
+			:aria-label="t('nmcsharing', 'Quick share options')"
+			tabindex="-1"
+			@keydown.down.prevent="handleArrowDown"
+			@keydown.up.prevent="handleArrowUp"
+			@keydown.esc.prevent.stop="closeDropdown">
+
+			<button
+				v-for="option in options"
+				:key="option.value"
+				type="button"
+				role="menuitemradio"
+				class="dropdown-item"
+				:class="{ selected: option.value === selectedPermission }"
+				:aria-checked="option.value === selectedPermission"
+				:disabled="disabled || !isPermissionEditAllowed"
+				@click.stop="selectOption(option.value)">
+				{{ option.label }}
 			</button>
 		</div>
 	</div>
 </template>
 
 <script>
-import EyeIcon from 'vue-material-design-icons/EyeCircleOutline.vue'
-import PencilIcon from 'vue-material-design-icons/Pencil.vue'
-import UploadIcon from 'vue-material-design-icons/Upload.vue'
-import LockOutlineIcon from 'vue-material-design-icons/LockOutline.vue'
+import { translate as t } from '@nextcloud/l10n'
+import { ShareType } from '@nextcloud/sharing'
+
 import CalendarMonthIcon from 'vue-material-design-icons/CalendarMonth.vue'
 import ChevronRightIcon from 'vue-material-design-icons/ChevronRight.vue'
-import SharesMixin from '../mixins/SharesMixin.js'
-import ShareDetails from '../mixins/ShareDetails.js'
-import ShareTypes from '../mixins/ShareTypes.js'
-
-import {
-	BUNDLED_PERMISSIONS,
-	ATOMIC_PERMISSIONS,
-	hasPermissions,
-} from '../lib/SharePermissionsToolBox.js'
+import EyeIcon from 'vue-material-design-icons/EyeCircleOutline.vue'
+import LockOutlineIcon from 'vue-material-design-icons/LockOutline.vue'
+import PencilIcon from 'vue-material-design-icons/Pencil.vue'
+import UploadIcon from 'vue-material-design-icons/Upload.vue'
 
 import { createFocusTrap } from 'focus-trap'
 
+import ShareDetails from '../mixins/ShareDetails.js'
+import SharesMixin from '../mixins/SharesMixin.js'
+import ShareTypes from '../mixins/ShareTypes.js'
+
+import {
+	ATOMIC_PERMISSIONS,
+	BUNDLED_PERMISSIONS,
+	hasPermissions,
+} from '../lib/SharePermissionsToolBox.js'
+
 export default {
+	name: 'SharingEntryQuickShareSelect',
+
 	components: {
-		EyeIcon,
-		PencilIcon,
-		UploadIcon,
-		LockOutlineIcon,
 		CalendarMonthIcon,
 		ChevronRightIcon,
+		EyeIcon,
+		LockOutlineIcon,
+		PencilIcon,
+		UploadIcon,
 	},
-	mixins: [SharesMixin, ShareDetails, ShareTypes],
+
+	/*
+	 * Keep ShareTypes for now in case SharesMixin or ShareDetails
+	 * still depend on the legacy constants internally.
+	 *
+	 * Direct comparisons in this component already use ShareType.
+	 */
+	mixins: [
+		SharesMixin,
+		ShareDetails,
+		ShareTypes,
+	],
+
 	props: {
 		share: {
 			type: Object,
 			required: true,
 		},
+
 		toggle: {
 			type: Boolean,
 			default: false,
 		},
-		// TODO apply based on mime type
+
 		disabled: {
 			type: Boolean,
 			default: false,
 		},
 	},
+
 	data() {
 		return {
-			selectedOption: '',
-			showDropdown: this.toggle,
+			showDropdown: Boolean(this.toggle),
 			focusTrap: null,
-			fileDrop: false,
-			canEdit: false,
-			canView: false,
 		}
 	},
+
 	computed: {
 		hasExpireDate() {
-			if (this.share.expireDate) {
-				return true
-			}
-			return false
+			return !!this.share?.expireDate
 		},
+
 		hasPassword() {
-			if (this.share.password) {
-				return true
-			}
-			return false
+			return !!this.share?.password
 		},
+
 		canViewText() {
-			return t('nmcsharing', 'Anyone with the link can only view')
+			return t(
+				'nmcsharing',
+				'Anyone with the link can only view',
+			)
 		},
+
 		canEditText() {
-			return t('nmcsharing', 'Anyone with the link can edit')
+			return t(
+				'nmcsharing',
+				'Anyone with the link can edit',
+			)
 		},
+
 		fileDropText() {
-			return t('nmcsharing', 'Anyone with the link can file drop')
+			return t(
+				'nmcsharing',
+				'Anyone with the link can file drop',
+			)
 		},
+
 		customPermissionsText() {
-			return t('files_sharing', 'Custom permissions')
+			return t(
+				'files_sharing',
+				'Custom permissions',
+			)
 		},
-		preSelectedOption() {
-			let permissions = this.share.permissions
-			if (hasPermissions(this.share.permissions, ATOMIC_PERMISSIONS.SHARE)) {
-				// We remove the share permission for the comparison as it is not relevant for bundled permissions.
-				permissions = this.share.permissions & ~ATOMIC_PERMISSIONS.SHARE
+
+		/**
+		 * Normalize API/model variants.
+		 *
+		 * @return {number|undefined}
+		 */
+		currentShareType() {
+			const type =
+				this.share?.type
+				?? this.share?.shareType
+				?? this.share?.share_type
+
+			if (type === null || type === undefined) {
+				return undefined
 			}
-			if (permissions === BUNDLED_PERMISSIONS.READ_ONLY) {
-				this.setCanView(true)
+
+			const normalizedType = Number(type)
+
+			return Number.isNaN(normalizedType)
+				? undefined
+				: normalizedType
+		},
+
+		/**
+		 * Permissions relevant to the bundled quick selection.
+		 * SHARE itself is handled separately and therefore ignored here.
+		 *
+		 * @return {number}
+		 */
+		normalizedPermissions() {
+			let permissions = Number(this.share?.permissions ?? 0)
+
+			if (
+				hasPermissions(
+					permissions,
+					ATOMIC_PERMISSIONS.SHARE,
+				)
+			) {
+				permissions &= ~ATOMIC_PERMISSIONS.SHARE
+			}
+
+			return permissions
+		},
+
+		/**
+		 * Stable internal identifier for the selected option.
+		 *
+		 * @return {'view'|'edit'|'file-drop'|'custom'}
+		 */
+		selectedPermission() {
+			if (
+				this.normalizedPermissions
+				=== BUNDLED_PERMISSIONS.READ_ONLY
+			) {
+				return 'view'
+			}
+
+			if (
+				this.normalizedPermissions
+					=== BUNDLED_PERMISSIONS.ALL
+				|| this.normalizedPermissions
+					=== BUNDLED_PERMISSIONS.ALL_FILE
+			) {
+				return 'edit'
+			}
+
+			if (
+				this.normalizedPermissions
+				=== BUNDLED_PERMISSIONS.FILE_DROP
+			) {
+				return 'file-drop'
+			}
+
+			return 'custom'
+		},
+
+		selectedOption() {
+			switch (this.selectedPermission) {
+			case 'view':
 				return this.canViewText
-			} else if (permissions === BUNDLED_PERMISSIONS.ALL || permissions === BUNDLED_PERMISSIONS.ALL_FILE) {
-				this.setCanEdit(true)
+
+			case 'edit':
 				return this.canEditText
-			} else if (permissions === BUNDLED_PERMISSIONS.FILE_DROP) {
-				this.setFileDrop(true)
+
+			case 'file-drop':
 				return this.fileDropText
+
+			default:
+				return this.customPermissionsText
 			}
-
-			return this.customPermissionsText
-
 		},
+
+		canView() {
+			return this.selectedPermission === 'view'
+		},
+
+		canEdit() {
+			return this.selectedPermission === 'edit'
+		},
+
+		fileDrop() {
+			return this.selectedPermission === 'file-drop'
+		},
+
 		options() {
-			const options = [this.canViewText, this.canEditText]
+			const options = [
+				{
+					value: 'view',
+					label: this.canViewText,
+				},
+				{
+					value: 'edit',
+					label: this.canEditText,
+				},
+			]
+
 			if (this.supportsFileDrop) {
-				options.push(this.fileDropText)
+				options.push({
+					value: 'file-drop',
+					label: this.fileDropText,
+				})
 			}
-			// options.push(this.customPermissionsText)
 
 			return options
 		},
+
 		supportsFileDrop() {
-			if (this.isFolder) {
-				const shareType = this.share.type ?? this.share.shareType
-				return [this.SHARE_TYPES.SHARE_TYPE_LINK, this.SHARE_TYPES.SHARE_TYPE_EMAIL].includes(shareType)
+			if (!this.isFolder) {
+				return false
 			}
-			return false
-		},
-		dropDownPermissionValue() {
-			switch (this.selectedOption) {
-			case this.canEditText:
-				this.setCanView(true)
-				this.setCanEdit(true)
-				this.setFileDrop(false)
-				return this.isFolder ? BUNDLED_PERMISSIONS.ALL : BUNDLED_PERMISSIONS.ALL_FILE
-			case this.fileDropText:
-				this.setCanView(false)
-				this.setCanEdit(false)
-				this.setFileDrop(true)
-				return BUNDLED_PERMISSIONS.FILE_DROP
-			// case this.customPermissionsText:
-			// return 'custom'
-			case this.canViewText:
-			default:
-				this.setCanView(true)
-				this.setCanEdit(false)
-				this.setFileDrop(false)
-				return BUNDLED_PERMISSIONS.READ_ONLY
-			}
-		},
-		dropdownId() {
-			// Generate a unique ID for ARIA attributes
-			return `dropdown-${Math.random().toString(36).substr(2, 9)}`
+
+			return this.currentShareType === ShareType.Link
+				|| this.currentShareType === ShareType.Email
 		},
 	},
+
 	watch: {
-		toggle(toggleValue) {
-			this.showDropdown = toggleValue
+		toggle(value) {
+			this.setDropdownState(
+				Boolean(value),
+				false,
+			)
 		},
 	},
+
 	mounted() {
-		this.initializeComponent()
-		window.addEventListener('click', this.handleClickOutside)
+		window.addEventListener(
+			'click',
+			this.handleClickOutside,
+		)
+
+		if (this.showDropdown) {
+			this.$nextTick(() => {
+				this.useFocusTrap()
+			})
+		}
 	},
+
 	beforeDestroy() {
-		// Remove the global click event listener to prevent memory leaks
-		window.removeEventListener('click', this.handleClickOutside)
+		window.removeEventListener(
+			'click',
+			this.handleClickOutside,
+		)
+
+		this.clearFocusTrap(false)
 	},
+
 	methods: {
-		setCanView(value) {
-			this.canView = value
-		},
+		/**
+		 * Apply an externally or internally requested dropdown state.
+		 *
+		 * @param {boolean} open Open state
+		 * @param {boolean} emit Whether to sync the state to the parent
+		 */
+		setDropdownState(open, emit = true) {
+			const newState = Boolean(open)
 
-		setCanEdit(value) {
-			this.canEdit = value
-		},
-
-		setFileDrop(value) {
-			this.fileDrop = value
-		},
-
-		toggleDropdown() {
-			if (!this.isPermissionEditAllowed) {
+			if (this.showDropdown === newState) {
 				return
 			}
-			this.showDropdown = !this.showDropdown
-			if (this.showDropdown) {
+
+			if (!newState) {
+				this.clearFocusTrap()
+			}
+
+			this.showDropdown = newState
+
+			if (emit) {
+				this.$emit(
+					'update:toggle',
+					newState,
+				)
+			}
+
+			if (newState) {
 				this.$nextTick(() => {
 					this.useFocusTrap()
 				})
-			} else {
-				this.clearFocusTrap()
 			}
 		},
+
 		closeDropdown() {
-			this.clearFocusTrap()
-			this.showDropdown = false
+			this.setDropdownState(false)
 		},
+
+		/**
+		 * Select one of the bundled permission presets.
+		 *
+		 * @param {'view'|'edit'|'file-drop'} option Selected option
+		 */
 		selectOption(option) {
-			this.selectedOption = option
-			// if (option === this.customPermissionsText) {
-			// this.$emit('open-sharing-details')
-			// } else {
-			// }
-			this.share.permissions = this.dropDownPermissionValue
+			let permissions
+
+			switch (option) {
+			case 'edit':
+				permissions = this.isFolder
+					? BUNDLED_PERMISSIONS.ALL
+					: BUNDLED_PERMISSIONS.ALL_FILE
+				break
+
+			case 'file-drop':
+				if (!this.supportsFileDrop) {
+					return
+				}
+
+				permissions = BUNDLED_PERMISSIONS.FILE_DROP
+				break
+
+			case 'view':
+			default:
+				permissions = BUNDLED_PERMISSIONS.READ_ONLY
+				break
+			}
+
+			/*
+			 * Preserve resharing when the current share already has it.
+			 * The quick selector only changes the bundled read/write/
+			 * file-drop permissions.
+			 */
+			if (
+				hasPermissions(
+					Number(this.share.permissions ?? 0),
+					ATOMIC_PERMISSIONS.SHARE,
+				)
+			) {
+				permissions |= ATOMIC_PERMISSIONS.SHARE
+			}
+
+			this.share.permissions = permissions
+
 			this.queueUpdate('permissions')
-			this.showDropdown = false
+			this.closeDropdown()
 		},
+
 		openSharingDetails() {
+			if (this.disabled) {
+				return
+			}
+
+			if (this.showDropdown) {
+				this.closeDropdown()
+			}
+
 			this.$emit('open-sharing-details')
 		},
-		initializeComponent() {
-			this.selectedOption = this.preSelectedOption
-		},
-		handleClickOutside(event) {
-			const dropdownContainer = this.$refs.quickShareDropdownContainer
 
-			if (dropdownContainer && !dropdownContainer.contains(event.target)) {
-				this.showDropdown = false
+		handleClickOutside(event) {
+			if (!this.showDropdown) {
+				return
+			}
+
+			const dropdownContainer =
+				this.$refs.quickShareDropdownContainer
+
+			if (
+				dropdownContainer
+				&& !dropdownContainer.contains(event.target)
+			) {
+				this.closeDropdown()
 			}
 		},
+
 		useFocusTrap() {
-			// Create global stack if undefined
-			// Use in with trapStack to avoid conflicting traps
-			Object.assign(window, { _nc_focus_trap: window._nc_focus_trap || [] })
-			const dropdownElement = this.$refs.quickShareDropdown
-			this.focusTrap = createFocusTrap(dropdownElement, {
-				allowOutsideClick: true,
-				trapStack: window._nc_focus_trap,
-			})
+			const dropdownElement =
+				this.$refs.quickShareDropdown
+
+			if (!dropdownElement || this.focusTrap) {
+				return
+			}
+
+			window._nc_focus_trap ??= []
+
+			this.focusTrap = createFocusTrap(
+				dropdownElement,
+				{
+					allowOutsideClick: true,
+					escapeDeactivates: false,
+					fallbackFocus: dropdownElement,
+					trapStack: window._nc_focus_trap,
+				},
+			)
 
 			this.focusTrap.activate()
 		},
-		clearFocusTrap() {
-			this.focusTrap?.deactivate()
-			this.focusTrap = null
+
+		/**
+		 * @param {boolean} returnFocus Restore focus to the element
+		 * that was active when the trap was opened
+		 */
+		clearFocusTrap(returnFocus = true) {
+			if (!this.focusTrap) {
+				return
+			}
+
+			try {
+				this.focusTrap.deactivate({
+					returnFocus,
+				})
+			} finally {
+				this.focusTrap = null
+			}
 		},
+
+		getDropdownItems() {
+			const dropdown =
+				this.$refs.quickShareDropdown
+
+			if (!dropdown) {
+				return []
+			}
+
+			return Array.from(
+				dropdown.querySelectorAll(
+					'button:not(:disabled)',
+				),
+			)
+		},
+
 		shiftFocusForward() {
-			const currentElement = document.activeElement
-			let nextElement = currentElement.nextElementSibling
-			if (!nextElement) {
-				nextElement = this.$refs.quickShareDropdown.firstElementChild
+			const items = this.getDropdownItems()
+
+			if (items.length === 0) {
+				return
 			}
-			nextElement.focus()
+
+			const currentIndex =
+				items.indexOf(document.activeElement)
+
+			const nextIndex =
+				currentIndex < 0
+					? 0
+					: (currentIndex + 1) % items.length
+
+			items[nextIndex].focus()
 		},
+
 		shiftFocusBackward() {
-			const currentElement = document.activeElement
-			let previousElement = currentElement.previousElementSibling
-			if (!previousElement) {
-				previousElement = this.$refs.quickShareDropdown.lastElementChild
+			const items = this.getDropdownItems()
+
+			if (items.length === 0) {
+				return
 			}
-			previousElement.focus()
+
+			const currentIndex =
+				items.indexOf(document.activeElement)
+
+			const previousIndex =
+				currentIndex <= 0
+					? items.length - 1
+					: currentIndex - 1
+
+			items[previousIndex].focus()
 		},
+
 		handleArrowUp() {
 			this.shiftFocusBackward()
 		},
+
 		handleArrowDown() {
 			this.shiftFocusForward()
 		},
 	},
-
 }
 </script>
 
@@ -295,60 +573,71 @@ export default {
 		display: flex;
 		flex-direction: row;
 		align-items: center;
-		font-size: 14px;
+		min-height: 1.5rem;
+		margin: 0;
+		padding: 0;
 		gap: 2px;
-		color: var(--color-primary-element);
-		cursor: pointer;
-
-		background: none;
 		border: none;
 		border-radius: 0;
-		margin: 0;
-		min-height: 1.5rem;
-		padding: 0;
+		background: none;
+		color: var(--color-primary-element);
+		font-size: 14px;
 		text-align: left;
+		cursor: pointer;
 
-		&:hover {
+		&:hover:not(:disabled) {
 			text-decoration: underline;
+		}
+
+		&:disabled {
+			cursor: default;
 		}
 	}
 
 	.share-select-dropdown {
 		position: absolute;
-		display: flex;
-		flex-direction: column;
+		z-index: 1;
 		top: 100%;
 		left: 0;
-		border-radius: 8px;
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+		display: flex;
+		flex-direction: column;
+		max-height: 0;
+		overflow: hidden;
 		padding: 4px 0;
-		z-index: 1;
+		border-radius: 8px;
+		background-color: var(--color-main-background);
+		box-shadow: 0 2px 4px rgb(0 0 0 / 20%);
+		transition: max-height 0.3s ease;
 
 		.dropdown-item {
+			width: 100%;
 			padding: 8px;
-			font-size: 12px;
-			background: none;
 			border: none;
 			border-radius: 0;
-			font: inherit;
-			cursor: pointer;
+			background: none;
 			color: inherit;
-			outline: none;
-			width: 100%;
-			white-space: nowrap;
+			font: inherit;
+			font-size: 12px;
 			text-align: left;
+			white-space: nowrap;
+			cursor: pointer;
+
+			&:hover:not(:disabled),
+			&:focus-visible {
+				background-color: var(--color-background-hover);
+			}
+
+			&:disabled {
+				cursor: default;
+				opacity: 0.5;
+			}
 		}
 	}
 
-	/* Optional: Add a transition effect for smoother dropdown animation */
-	.share-select-dropdown {
-		max-height: 0;
-		overflow: hidden;
-		transition: max-height 0.3s ease;
-	}
-
-	&.active .share-select-dropdown {
-		max-height: 200px;
+	&.active {
+		.share-select-dropdown {
+			max-height: 200px;
+		}
 	}
 }
 </style>

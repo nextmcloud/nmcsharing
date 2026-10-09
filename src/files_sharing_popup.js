@@ -5,75 +5,103 @@
  * @author Julius Härtl <jus@bitgrid.net>
  *
  * @license AGPL-3.0-or-later
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- *
  */
 
 import Vue from 'vue'
+import { getCSPNonce } from '@nextcloud/auth'
 import { translate as t, translatePlural as n } from '@nextcloud/l10n'
-import { getRequestToken } from '@nextcloud/auth'
+import { generateFilePath } from '@nextcloud/router'
 
 import SharingPopup from './views/SharingPopup.vue'
 
 // eslint-disable-next-line camelcase
-__webpack_nonce__ = btoa(getRequestToken())
-__webpack_public_path__ = '/customapps/nmcsharing/js/'
+__webpack_public_path__ = generateFilePath('nmcsharing', '', 'js/')
+
+// eslint-disable-next-line camelcase
+__webpack_nonce__ = getCSPNonce()
 
 Vue.prototype.t = t
 Vue.prototype.n = n
 
-// Sharing popup modal component
 const View = Vue.extend(SharingPopup)
+
 let instance = null
+let mountPoint = null
 
 /**
- * Tear down the currently mounted popup instance, if any.
+ * Create the global sharing popup instance if it does not exist yet.
+ *
+ * @return {Vue} SharingPopup instance
  */
-function destroyInstance() {
+function getInstance() {
 	if (instance) {
-		const el = instance.$el
-		instance.$destroy()
-		el?.remove()
-		instance = null
+		return instance
+	}
+
+	mountPoint = document.createElement('div')
+	mountPoint.id = 'nmcsharing-popup'
+	document.body.appendChild(mountPoint)
+
+	instance = new View()
+	instance.$mount(mountPoint)
+
+	instance.$on('close-popup', () => {
+		// Keep the instance mounted so it can be reused.
+	})
+
+	return instance
+}
+
+/**
+ * Open the MagentaCLOUD sharing popup.
+ *
+ * @param {object} fileInfo Legacy FileInfo object
+ * @return {Promise<boolean>}
+ */
+async function openSharingPopup(fileInfo) {
+	if (!fileInfo) {
+		console.error('[nmcsharing] Cannot open sharing popup without fileInfo')
+		return false
+	}
+
+	try {
+		const popup = getInstance()
+
+		await popup.open(fileInfo)
+
+		return true
+	} catch (error) {
+		console.error('[nmcsharing] Failed to open sharing popup', error)
+		return false
 	}
 }
 
 /**
- * Open the MagentaCLOUD sharing popup as a standalone modal.
+ * Destroy the globally mounted popup.
  *
- * Nextcloud 33 removed the OCA.Files.Sidebar API that this popup used to be
- * embedded in as a sidebar tab. The modal is now mounted directly on the page
- * and opened from the file action.
- *
- * @param {object} fileInfo the file to share ({ path, name, size, permissions, id, mime })
+ * Primarily useful for cleanup during development or app teardown.
  */
-async function openSharingPopup(fileInfo) {
-	destroyInstance()
+function destroySharingPopup() {
+	if (!instance) {
+		return
+	}
 
-	const mountPoint = document.createElement('div')
-	document.body.appendChild(mountPoint)
+	instance.$destroy()
 
-	instance = new View()
-	instance.$on('close-popup', destroyInstance)
-	instance.$mount(mountPoint)
+	if (instance.$el?.parentNode) {
+		instance.$el.parentNode.removeChild(instance.$el)
+	}
 
-	// Only show the modal once the share data is loaded
-	await instance.update(fileInfo)
-	instance.showThisModal()
+	if (mountPoint?.parentNode) {
+		mountPoint.parentNode.removeChild(mountPoint)
+	}
+
+	instance = null
+	mountPoint = null
 }
 
-window.OCA = window.OCA || {}
-window.OCA.Nmcsharing = window.OCA.Nmcsharing || {}
+window.OCA ??= {}
+window.OCA.Nmcsharing ??= {}
+
 window.OCA.Nmcsharing.openSharingPopup = openSharingPopup
+window.OCA.Nmcsharing.destroySharingPopup = destroySharingPopup

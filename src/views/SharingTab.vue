@@ -1,24 +1,3 @@
-<!--
-  - @copyright Copyright (c) 2019 John Molakvoæ <skjnldsv@protonmail.com>
-  -
-  - @author John Molakvoæ <skjnldsv@protonmail.com>
-  -
-  - @license GNU AGPL version 3 or any later version
-  -
-  - This program is free software: you can redistribute it and/or modify
-  - it under the terms of the GNU Affero General Public License as
-  - published by the Free Software Foundation, either version 3 of the
-  - License, or (at your option) any later version.
-  -
-  - This program is distributed in the hope that it will be useful,
-  - but WITHOUT ANY WARRANTY; without even the implied warranty of
-  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  - GNU Affero General Public License for more details.
-  -
-  - You should have received a copy of the GNU Affero General Public License
-  - along with this program. If not, see <http://www.gnu.org/licenses/>.
-  -
-  -->
 <template>
 	<div :class="{ 'icon-loading': loading }">
 		<!-- error message -->
@@ -34,7 +13,10 @@
 			</h2>
 
 			<!-- shared with me information -->
-			<SharingEntrySimple v-if="isSharedWithMe" v-bind="sharedWithMe" class="sharing-entry__reshare" />
+			<SharingEntrySimple
+				v-if="isSharedWithMe"
+				v-bind="sharedWithMe"
+				class="sharing-entry__reshare" />
 
 			<p v-if="canReshare">
 				{{ isSharedWithMe ? `${t('nmcsharing', 'Resharing is allowed')}. ` : '' }}
@@ -45,74 +27,107 @@
 					{{ t('nmcsharing', 'Here you can see who has access to your file/folder.') }}
 				</span>
 			</p>
+
 			<p v-else>
 				{{ t('files_sharing', 'Resharing is not allowed') }}
 			</p>
 
 			<!-- add new share input -->
-			<SharingInput v-if="!loading && false" :can-reshare="canReshare" :file-info="fileInfo"
-				:link-shares="linkShares" :reshare="reshare" :shares="shares" :is-shared-with-me="isSharedWithMe"
-				@open-sharing-details="toggleShareDetailsView" @open-sharing-details-all="toggleShareDetailsViewAll" />
+			<SharingInput
+				v-if="!loading && false"
+				:can-reshare="canReshare"
+				:file-info="fileInfo"
+				:link-shares="linkShares"
+				:reshare="reshare"
+				:shares="shares"
+				:is-shared-with-me="isSharedWithMe"
+				@open-sharing-details="toggleShareDetailsView"
+				@open-sharing-details-all="toggleShareDetailsViewAll" />
 
 			<!-- link shares list -->
-			<SharingLinkList v-if="!loading" ref="linkShareList" :can-reshare="canReshare" :file-info="fileInfo"
-				:shares="linkShares" @open-sharing-details="toggleShareDetailsView" />
-
-			<!-- other shares list -->
-			<SharingList v-if="!loading && canReshare" ref="shareList" :shares="shares" :file-info="fileInfo"
+			<SharingLinkList
+				v-if="!loading"
+				ref="linkShareList"
+				:can-reshare="canReshare"
+				:file-info="fileInfo"
+				:shares="linkShares"
 				@open-sharing-details="toggleShareDetailsView" />
 
-			<OpenSharingButton v-if="canReshare" :file-info="fileInfo" />
+			<!-- other shares list -->
+			<SharingList
+				v-if="!loading && canReshare"
+				ref="shareList"
+				:shares="shares"
+				:file-info="fileInfo"
+				@open-sharing-details="toggleShareDetailsView" />
+
+			<OpenSharingButton
+				v-if="canReshare"
+				:file-info="fileInfo" />
 		</div>
 
 		<!-- share details -->
 		<div v-else>
-			<SharingDetailsTab :file-info="shareDetailsData.fileInfo" :share="shareDetailsData.share"
-				:share-all="shareDetailsDataAll" :resharing-allowed-global="config.isResharingAllowed"
-				@close-sharing-details="toggleShareDetailsView" @add:share="addShare" @remove:share="removeShare" />
+			<SharingTabDetails
+				:file-info="shareDetailsData.fileInfo"
+				:share="shareDetailsData.share"
+				:share-all="shareDetailsDataAll"
+				:resharing-allowed-global="config.isResharingAllowed"
+				@close-sharing-details="toggleShareDetailsView"
+				@add:share="addShare"
+				@remove:share="removeShare" />
 		</div>
 
-		<!-- additional entries, use it with cautious -->
-		<div v-for="(section, index) in sections" :ref="'section-' + index" :key="index"
+		<!-- additional entries -->
+		<div
+			v-for="(section, index) in sections"
+			:ref="'section-' + index"
+			:key="index"
 			class="sharingTab__additionalContent">
-			<component :is="section($refs['section-' + index], fileInfo)" :file-info="fileInfo" />
+			<component
+				:is="section($refs['section-' + index], fileInfo)"
+				:file-info="fileInfo" />
 		</div>
 	</div>
 </template>
-<!-- eslint-disable @nextcloud/no-deprecations -->
-<script>
-import { generateOcsUrl } from '@nextcloud/router'
-import axios from '@nextcloud/axios'
 
-import Config from '../services/ConfigService.js'
-import { shareWithTitle } from '../utils/SharedWithMe.js'
-import Share from '../models/Share.js'
-import ShareTypes from '../mixins/ShareTypes.js'
+<!-- eslint-disable @nextcloud/no-deprecations -->
+
+<script>
+import axios from '@nextcloud/axios'
+import { translate as t } from '@nextcloud/l10n'
+import { generateOcsUrl } from '@nextcloud/router'
+import { ShareType } from '@nextcloud/sharing'
+
+import OpenSharingButton from '../components/OpenSharingButton.vue'
 import SharingEntrySimple from '../components/SharingEntrySimple.vue'
 import SharingInput from '../components/SharingInput.vue'
-import OpenSharingButton from '../components/OpenSharingButton.vue'
+
+import Share from '../models/Share.js'
+import Config from '../services/ConfigService.js'
+import { shareWithTitle } from '../utils/SharedWithMe.js'
 
 import SharingLinkList from './SharingLinkList.vue'
 import SharingList from './SharingList.vue'
-import SharingDetailsTab from './SharingDetailsTab.vue'
-
-import LinkIcon from 'vue-material-design-icons/Link.vue'
-import AccountPlusIcon from 'vue-material-design-icons/AccountPlus.vue'
+import SharingTabDetails from './SharingTabDetails.vue'
 
 export default {
 	name: 'SharingTab',
 
-	mixins: [ShareTypes],
-
 	components: {
+		OpenSharingButton,
 		SharingEntrySimple,
 		SharingInput,
 		SharingLinkList,
 		SharingList,
-		SharingDetailsTab,
-		OpenSharingButton,
-		LinkIcon,
-		AccountPlusIcon,
+		SharingTabDetails,
+	},
+
+	props: {
+		fileInfo: {
+			type: Object,
+			required: true,
+		},
 	},
 
 	data() {
@@ -122,15 +137,11 @@ export default {
 			error: '',
 			expirationInterval: null,
 			loading: true,
-
-			// reshare Share object
 			reshare: null,
 			sharedWithMe: {},
 			shares: [],
 			linkShares: [],
-
-			sections: OCA.Sharing.ShareTabSections.getSections(),
-			// projectsEnabled: loadState('core', 'projects_enabled', false),
+			sections: OCA.Sharing?.ShareTabSections?.getSections?.() ?? [],
 			showSharingDetailsView: false,
 			shareDetailsData: {},
 			shareDetailsDataAll: [],
@@ -153,16 +164,48 @@ export default {
 		},
 	},
 
+	watch: {
+		fileInfo(newFileInfo, oldFileInfo) {
+			if (!newFileInfo) {
+				return
+			}
+
+			if (!oldFileInfo || newFileInfo.id !== oldFileInfo.id) {
+				this.refresh()
+			}
+		},
+	},
+
+	mounted() {
+		this.refresh()
+	},
+
+	beforeDestroy() {
+		clearInterval(this.expirationInterval)
+	},
+
 	methods: {
+		async refresh() {
+			if (!this.fileInfo) {
+				return
+			}
+
+			this.resetState()
+			await this.getShares()
+			this.applyShareIconOverlay()
+		},
+
 		applyShareIconOverlay() {
 			const file = this.fileInfo
+
 			if (!file || !file.attributes) {
 				return
 			}
 
 			const raw = file.attributes['share-types'] || {}
 			const shareTypes = Object.values(raw).flat()
-			if (!shareTypes.some(type => type === 3 || type === 4 || type === 0)) {
+
+			if (!shareTypes.some(type => type === ShareType.Link || type === ShareType.Email || type === ShareType.User)) {
 				return
 			}
 
@@ -199,6 +242,7 @@ export default {
 				overlayElement.style.setProperty('background-repeat', 'no-repeat', 'important')
 				overlayElement.style.setProperty('background-position', 'center', 'important')
 				overlayElement.style.setProperty('background-size', '2.1rem 2.5rem', 'important')
+
 				return overlayElement
 			}
 
@@ -216,33 +260,18 @@ export default {
 			}, 50)
 		},
 
-
 		/**
-		 * Update current fileInfo and fetch new data
-		 *
-		 * @param {object} fileInfo the current file FileInfo
-		 */
-		async update(fileInfo) {
-			this.fileInfo = fileInfo
-			this.resetState()
-			this.getShares()
-			this.applyShareIconOverlay()
-		},
-
-		/**
-		 * Get the existing shares infos
+		 * Get the existing shares.
 		 */
 		async getShares() {
 			try {
 				this.loading = true
+				this.error = ''
 
-				// init params
 				const shareUrl = generateOcsUrl('apps/files_sharing/api/v1/shares')
 				const format = 'json'
-				// TODO: replace with proper getFUllpath implementation of our own FileInfo model
 				const path = (this.fileInfo.path + '/' + this.fileInfo.name).replace('//', '/')
 
-				// fetch shares
 				const fetchShares = axios.get(shareUrl, {
 					params: {
 						format,
@@ -250,6 +279,7 @@ export default {
 						reshares: true,
 					},
 				})
+
 				const fetchSharedWithMe = axios.get(shareUrl, {
 					params: {
 						format,
@@ -258,31 +288,31 @@ export default {
 					},
 				})
 
-				// wait for data
-				const [shares, sharedWithMe] = await Promise.all([fetchShares, fetchSharedWithMe])
-				this.loading = false
+				const [shares, sharedWithMe] = await Promise.all([
+					fetchShares,
+					fetchSharedWithMe,
+				])
 
-				// process results
 				this.processSharedWithMe(sharedWithMe)
 				this.processShares(shares)
 			} catch (error) {
-				if (error.response.data?.ocs?.meta?.message) {
-					this.error = error.response.data.ocs.meta.message
-				} else {
-					this.error = t('files_sharing', 'Unable to load the shares list')
-				}
-				this.loading = false
+				const message = error?.response?.data?.ocs?.meta?.message
+				this.error = message || t('files_sharing', 'Unable to load the shares list')
 				console.error('Error loading the shares list', error)
+			} finally {
+				this.loading = false
 			}
 		},
 
 		/**
-		 * Reset the current view to its default state
+		 * Reset the current view to its default state.
 		 */
 		resetState() {
 			clearInterval(this.expirationInterval)
+
 			this.loading = true
 			this.error = ''
+			this.reshare = null
 			this.sharedWithMe = {}
 			this.shares = []
 			this.linkShares = []
@@ -292,59 +322,56 @@ export default {
 		},
 
 		/**
-		 * Update sharedWithMe.subtitle with the appropriate
-		 * expiration time left
+		 * Update sharedWithMe.subtitle with the appropriate expiration time left.
 		 *
-		 * @param {Share} share the sharedWith Share object
+		 * @param {Share} share the sharedWithMe Share object
 		 */
 		updateExpirationSubtitle(share) {
 			// eslint-disable-next-line no-undef
 			const expiration = moment(share.expireDate).unix()
+
 			this.$set(this.sharedWithMe, 'subtitle', t('files_sharing', 'Expires {relativetime}', {
 				relativetime: OC.Util.relativeModifiedDate(expiration * 1000),
 			}))
 
-			// share have expired
 			// eslint-disable-next-line no-undef
 			if (moment().unix() > expiration) {
 				clearInterval(this.expirationInterval)
-				// TODO: clear ui if share is expired
 				this.$set(this.sharedWithMe, 'subtitle', t('files_sharing', 'this share just expired.'))
 			}
 		},
 
 		/**
-		 * Process the current shares data
-		 * and init shares[]
+		 * Process current shares data.
 		 *
-		 * @param {object} share the share ocs api request data
-		 * @param {object} share.data the request data
+		 * @param {object} response Axios response
 		 */
 		processShares({ data }) {
-			if (data.ocs && data.ocs.data && data.ocs.data.length > 0) {
-				// create Share objects and sort by newest
-				const shares = data.ocs.data
-					.map(share => new Share(share))
-					.sort((a, b) => b.createdTime - a.createdTime)
+			const rawShares = data?.ocs?.data ?? []
 
-				this.linkShares = shares.filter(share => share.type === this.SHARE_TYPES.SHARE_TYPE_LINK || share.type === this.SHARE_TYPES.SHARE_TYPE_EMAIL)
-				this.shares = shares.filter(share => share.type !== this.SHARE_TYPES.SHARE_TYPE_LINK && share.type !== this.SHARE_TYPES.SHARE_TYPE_EMAIL)
+			const shares = rawShares
+				.map(share => new Share(share))
+				.sort((a, b) => b.createdTime - a.createdTime)
 
-				// console.debug('Processed', this.linkShares.length, 'link share(s)')
-				// console.debug('Processed', this.shares.length, 'share(s)')
-			}
+			this.linkShares = shares.filter(share =>
+				share.type === ShareType.Link || share.type === ShareType.Email,
+			)
+
+			this.shares = shares.filter(share =>
+				share.type !== ShareType.Link && share.type !== ShareType.Email,
+			)
 		},
 
 		/**
-		 * Process the sharedWithMe share data
-		 * and init sharedWithMe
+		 * Process the shared-with-me data.
 		 *
-		 * @param {object} share the share ocs api request data
-		 * @param {object} share.data the request data
+		 * @param {object} response Axios response
 		 */
 		processSharedWithMe({ data }) {
-			if (data.ocs && data.ocs.data && data.ocs.data[0]) {
-				const share = new Share(data)
+			const rawShare = data?.ocs?.data?.[0]
+
+			if (rawShare) {
+				const share = new Share(rawShare)
 				const title = shareWithTitle(share)
 				const displayName = share.ownerDisplayName
 				const user = share.owner
@@ -354,19 +381,23 @@ export default {
 					title,
 					user,
 				}
+
 				this.reshare = share
 
-				// If we have an expiration date, use it as subtitle
-				// Refresh the status every 10s and clear if expired
 				// eslint-disable-next-line no-undef
 				if (share.expireDate && moment(share.expireDate).unix() > moment().unix()) {
-					// first update
 					this.updateExpirationSubtitle(share)
-					// interval update
-					this.expirationInterval = setInterval(this.updateExpirationSubtitle, 10000, share)
+					this.expirationInterval = setInterval(
+						this.updateExpirationSubtitle,
+						10000,
+						share,
+					)
 				}
-			} else if (this.fileInfo && this.fileInfo.shareOwnerId !== undefined ? this.fileInfo.shareOwnerId !== OC.currentUser : false) {
-				// Fallback to compare owner and current user.
+			} else if (
+				this.fileInfo
+				&& this.fileInfo.shareOwnerId !== undefined
+				&& this.fileInfo.shareOwnerId !== OC.currentUser
+			) {
 				this.sharedWithMe = {
 					displayName: this.fileInfo.shareOwner,
 					title: t(
@@ -382,53 +413,58 @@ export default {
 		},
 
 		/**
-		 * Add a new share into the shares list
-		 * and return the newly created share component
+		 * Add a share to the appropriate share list.
 		 *
-		 * @param {Share} share the share to add to the array
-		 * @param {Function} [resolve] a function to run after the share is added and its component initialized
+		 * @param {Share} share share to add
+		 * @param {Function} resolve callback
 		 */
-		addShare(share, resolve = () => { }) {
-			// only catching share type MAIL as link shares are added differently
-			// meaning: not from the ShareInput
-			if (share.type === this.SHARE_TYPES.SHARE_TYPE_EMAIL) {
+		addShare(share, resolve = () => {}) {
+			if (share.type === ShareType.Link || share.type === ShareType.Email) {
 				this.linkShares.unshift(share)
 			} else {
 				this.shares.unshift(share)
 			}
+
 			this.awaitForShare(share, resolve)
 		},
 
 		/**
-		 * Remove a share from the shares list
+		 * Remove a share from the appropriate list.
 		 *
-		 * @param {Share} share the share to remove
+		 * @param {Share} share share to remove
 		 */
 		removeShare(share) {
-			const index = this.shares.findIndex(item => item.id === share.id)
-			// eslint-disable-next-line vue/no-mutating-props
-			this.shares.splice(index, 1)
+			const shareIndex = this.shares.findIndex(item => item.id === share.id)
+			if (shareIndex !== -1) {
+				this.shares.splice(shareIndex, 1)
+			}
+
+			const linkShareIndex = this.linkShares.findIndex(item => item.id === share.id)
+			if (linkShareIndex !== -1) {
+				this.linkShares.splice(linkShareIndex, 1)
+			}
 		},
 
 		/**
-		 * Await for next tick and render after the list updated
-		 * Then resolve with the matched vue component of the
-		 * provided share object
+		 * Resolve with the newly rendered share component.
 		 *
 		 * @param {Share} share newly created share
-		 * @param {Function} resolve a function to execute after
+		 * @param {Function} resolve callback
 		 */
 		awaitForShare(share, resolve) {
 			let listComponent = this.$refs.shareList
-			// Only mail shares comes from the input, link shares
-			// are managed internally in the SharingLinkList component
-			if (share.type === this.SHARE_TYPES.SHARE_TYPE_EMAIL) {
+
+			if (share.type === ShareType.Link || share.type === ShareType.Email) {
 				listComponent = this.$refs.linkShareList
 			}
 
-			if (!listComponent) return
+			if (!listComponent) {
+				return
+			}
+
 			this.$nextTick(() => {
 				const newShare = listComponent.$children.find(component => component.share === share)
+
 				if (newShare) {
 					resolve(newShare)
 				}
@@ -439,6 +475,7 @@ export default {
 			if (eventData) {
 				this.shareDetailsData = eventData
 			}
+
 			this.showSharingDetailsView = !this.showSharingDetailsView
 		},
 
@@ -447,12 +484,9 @@ export default {
 				this.shareDetailsData = eventData[0]
 				this.shareDetailsDataAll = eventData
 			}
+
 			this.showSharingDetailsView = !this.showSharingDetailsView
 		},
-	},
-
-	mounted() {
-		this.applyShareIconOverlay()
 	},
 }
 </script>
@@ -468,11 +502,11 @@ export default {
 
 .sharingTab {
 	&__content {
-		padding: 0px;
+		padding: 0;
 
 		p,
 		.sharing-entry__noshare {
-			margin-bottom: 1rem
+			margin-bottom: 1rem;
 		}
 	}
 

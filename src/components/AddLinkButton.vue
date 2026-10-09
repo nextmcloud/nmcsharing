@@ -1,69 +1,91 @@
 <template>
 	<div>
-		<NcButton id="addlink_button" type="secondary" @click.prevent.stop="onNewLinkShare">
+		<NcButton
+			id="addlink_button"
+			type="secondary"
+			:disabled="loading"
+			@click.prevent.stop="onNewLinkShare">
 			{{ t('nmcsharing', 'Create new link') }}
 		</NcButton>
 	</div>
 </template>
 
 <script>
-import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
-import { Type as ShareTypes } from '@nextcloud/sharing'
 import { showError, showSuccess } from '@nextcloud/dialogs'
+import { ShareType } from '@nextcloud/sharing'
+import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
+
 import SharesMixin from '../mixins/SharesMixin.js'
 
 export default {
 	name: 'AddLinkButton',
+
 	components: {
 		NcButton,
 	},
-	mixins: [SharesMixin],
+
+	mixins: [
+		SharesMixin,
+	],
+
 	props: {
 		fileInfo: {
 			type: Object,
-			default: () => {},
 			required: true,
 		},
 	},
+
 	methods: {
 		async onNewLinkShare() {
-			try {
-				// do nothing if we're already pending creation
-				if (this.loading) {
-					return true
-				}
+			if (this.loading) {
+				return false
+			}
 
+			try {
 				this.loading = true
 				this.errors = {}
 
-				const path = (this.fileInfo.path + '/' + this.fileInfo.name).replace('//', '/')
-				const expireDate = new Date(new Date().setFullYear(new Date().getFullYear() + 1))
+				const path = `${this.fileInfo.path}/${this.fileInfo.name}`.replace(/\/+/g, '/')
+
+				// Keep the existing behaviour: link expires after one year.
+				const expiration = new Date()
+				expiration.setFullYear(expiration.getFullYear() + 1)
+
+				const expireDate = [
+					expiration.getFullYear(),
+					String(expiration.getMonth() + 1).padStart(2, '0'),
+					String(expiration.getDate()).padStart(2, '0'),
+				].join('-')
+
 				const options = {
 					path,
-					shareType: ShareTypes.SHARE_TYPE_LINK,
+					shareType: ShareType.Link,
 					expireDate,
+					attributes: JSON.stringify(this.fileInfo.shareAttributes ?? []),
 				}
-
-				// console.debug('Creating link share with options', options)
 
 				const newShare = await this.createShare(options)
 
-				// console.debug('Link share created', newShare)
+				// No callback/Pending Promise needed here.
+				// AddLinkButton does not need the rendered SharingEntryLink instance.
+				this.$emit('add:share', newShare)
 
-				await new Promise(resolve => {
-					this.$emit('add:share', newShare, resolve)
-				})
 				showSuccess(t('files_sharing', 'Link share created'))
 
-			} catch (data) {
-				const message = data?.response?.data?.ocs?.meta?.message
-				if (!message) {
+				return true
+			} catch (error) {
+				const message = error?.response?.data?.ocs?.meta?.message
+
+				if (message) {
+					this.onSyncError('pending', message)
+					showError(message)
+				} else {
 					showError(t('files_sharing', 'Error while creating the share'))
-					console.error(data)
-					return
 				}
-				this.onSyncError('pending', message)
-				throw data
+
+				console.error('[nmcsharing] Error while creating link share', error)
+
+				return false
 			} finally {
 				this.loading = false
 			}

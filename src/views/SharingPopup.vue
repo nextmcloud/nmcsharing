@@ -1,8 +1,12 @@
 <template>
-	<NcModal size="normal"
+	<NcModal
+		v-if="fileInfo"
+		size="normal"
+		:name="t('nmcsharing', 'Sharing')"
 		:show.sync="modal"
 		:has-next="false"
 		:has-previous="false"
+		:light-backdrop="true"
 		@close="closeThisModal">
 		<!-- error message -->
 		<div v-if="error" class="emptycontent" :class="{ emptyContentWithSections: sections.length > 0 }">
@@ -15,7 +19,8 @@
 			<div v-if="!loading" class="sharingPopup__content">
 				<!-- share link details -->
 				<template v-if="showShareLinkDetailsView">
-					<SharingDetailsTab :file-info="shareLinkDetailsData.fileInfo"
+					<SharingTabDetails
+						:file-info="shareLinkDetailsData.fileInfo"
 						:share="shareLinkDetailsData.share"
 						:resharing-allowed-global="config.isResharingAllowed"
 						@close-sharing-details="toggleShareLinkDetailsView"
@@ -28,14 +33,20 @@
 						{{ t('nmcsharing', 'Send link via E-Mail') }}
 					</h2>
 
-					<span class="sharingPopup__fileinfo">{{ fileInfo.name }} ⸱ {{ size }}</span>
+					<span class="sharingPopup__fileinfo">
+						{{ fileInfo.name }} ⸱ {{ size }}
+					</span>
 
 					<!-- shared with me information -->
-					<SharingEntrySimple v-if="isSharedWithMe" v-bind="sharedWithMe" class="sharing-entry__reshare" />
+					<SharingEntrySimple
+						v-if="isSharedWithMe"
+						v-bind="sharedWithMe"
+						class="sharing-entry__reshare" />
 
 					<!-- share details -->
 					<template v-if="showShareDetailsView">
-						<SharingPopupDetailsTab :file-info="shareDetailsData.fileInfo"
+						<SharingPopupDetails
+							:file-info="shareDetailsData.fileInfo"
 							:share="shareDetailsData.share"
 							:share-type="shareType"
 							:resharing-allowed-global="config.isResharingAllowed"
@@ -44,7 +55,8 @@
 					</template>
 
 					<!-- add new share input -->
-					<SharingInput :can-reshare="canReshare"
+					<SharingInput
+						:can-reshare="canReshare"
 						:file-info="fileInfo"
 						:shares="shares"
 						:link-shares="linkShares"
@@ -56,13 +68,15 @@
 						@done:share="doneSharing"
 						@open-sharing-details-all="toggleShareDetailsViewAll" />
 
-					<div v-if="canReshare"
-						class="sharingPopup__divider">
-						<span class="sharingPopup__or">{{ t('nmcsharing', 'or') }}</span>
+					<div v-if="canReshare" class="sharingPopup__divider">
+						<span class="sharingPopup__or">
+							{{ t('nmcsharing', 'or') }}
+						</span>
 					</div>
 
 					<!-- link shares list -->
-					<SharingPopupLinkList v-if="canReshare"
+					<SharingPopupLinkList
+						v-if="canReshare"
 						ref="linkShareList"
 						:can-reshare="canReshare"
 						:file-info="fileInfo"
@@ -87,38 +101,39 @@
 		</div>
 	</NcModal>
 </template>
+
 <!-- eslint-disable @nextcloud/no-deprecations -->
 <script>
+import axios from '@nextcloud/axios'
 import { formatFileSize } from '@nextcloud/files'
 import { generateOcsUrl } from '@nextcloud/router'
-import axios from '@nextcloud/axios'
+import { ShareType } from '@nextcloud/sharing'
+
 import NcModal from '@nextcloud/vue/dist/Components/NcModal.js'
 import CheckCircleOutlineIcon from 'vue-material-design-icons/CheckCircleOutline.vue'
 
-import Config from '../services/ConfigService.js'
-import { shareWithTitle } from '../utils/SharedWithMe.js'
-import Share from '../models/Share.js'
-import ShareTypes from '../mixins/ShareTypes.js'
 import SharingEntrySimple from '../components/SharingEntrySimple.vue'
 import SharingInput from '../components/SharingInput.vue'
-import SharingDetailsTab from './SharingDetailsTab.vue'
-import SharingPopupDetailsTab from './SharingPopupDetailsTab.vue'
+import Share from '../models/Share.js'
+import Config from '../services/ConfigService.js'
+import { shareWithTitle } from '../utils/SharedWithMe.js'
+
+import SharingPopupDetails from './SharingPopupDetails.vue'
 import SharingPopupLinkList from './SharingPopupLinkList.vue'
+import SharingTabDetails from './SharingTabDetails.vue'
 
 export default {
 	name: 'SharingPopup',
 
 	components: {
-		NcModal,
 		CheckCircleOutlineIcon,
+		NcModal,
 		SharingEntrySimple,
 		SharingInput,
-		SharingDetailsTab,
-		SharingPopupDetailsTab,
+		SharingPopupDetails,
 		SharingPopupLinkList,
+		SharingTabDetails,
 	},
-
-	mixins: [ShareTypes],
 
 	data() {
 		return {
@@ -129,15 +144,13 @@ export default {
 			loading: true,
 			modal: false,
 			fileInfo: null,
-			// reshare Share object
 			reshare: null,
 			sharedWithMe: {},
 			shares: [],
 			linkShares: [],
 			newShare: {},
 			shareSet: false,
-			sections: OCA.Sharing.ShareTabSections.getSections(),
-			// projectsEnabled: loadState('core', 'projects_enabled', false),
+			sections: window.OCA?.Sharing?.ShareTabSections?.getSections?.() ?? [],
 			showShareDetailsView: false,
 			showShareLinkDetailsView: false,
 			shareDetailsData: {},
@@ -150,33 +163,33 @@ export default {
 	},
 
 	computed: {
-		/**
-		 * Is this share shared with me?
-		 *
-		 * @return {boolean}
-		 */
 		isSharedWithMe() {
-			// When embedded in the legacy sidebar tab the popup opened itself
-			// once the "sharing" tab became active. As a standalone modal there
-			// is no parent tab, so guard the call — the opener shows the modal.
-			if (typeof this.$parent?.getActiveTab === 'function' && this.$parent.getActiveTab() === 'sharing') {
-				this.showThisModal()
-			}
 			return Object.keys(this.sharedWithMe).length > 0
 		},
 
 		canReshare() {
+			if (!this.fileInfo) {
+				return false
+			}
+
 			return !!(this.fileInfo.permissions & OC.PERMISSION_SHARE)
-                || !!(this.reshare && this.reshare.hasSharePermission && this.config.isResharingAllowed)
+				|| !!(this.reshare?.hasSharePermission && this.config.isResharingAllowed)
 		},
 
 		size() {
-			const size = parseInt(this.fileInfo.size, 10)
-			if (typeof size !== 'number' || isNaN(size) || size < 0) {
+			if (!this.fileInfo) {
+				return ''
+			}
+
+			const size = Number.parseInt(this.fileInfo.size, 10)
+
+			if (Number.isNaN(size) || size < 0) {
 				return this.t('files', 'Pending')
 			}
+
 			return formatFileSize(size, true)
 		},
+
 		recipients() {
 			return this.sharedWith.join(', ')
 		},
@@ -184,24 +197,53 @@ export default {
 		shareType() {
 			let isUser = false
 			let isEmail = false
+
 			for (const element of this.shareDetailsDataAll) {
-				if (element.share.type === 0) {
+				if (element?.share?.type === ShareType.User) {
 					isUser = true
-				} else if (element.share.type === 4) {
+				} else if (element?.share?.type === ShareType.Email) {
 					isEmail = true
 				}
+
 				if (isUser && isEmail) {
 					return 'MIXED'
 				}
 			}
+
 			if (isUser) {
 				return 'USER'
 			}
+
 			return 'EMAIL'
 		},
 	},
 
+	beforeDestroy() {
+		clearInterval(this.expirationInterval)
+	},
+
 	methods: {
+		/**
+		 * Open the popup for the provided file.
+		 *
+		 * @param {object} fileInfo Legacy FileInfo object
+		 * @return {Promise<boolean>}
+		 */
+		async open(fileInfo) {
+			if (!fileInfo) {
+				console.error('[nmcsharing] Cannot open SharingPopup without fileInfo')
+				return false
+			}
+
+			this.fileInfo = fileInfo
+			this.resetState()
+			this.modal = true
+
+			await this.getShares()
+
+			return true
+		},
+
 		linkShareCreated() {
 			this.newLinkShare = true
 		},
@@ -211,56 +253,45 @@ export default {
 		},
 
 		closeThisModal() {
-			// Nextcloud 33 removed the OCA.Files.Sidebar API this popup used
-			// to be embedded in. The popup is now a standalone modal, so we
-			// simply hide it and let the mounting code tear the instance down.
+			clearInterval(this.expirationInterval)
 			this.modal = false
 			this.$emit('close-popup')
 		},
 
-		async openSharingManage() {
-			// The legacy "manage shares" flow relied on the removed
-			// OCA.Files.Sidebar API. Fall back to the standard files sidebar
-			// sharing tab when available; otherwise this is a no-op.
-			try {
-				const sidebar = window.OCP?.Files?.Sidebar || window.OCA?.Files?.Sidebar
-				if (!sidebar) {
-					return null
-				}
-				const fileInfoPathName = this.fileInfo.path + '/' + this.fileInfo.name
-				sidebar.open?.(fileInfoPathName)
-				sidebar.setActiveTab?.('sharing')
-				return null
-			} catch (error) {
-				return false
-			}
-		},
-
 		/**
-		 * Update current fileInfo and fetch new data
+		 * Update current fileInfo and fetch new data.
+		 *
+		 * Kept for compatibility with callers that still use update().
 		 *
 		 * @param {object} fileInfo the current file FileInfo
+		 * @return {Promise<void>}
 		 */
 		async update(fileInfo) {
+			if (!fileInfo) {
+				return
+			}
+
 			this.fileInfo = fileInfo
 			this.resetState()
-			this.getShares()
+			await this.getShares()
 		},
 
 		/**
-		 * Get the existing shares infos
+		 * Get existing shares.
 		 */
 		async getShares() {
+			if (!this.fileInfo) {
+				return
+			}
+
 			try {
 				this.loading = true
+				this.error = ''
 
-				// init params
 				const shareUrl = generateOcsUrl('apps/files_sharing/api/v1/shares')
 				const format = 'json'
-				// TODO: replace with proper getFUllpath implementation of our own FileInfo model
-				const path = (this.fileInfo.path + '/' + this.fileInfo.name).replace('//', '/')
+				const path = `${this.fileInfo.path}/${this.fileInfo.name}`.replace(/\/+/g, '/')
 
-				// fetch shares
 				const fetchShares = axios.get(shareUrl, {
 					params: {
 						format,
@@ -268,6 +299,7 @@ export default {
 						reshares: true,
 					},
 				})
+
 				const fetchSharedWithMe = axios.get(shareUrl, {
 					params: {
 						format,
@@ -276,32 +308,36 @@ export default {
 					},
 				})
 
-				// wait for data
-				const [shares, sharedWithMe] = await Promise.all([fetchShares, fetchSharedWithMe])
-				this.loading = false
+				const [shares, sharedWithMe] = await Promise.all([
+					fetchShares,
+					fetchSharedWithMe,
+				])
 
-				// process results
 				this.processSharedWithMe(sharedWithMe)
 				this.processShares(shares)
 			} catch (error) {
-				if (error.response.data?.ocs?.meta?.message) {
-					this.error = error.response.data.ocs.meta.message
-				} else {
-					this.error = t('files_sharing', 'Unable to load the shares list')
-				}
+				const message = error?.response?.data?.ocs?.meta?.message
+
+				this.error = message || t(
+					'files_sharing',
+					'Unable to load the shares list',
+				)
+
+				console.error('[nmcsharing] Error loading the shares list', error)
+			} finally {
 				this.loading = false
-				console.error('Error loading the shares list', error)
 			}
 		},
 
 		/**
-		 * Reset the current view to its default state
+		 * Reset the popup state.
 		 */
 		resetState() {
 			clearInterval(this.expirationInterval)
+
 			this.loading = true
-			this.modal = false
 			this.error = ''
+			this.reshare = null
 			this.sharedWithMe = {}
 			this.shares = []
 			this.linkShares = []
@@ -318,59 +354,67 @@ export default {
 		},
 
 		/**
-		 * Update sharedWithMe.subtitle with the appropriate
-		 * expiration time left
+		 * Update sharedWithMe subtitle with the expiration time left.
 		 *
-		 * @param {Share} share the sharedWith Share object
+		 * @param {Share} share shared-with-me Share object
 		 */
 		updateExpirationSubtitle(share) {
 			// eslint-disable-next-line no-undef
 			const expiration = moment(share.expireDate).unix()
-			this.$set(this.sharedWithMe, 'subtitle', t('files_sharing', 'Expires {relativetime}', {
-				relativetime: OC.Util.relativeModifiedDate(expiration * 1000),
-			}))
 
-			// share have expired
+			this.$set(this.sharedWithMe, 'subtitle', t(
+				'files_sharing',
+				'Expires {relativetime}',
+				{
+					relativetime: OC.Util.relativeModifiedDate(expiration * 1000),
+				},
+			))
+
 			// eslint-disable-next-line no-undef
 			if (moment().unix() > expiration) {
 				clearInterval(this.expirationInterval)
-				// TODO: clear ui if share is expired
-				this.$set(this.sharedWithMe, 'subtitle', t('files_sharing', 'this share just expired.'))
+
+				this.$set(
+					this.sharedWithMe,
+					'subtitle',
+					t('files_sharing', 'this share just expired.'),
+				)
 			}
 		},
 
 		/**
-		 * Process the current shares data
-		 * and init shares[]
+		 * Process current shares.
 		 *
-		 * @param {object} share the share ocs api request data
-		 * @param {object} share.data the request data
+		 * @param {object} response OCS response
 		 */
 		processShares({ data }) {
-			if (data.ocs && data.ocs.data && data.ocs.data.length > 0) {
-				// create Share objects and sort by newest
-				const shares = data.ocs.data
-					.map(share => new Share(share))
-					.sort((a, b) => b.createdTime - a.createdTime)
+			const rawShares = data?.ocs?.data ?? []
 
-				this.linkShares = shares.filter(share => share.type === this.SHARE_TYPES.SHARE_TYPE_LINK || share.type === this.SHARE_TYPES.SHARE_TYPE_EMAIL)
-				this.shares = shares.filter(share => share.type !== this.SHARE_TYPES.SHARE_TYPE_LINK && share.type !== this.SHARE_TYPES.SHARE_TYPE_EMAIL)
+			const shares = rawShares
+				.map(share => new Share(share))
+				.sort((a, b) => b.createdTime - a.createdTime)
 
-				// console.debug('Processed', this.linkShares.length, 'link share(s)')
-				// console.debug('Processed', this.shares.length, 'share(s)')
-			}
+			this.linkShares = shares.filter(share =>
+				share.type === ShareType.Link
+				|| share.type === ShareType.Email,
+			)
+
+			this.shares = shares.filter(share =>
+				share.type !== ShareType.Link
+				&& share.type !== ShareType.Email,
+			)
 		},
 
 		/**
-		 * Process the sharedWithMe share data
-		 * and init sharedWithMe
+		 * Process shared-with-me data.
 		 *
-		 * @param {object} share the share ocs api request data
-		 * @param {object} share.data the request data
+		 * @param {object} response OCS response
 		 */
 		processSharedWithMe({ data }) {
-			if (data.ocs && data.ocs.data && data.ocs.data[0]) {
-				const share = new Share(data)
+			const rawShare = data?.ocs?.data?.[0]
+
+			if (rawShare) {
+				const share = new Share(rawShare)
 				const title = shareWithTitle(share)
 				const displayName = share.ownerDisplayName
 				const user = share.owner
@@ -380,23 +424,34 @@ export default {
 					title,
 					user,
 				}
+
 				this.reshare = share
 
 				if (this.reshare?.hasSharePermission === false) {
-					this.sharedWithMe.reshare = t('files_sharing', 'Resharing is not allowed')
+					this.sharedWithMe.reshare = t(
+						'files_sharing',
+						'Resharing is not allowed',
+					)
 				}
 
-				// If we have an expiration date, use it as subtitle
-				// Refresh the status every 10s and clear if expired
 				// eslint-disable-next-line no-undef
-				if (share.expireDate && moment(share.expireDate).unix() > moment().unix()) {
-					// first update
+				if (
+					share.expireDate
+					&& moment(share.expireDate).unix() > moment().unix()
+				) {
 					this.updateExpirationSubtitle(share)
-					// interval update
-					this.expirationInterval = setInterval(this.updateExpirationSubtitle, 10000, share)
+
+					this.expirationInterval = setInterval(
+						this.updateExpirationSubtitle,
+						10000,
+						share,
+					)
 				}
-			} else if (this.fileInfo && this.fileInfo.shareOwnerId !== undefined ? this.fileInfo.shareOwnerId !== OC.currentUser : false) {
-				// Fallback to compare owner and current user.
+			} else if (
+				this.fileInfo
+				&& this.fileInfo.shareOwnerId !== undefined
+				&& this.fileInfo.shareOwnerId !== OC.currentUser
+			) {
 				this.sharedWithMe = {
 					displayName: this.fileInfo.shareOwner,
 					title: t(
@@ -412,10 +467,9 @@ export default {
 		},
 
 		/**
-		 * Add a new share into the shares list
-		 * and the share details data
+		 * Save share details.
 		 *
-		 * @param {Share} share the share to add to the array
+		 * @param {Share} share share to save
 		 */
 		saveShare(share) {
 			this.shareDetailsData.share = share
@@ -425,55 +479,80 @@ export default {
 		},
 
 		/**
-		 * Add a new share into the shares list
-		 * and return the newly created share component
+		 * Add a new share.
 		 *
-		 * @param {Share} share the share to add to the array
-		 * @param {Function} [resolve] a function to run after the share is added and its component initialized
+		 * @param {Share} share share to add
+		 * @param {Function} resolve callback
 		 */
-		 addShare(share, resolve = () => { }) {
-			// only catching share type MAIL as link shares are added differently
-			// meaning: not from the ShareInput
-			if (share.type === this.SHARE_TYPES.SHARE_TYPE_EMAIL) {
-				this.sharedWith.push(share.shareWith)
+		addShare(share, resolve = () => {}) {
+			if (
+				share.type === ShareType.Link
+				|| share.type === ShareType.Email
+			) {
+				if (share.type === ShareType.Email) {
+					this.sharedWith.push(share.shareWith)
+				}
+
 				this.linkShares.unshift(share)
 			} else {
-				this.sharedWith.push(share.shareWithDisplayName)
+				this.sharedWith.push(
+					share.shareWithDisplayName || share.shareWith,
+				)
+
 				this.shares.unshift(share)
 			}
+
 			this.awaitForShare(share, resolve)
 		},
 
 		/**
-		 * Remove a share from the shares list
+		 * Remove a share.
 		 *
-		 * @param {Share} share the share to remove
+		 * @param {Share} share share to remove
 		 */
 		removeShare(share) {
-			const index = this.shares.findIndex(item => item.id === share.id)
-			// eslint-disable-next-line vue/no-mutating-props
-			this.shares.splice(index, 1)
+			const shareIndex = this.shares.findIndex(
+				item => item.id === share.id,
+			)
+
+			if (shareIndex !== -1) {
+				this.shares.splice(shareIndex, 1)
+			}
+
+			const linkShareIndex = this.linkShares.findIndex(
+				item => item.id === share.id,
+			)
+
+			if (linkShareIndex !== -1) {
+				this.linkShares.splice(linkShareIndex, 1)
+			}
 		},
 
 		/**
-		 * Await for next tick and render after the list updated
-		 * Then resolve with the matched vue component of the
-		 * provided share object
+		 * Wait for the newly created share component.
 		 *
 		 * @param {Share} share newly created share
-		 * @param {Function} resolve a function to execute after
+		 * @param {Function} resolve callback
 		 */
 		awaitForShare(share, resolve) {
 			let listComponent = this.$refs.shareList
-			// Only mail shares comes from the input, link shares
-			// are managed internally in the SharingLinkList component
-			if (share.type === this.SHARE_TYPES.SHARE_TYPE_EMAIL) {
+
+			if (
+				share.type === ShareType.Link
+				|| share.type === ShareType.Email
+			) {
 				listComponent = this.$refs.linkShareList
 			}
 
-			if (!listComponent) return
+			if (!listComponent) {
+				return
+			}
+
 			this.$nextTick(() => {
-				const newShare = listComponent.$children.find(component => component.share === share)
+				const newShare = listComponent.$children.find(
+					component => component.share === share,
+				)
+
 				if (newShare) {
 					resolve(newShare)
 				}
@@ -492,6 +571,7 @@ export default {
 			if (eventData) {
 				this.shareLinkDetailsData = eventData
 			}
+
 			this.showShareLinkDetailsView = !this.showShareLinkDetailsView
 		},
 
@@ -500,8 +580,10 @@ export default {
 				if (!this.shareSet) {
 					this.shareDetailsData = eventData[0]
 				}
+
 				this.shareDetailsDataAll = eventData
 			}
+
 			this.showShareDetailsView = !this.showShareDetailsView
 		},
 
@@ -512,41 +594,40 @@ export default {
 
 <style scoped lang="scss">
 .emptyContentWithSections {
-    margin: 1rem auto;
+	margin: 1rem auto;
 }
 
 .sharingPopup__header {
-    line-height: initial;
+	line-height: initial;
 }
 
 .sharingPopup {
+	&__info {
+		display: block;
+		margin-bottom: 1rem;
+	}
 
-    &__info {
-        display: block;
-        margin-bottom: 1rem
-    }
+	&__additionalContent {
+		margin: 3rem 0;
+	}
 
-    &__additionalContent {
-        margin: 3rem 0;
-    }
+	&__fileinfo {
+		margin: 1rem 0;
+		font-size: 14px;
+	}
 
-    &__fileinfo {
-        font-size: 14px;
-        margin: 1rem 0;
-    }
+	&__divider {
+		margin-bottom: 1rem;
+		border-bottom: 1px solid var(--color-border);
+		text-align: center;
+	}
 
-    &__divider {
-        border-bottom: 1px solid var(--color-border);
-        margin-bottom: 1rem;
-        text-align: center;
-    }
-
-    &__or {
-        background-color: var(--color-main-background);
-        bottom: -0.75rem;
-        font-size: 14px;
-        padding: 0.75rem;
-        position: relative;
-    }
+	&__or {
+		position: relative;
+		bottom: -0.75rem;
+		padding: 0.75rem;
+		background-color: var(--color-main-background);
+		font-size: 14px;
+	}
 }
 </style>

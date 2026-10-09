@@ -1,129 +1,230 @@
 <template>
-	<div :class="{ 'share-select': true, 'disabled': disabled }">
-		<button :id="dropdownId"
+	<div
+		class="share-select"
+		:class="{ disabled }">
+
+		<button
+			type="button"
 			class="trigger-text"
-			tabindex="0"
-			@click="openDetails">
-			<EyeIcon v-if="canView" :size="16" />
-			<PencilIcon v-if="canEdit" :size="16" />
-			<UploadIcon v-if="canFileDrop" :size="16" />
+			:disabled="disabled"
+			:aria-label="selectedOption"
+			@click.stop="openDetails">
+
+			<EyeIcon
+				v-if="canView"
+				:size="16"
+				aria-hidden="true" />
+
+			<PencilIcon
+				v-if="canEdit"
+				:size="16"
+				aria-hidden="true" />
+
+			<UploadIcon
+				v-if="canFileDrop"
+				:size="16"
+				aria-hidden="true" />
+
 			{{ selectedOption }}
-			<LockOutlineIcon v-if="hasPassword" :size="16" />
-			<CalendarMonthIcon v-if="hasExpireDate" :size="16" />
-			<ChevronRightIcon :size="18" />
+
+			<LockOutlineIcon
+				v-if="hasPassword"
+				:size="16"
+				aria-hidden="true" />
+
+			<CalendarMonthIcon
+				v-if="hasExpireDate"
+				:size="16"
+				aria-hidden="true" />
+
+			<ChevronRightIcon
+				:size="18"
+				aria-hidden="true" />
 		</button>
 	</div>
 </template>
 
 <script>
-import EyeIcon from 'vue-material-design-icons/EyeCircleOutline.vue'
-import PencilIcon from 'vue-material-design-icons/Pencil.vue'
-import UploadIcon from 'vue-material-design-icons/Upload.vue'
-import LockOutlineIcon from 'vue-material-design-icons/LockOutline.vue'
+import { translate as t } from '@nextcloud/l10n'
+
 import CalendarMonthIcon from 'vue-material-design-icons/CalendarMonth.vue'
 import ChevronRightIcon from 'vue-material-design-icons/ChevronRight.vue'
-import SharesMixin from '../mixins/SharesMixin.js'
+import EyeIcon from 'vue-material-design-icons/EyeCircleOutline.vue'
+import LockOutlineIcon from 'vue-material-design-icons/LockOutline.vue'
+import PencilIcon from 'vue-material-design-icons/Pencil.vue'
+import UploadIcon from 'vue-material-design-icons/Upload.vue'
+
 import ShareDetails from '../mixins/ShareDetails.js'
+import SharesMixin from '../mixins/SharesMixin.js'
 import ShareTypes from '../mixins/ShareTypes.js'
 
 import {
-	BUNDLED_PERMISSIONS,
 	ATOMIC_PERMISSIONS,
+	BUNDLED_PERMISSIONS,
 	hasPermissions,
 } from '../lib/SharePermissionsToolBox.js'
 
 export default {
+	name: 'SharingEntryQuickShareSelectAll',
+
 	components: {
-		EyeIcon,
-		PencilIcon,
-		UploadIcon,
-		LockOutlineIcon,
 		CalendarMonthIcon,
 		ChevronRightIcon,
+		EyeIcon,
+		LockOutlineIcon,
+		PencilIcon,
+		UploadIcon,
 	},
-	mixins: [SharesMixin, ShareDetails, ShareTypes],
+
+	/*
+	 * ShareTypes bleibt vorerst enthalten, falls SharesMixin oder
+	 * ShareDetails noch auf die Legacy-Konstanten zugreifen.
+	 */
+	mixins: [
+		SharesMixin,
+		ShareDetails,
+		ShareTypes,
+	],
+
 	props: {
 		share: {
 			type: Object,
-			default: () => ({}),
 			required: true,
 		},
-		// TODO apply based on mime type
+
 		disabled: {
 			type: Boolean,
 			default: false,
 		},
 	},
+
 	computed: {
-		canView() {
-			if (this.selectedOption === this.canViewText) {
-				return true
-			}
-			return false
-		},
-		canEdit() {
-			if (this.selectedOption === this.canEditText) {
-				return true
-			}
-			return false
-		},
-		canFileDrop() {
-			if (this.selectedOption === this.fileDropText) {
-				return true
-			}
-			return false
-		},
 		hasExpireDate() {
-			if (this.share.expireDate) {
-				return true
-			}
-			return false
+			return !!this.share?.expireDate
 		},
+
 		hasPassword() {
-			if (this.share.password) {
-				return true
-			}
-			return false
+			return !!this.share?.password
 		},
+
 		canViewText() {
-			return t('nmcsharing', 'Anyone with the link can only view')
+			return t(
+				'nmcsharing',
+				'Anyone with the link can only view',
+			)
 		},
+
 		canEditText() {
-			return t('nmcsharing', 'Anyone with the link can edit')
+			return t(
+				'nmcsharing',
+				'Anyone with the link can edit',
+			)
 		},
+
 		fileDropText() {
-			return t('nmcsharing', 'Anyone with the link can file drop')
+			return t(
+				'nmcsharing',
+				'Anyone with the link can file drop',
+			)
 		},
+
+		customPermissionsText() {
+			return t(
+				'files_sharing',
+				'Custom permissions',
+			)
+		},
+
+		/**
+		 * Permissions relevant for the bundled quick presets.
+		 * Resharing is ignored for this comparison.
+		 *
+		 * @return {number}
+		 */
+		normalizedPermissions() {
+			let permissions = Number(
+				this.share?.permissions ?? 0,
+			)
+
+			if (
+				hasPermissions(
+					permissions,
+					ATOMIC_PERMISSIONS.SHARE,
+				)
+			) {
+				permissions &= ~ATOMIC_PERMISSIONS.SHARE
+			}
+
+			return permissions
+		},
+
+		/**
+		 * @return {'view'|'edit'|'file-drop'|'custom'}
+		 */
+		selectedPermission() {
+			if (
+				this.normalizedPermissions
+				=== BUNDLED_PERMISSIONS.READ_ONLY
+			) {
+				return 'view'
+			}
+
+			if (
+				this.normalizedPermissions
+					=== BUNDLED_PERMISSIONS.ALL
+				|| this.normalizedPermissions
+					=== BUNDLED_PERMISSIONS.ALL_FILE
+			) {
+				return 'edit'
+			}
+
+			if (
+				this.normalizedPermissions
+				=== BUNDLED_PERMISSIONS.FILE_DROP
+			) {
+				return 'file-drop'
+			}
+
+			return 'custom'
+		},
+
 		selectedOption() {
-			let permissions = this.share.permissions
-			if (hasPermissions(this.share.permissions, ATOMIC_PERMISSIONS.SHARE)) {
-				// We remove the share permission for the comparison as it is not relevant for bundled permissions.
-				permissions = this.share.permissions & ~ATOMIC_PERMISSIONS.SHARE
-			}
-			if (permissions === BUNDLED_PERMISSIONS.ALL || permissions === BUNDLED_PERMISSIONS.ALL_FILE) {
+			switch (this.selectedPermission) {
+			case 'edit':
 				return this.canEditText
-			} else if (permissions === BUNDLED_PERMISSIONS.FILE_DROP) {
+
+			case 'file-drop':
 				return this.fileDropText
+
+			case 'custom':
+				return this.customPermissionsText
+
+			case 'view':
+			default:
+				return this.canViewText
 			}
-			// view permission is default setting
-			return this.canViewText
 		},
-		dropdownId() {
-			// Generate a unique ID for ARIA attributes
-			return `dropdown-${Math.random().toString(36).substr(2, 9)}`
+
+		canView() {
+			return this.selectedPermission === 'view'
+		},
+
+		canEdit() {
+			return this.selectedPermission === 'edit'
+		},
+
+		canFileDrop() {
+			return this.selectedPermission === 'file-drop'
 		},
 	},
-	mounted() {
-		window.addEventListener('click', this.handleClickOutside)
-	},
-	beforeDestroy() {
-		window.removeEventListener('click', this.handleClickOutside)
-	},
+
 	methods: {
 		openDetails() {
-			if (!this.disabled) {
-				this.$emit('open-sharing-details-all')
+			if (this.disabled) {
+				return
 			}
+
+			this.$emit('open-sharing-details-all')
 		},
 	},
 }
@@ -131,7 +232,6 @@ export default {
 
 <style lang="scss" scoped>
 .share-select {
-	cursor: pointer;
 	position: relative;
 	margin-top: 0.5rem;
 
@@ -139,27 +239,25 @@ export default {
 		display: flex;
 		flex-direction: row;
 		align-items: center;
-		font-size: 14px;
+		min-height: 1.5rem;
+		margin: 0;
+		padding: 0;
 		gap: 2px;
-		color: var(--color-primary-element);
-		cursor: pointer;
-
-		background: none;
 		border: none;
 		border-radius: 0;
-		margin: 0;
-		min-height: 1.5rem;
-		padding: 0;
+		background: none;
+		color: var(--color-primary-element);
+		font-size: 14px;
+		text-align: left;
+		cursor: pointer;
 
-		&:hover {
+		&:hover:not(:disabled) {
 			text-decoration: underline;
 		}
-	}
 
-	&.disabled .trigger-text {
-
-		&:hover {
-			text-decoration: none;
+		&:disabled {
+			cursor: default;
+			opacity: 0.7;
 		}
 	}
 }
