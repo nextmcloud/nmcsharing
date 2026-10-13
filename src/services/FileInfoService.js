@@ -1,61 +1,83 @@
-/**
- * SPDX-FileCopyrightText: 2019 Nextcloud GmbH and Nextcloud contributors
- * SPDX-License-Identifier: AGPL-3.0-or-later
- */
+import { getShareAttributes } from '../utils/shareAttributes.js'
 
 /**
- * Convert a modern @nextcloud/files Node to the legacy FileInfo format
- * expected by the existing sharing components.
+ * Convert a Nextcloud FileNode into the legacy FileInfo shape
+ * expected by the sharing components.
  *
- * @param {object} node The selected file/folder node
- * @return {object} Legacy FileInfo instance
+ * @param {object} node Nextcloud file node
+ * @return {object} FileInfo
  */
 export default function FileInfo(node) {
 	const attributes = node.attributes ?? {}
-
-	let shareAttributes = []
-
-	try {
-		shareAttributes = JSON.parse(
-			attributes['share-attributes'] || '[]',
-		)
-	} catch (error) {
-		console.error(
-			'[nmcsharing] Failed to parse share attributes',
-			error,
-		)
-
-		shareAttributes = []
-	}
 
 	const rawFileInfo = {
 		id: node.fileid,
 		path: node.dirname,
 		name: node.basename,
-		mtime: node.mtime?.getTime(),
+
+		mtime:
+			node.mtime instanceof Date
+				? node.mtime.getTime()
+				: node.mtime,
+
 		etag: attributes.etag,
 		size: node.size,
-		hasPreview: attributes.hasPreview,
-		isEncrypted: attributes.isEncrypted === 1,
-		isFavourited: attributes.favorite === 1,
+
+		hasPreview:
+			attributes.hasPreview,
+
+		isEncrypted:
+			attributes['is-encrypted'] === 1
+			|| attributes['is-encrypted'] === true
+			|| attributes.isEncrypted === 1
+			|| attributes.isEncrypted === true,
+
+		isFavourited:
+			attributes.favorite === 1
+			|| attributes.favorite === true,
+
 		mimetype: node.mime,
-		permissions: node.permissions,
-		mountType: attributes['mount-type'],
-		sharePermissions: attributes['share-permissions'],
-		shareAttributes,
-		type: node.type === 'file'
-			? 'file'
-			: 'dir',
+
+		permissions:
+			node.permissions,
+
+		mountType:
+			attributes['mount-type'],
+
+		sharePermissions: Number(
+			attributes['share-permissions']
+				?? node.permissions,
+		),
+
+		shareAttributes:
+			getShareAttributes(node),
+
+		shareOwner:
+			attributes['share-owner-displayname'],
+
+		shareOwnerId:
+			attributes['share-owner-id'],
+
+		type:
+			node.type === 'file'
+				? 'file'
+				: 'dir',
+
 		attributes,
 	}
 
-	const fileInfo = new OC.Files.FileInfo(rawFileInfo)
+	const fileInfo =
+		new OC.Files.FileInfo(rawFileInfo)
 
-	// Compatibility with the old sharing components.
-	fileInfo.get = key => fileInfo[key]
+	/*
+	 * Compatibility helpers required by the existing
+	 * nmcsharing components.
+	 */
+	fileInfo.get = key =>
+		fileInfo[key]
 
 	fileInfo.isDirectory = () =>
-		fileInfo.mimetype === 'httpd/unix-directory'
+		fileInfo.type === 'dir'
 
 	fileInfo.canEdit = () =>
 		Boolean(
@@ -63,7 +85,20 @@ export default function FileInfo(node) {
 			& OC.PERMISSION_UPDATE,
 		)
 
-	// Keep access to the modern Node.
+	fileInfo.canDownload = () => {
+		if (
+			typeof node.canDownload === 'function'
+		) {
+			return node.canDownload()
+		}
+
+		return true
+	}
+
+	/*
+	 * Keep access to the original modern FileNode if a
+	 * component needs it later.
+	 */
 	fileInfo.node = node
 
 	return fileInfo
