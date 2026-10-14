@@ -24,12 +24,8 @@ on:
         description: Branch to build a package from
         options: 
           - main
-          - stable25
-          - stable26
-          - stable27
-          - stable28
-          - stable29
-          - nmc/versions
+          - stable32
+          - stable33
       increment:
         description: 'Release increment'
         required: true
