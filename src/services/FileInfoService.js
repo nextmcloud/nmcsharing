@@ -1,4 +1,4 @@
-import { getShareAttributes } from '../utils/shareAttributes.js'
+import { getShareAttributes } from '../utils/ShareAttributes.js'
 
 /**
  * Convert a Nextcloud FileNode into the legacy FileInfo shape
