@@ -1,17 +1,15 @@
 /**
- * @copyright Copyright (c) 2019 John Molakvoæ <skjnldsv@protonmail.com>
- *
- * @author John Molakvoæ <skjnldsv@protonmail.com>
- * @author Julius Härtl <jus@bitgrid.net>
- *
- * @license AGPL-3.0-or-later
+ * SPDX-FileCopyrightText: 2019 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
 import Vue from 'vue'
 import { getCSPNonce } from '@nextcloud/auth'
+import { getClient, getDefaultPropfind, resultToNode } from '@nextcloud/files/dav'
 import { translate as t, translatePlural as n } from '@nextcloud/l10n'
 import { generateFilePath } from '@nextcloud/router'
 
+import FileInfo from './services/FileInfoService.js'
 import SharingPopup from './views/SharingPopup.vue'
 
 // eslint-disable-next-line camelcase
@@ -24,6 +22,7 @@ Vue.prototype.t = t
 Vue.prototype.n = n
 
 const View = Vue.extend(SharingPopup)
+const PENDING_SHARE_KEY = 'nmcsharing:pending-share'
 
 let instance = null
 let mountPoint = null
@@ -76,6 +75,44 @@ async function openSharingPopup(fileInfo) {
 	}
 }
 
+async function openPendingSharingPopup() {
+	const pendingShare = sessionStorage.getItem(PENDING_SHARE_KEY)
+
+	if (!pendingShare) {
+		return
+	}
+
+	sessionStorage.removeItem(PENDING_SHARE_KEY)
+
+	try {
+		const { fileid, davPath } = JSON.parse(pendingShare)
+
+		if (!fileid || typeof davPath !== 'string' || davPath === '') {
+			return
+		}
+
+		const response = await getClient().stat(davPath, {
+			details: true,
+			data: getDefaultPropfind(),
+		})
+
+		const node = resultToNode(response.data)
+
+		if (!node?.id || String(node.id) !== String(fileid)) {
+			console.error('[nmcsharing] Pending share file does not match resolved node', {
+				fileid,
+				resolvedFileid: node?.id,
+				davPath,
+			})
+			return
+		}
+
+		await openSharingPopup(FileInfo(node))
+	} catch (error) {
+		console.error('[nmcsharing] Failed to open pending sharing popup', error)
+	}
+}
+
 /**
  * Destroy the globally mounted popup.
  *
@@ -105,3 +142,9 @@ window.OCA.Nmcsharing ??= {}
 
 window.OCA.Nmcsharing.openSharingPopup = openSharingPopup
 window.OCA.Nmcsharing.destroySharingPopup = destroySharingPopup
+
+if (document.readyState === 'loading') {
+	window.addEventListener('DOMContentLoaded', () => openPendingSharingPopup(), { once: true })
+} else {
+	openPendingSharingPopup()
+}
