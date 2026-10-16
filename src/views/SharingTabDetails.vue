@@ -68,6 +68,7 @@
 					autocomplete="off"
 					show-trailing-button
 					:label="t('nmcsharing', 'Share label')"
+					:placeholder="t('nmcsharing', 'Share label')"
 					:value.sync="mutableShare.label">
 					<template #trailing-button-icon>
 						<PencilIcon :size="16" />
