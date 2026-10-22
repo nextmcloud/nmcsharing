@@ -53,6 +53,7 @@
 		"This share was limited to {limit} downloads. There is still {downloadsLeft} left allowed.": "Diese Freigabe ist auf {limit} Downloads beschränkt. Es sind noch {downloadsLeft} Downloads zugelassen.",
 		"Deny download": "Download verhindern",
 		"Name, email": "Name, E-Mail-Adresse",
+		"Share with users, groups or email addresses": "Mit Personen, Gruppen oder E-Mail-Adressen teilen",
 		"Password must be at least 6 characters long": "Passwort muss mindestens 6 Zeichen lang sein",
 		"Share label": "Ihre Linkbezeichnung"
 	},
