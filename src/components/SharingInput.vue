@@ -7,7 +7,7 @@
 		<NcSelect ref="select"
 			v-model="value"
 			input-id="sharing-search-input"
-			:input-label="t('nmcsharing', 'Share with users, groups or email addresses')"
+			:aria-label-combobox="t('nmcsharing', 'Share with users, groups or email addresses')"
 			class="sharing-search__input"
 			:loading="loading"
 			:filterable="false"
@@ -565,10 +565,6 @@ export default {
 	display: flex;
 	flex-direction: column;
 	margin-bottom: 1rem;
-
-	label[for="sharing-search-input"] {
-		margin-bottom: 0;
-	}
 
 	&__input.v-select.select {
 		min-width: auto;

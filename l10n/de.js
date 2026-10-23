@@ -22,6 +22,7 @@ OC.L10N.register(
 		'Manage access': 'Zugriff verwalten',
 		'Send': 'Send',
 		'Send link via E-Mail': 'Link per E-Mail senden',
+		'Share with users, groups or email addresses': 'Mit Personen, Gruppen oder E-Mail-Adressen teilen',
 		'Links sent via E-Mail': 'Links per E-Mail versandt',
 		'Accept settings': 'Übernehmen',
 		'Or': 'Oder',
