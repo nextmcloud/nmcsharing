@@ -475,7 +475,7 @@ export default {
 		 */
 		shareTypeToIcon(type) {
 			switch (type) {
-			case this.SHARE_TYPES.SHARE_TYPE_GUEST:
+			case this.SHARE_TYPES.Guest:
 				// default is a user, other icons are here to differentiate
 				// themselves from it, so let's not display the user icon
 				// case this.SHARE_TYPES.SHARE_TYPE_REMOTE:
@@ -484,18 +484,18 @@ export default {
 					icon: 'icon-user',
 					iconTitle: t('files_sharing', 'Guest'),
 				}
-			case this.SHARE_TYPES.SHARE_TYPE_USER:
+			case this.SHARE_TYPES.User:
 				return {
 					icon: 'icon-upload-to-cloud',
 					iconTitle: t('nmcsharing', 'User'),
 				}
-			case this.SHARE_TYPES.SHARE_TYPE_REMOTE_GROUP:
-			case this.SHARE_TYPES.SHARE_TYPE_GROUP:
+			case this.SHARE_TYPES.RemoteGroup:
+			case this.SHARE_TYPES.Group:
 				return {
 					icon: 'icon-group',
 					iconTitle: t('files_sharing', 'Group'),
 				}
-			case this.SHARE_TYPES.SHARE_TYPE_EMAIL:
+			case this.SHARE_TYPES.Email:
 				return {
 					icon: 'icon-mail',
 					iconTitle: t('files_sharing', 'Email'),
@@ -505,17 +505,17 @@ export default {
 					icon: 'icon-circle',
 					iconTitle: t('files_sharing', 'Circle'),
 				}
-			case this.SHARE_TYPES.SHARE_TYPE_ROOM:
+			case this.SHARE_TYPES.Room:
 				return {
 					icon: 'icon-room',
 					iconTitle: t('files_sharing', 'Talk conversation'),
 				}
-			case this.SHARE_TYPES.SHARE_TYPE_DECK:
+			case this.SHARE_TYPES.Deck:
 				return {
 					icon: 'icon-deck',
 					iconTitle: t('files_sharing', 'Deck board'),
 				}
-			case this.SHARE_TYPES.SHARE_TYPE_SCIENCEMESH:
+			case this.SHARE_TYPES.ScienceMesh:
 				return {
 					icon: 'icon-sciencemesh',
 					iconTitle: t('files_sharing', 'ScienceMesh'),
