@@ -1,6 +1,45 @@
 import { getShareAttributes } from '../utils/ShareAttributes.js'
 
 /**
+ * Same normalisation as the legacy OC.Files.FileInfo, which Nextcloud 34 removed.
+ *
+ * @param {object} data raw file info values
+ * @return {object} FileInfo
+ */
+function createLegacyFileInfo(data) {
+	const fileInfo = {
+		icon: null,
+		hasPreview: true,
+		shareAttributes: [],
+		quotaAvailableBytes: -1,
+	}
+
+	for (const [key, value] of Object.entries(data)) {
+		if (typeof value !== 'function') {
+			fileInfo[key] = value
+		}
+	}
+
+	if (fileInfo.id !== undefined) {
+		fileInfo.id = parseInt(data.id, 10)
+	}
+
+	fileInfo.path = data.path || ''
+
+	if (fileInfo.type === 'dir') {
+		fileInfo.mimetype = 'httpd/unix-directory'
+	} else {
+		fileInfo.mimetype = fileInfo.mimetype || 'application/octet-stream'
+	}
+
+	if (!fileInfo.type) {
+		fileInfo.type = fileInfo.mimetype === 'httpd/unix-directory' ? 'dir' : 'file'
+	}
+
+	return fileInfo
+}
+
+/**
  * Convert a Nextcloud FileNode into the legacy FileInfo shape
  * expected by the sharing components.
  *
@@ -67,7 +106,7 @@ export default function FileInfo(node) {
 	}
 
 	const fileInfo =
-		new OC.Files.FileInfo(rawFileInfo)
+		createLegacyFileInfo(rawFileInfo)
 
 	/*
 	 * Compatibility helpers required by the existing
