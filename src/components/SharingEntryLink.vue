@@ -644,7 +644,7 @@ export default {
 					if (!this.checkShare(this.share)) {
 						this.open = true
 
-						OC.Notification.showTemporary(
+						showError(
 							t(
 								'files_sharing',
 								'Error, please enter proper password and/or expiration date',
